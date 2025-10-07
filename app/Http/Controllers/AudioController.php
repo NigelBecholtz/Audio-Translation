@@ -7,6 +7,7 @@ use App\Models\CreditTransaction;
 use App\Models\TextToAudio;
 use App\Services\GeminiTtsService;
 use App\Services\SimpleTtsService;
+use App\Services\SanitizationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -109,9 +110,17 @@ class AudioController extends Controller
         try {
             Log::info('Starting file upload...');
             
+            // Sanitize inputs
+            $sanitizer = new SanitizationService();
+            $sourceLanguage = $sanitizer->sanitizeLanguageCode($request->source_language);
+            $targetLanguage = $sanitizer->sanitizeLanguageCode($request->target_language);
+            $voice = $sanitizer->sanitizeVoiceName($request->voice);
+            $styleInstruction = $sanitizer->sanitizeStyleInstruction($request->style_instruction);
+            
             // Upload audio file
             $audioFile = $request->file('audio');
-            $filename = time() . '_' . $audioFile->getClientOriginalName();
+            $originalFilename = $sanitizer->sanitizeFilename($audioFile->getClientOriginalName());
+            $filename = time() . '_' . $originalFilename;
             Log::info('Generated filename: ' . $filename);
             
             $path = $audioFile->storeAs('audio', $filename, 'public');
@@ -121,13 +130,13 @@ class AudioController extends Controller
             Log::info('Creating database record...');
             $audioRecord = AudioFile::create([
                 'user_id' => $user->id,
-                'original_filename' => $audioFile->getClientOriginalName(),
+                'original_filename' => $originalFilename,
                 'file_path' => $path,
                 'file_size' => $audioFile->getSize(),
-                'source_language' => $request->source_language,
-                'target_language' => $request->target_language,
-                'voice' => $request->voice,
-                'style_instruction' => $request->style_instruction,
+                'source_language' => $sourceLanguage,
+                'target_language' => $targetLanguage,
+                'voice' => $voice,
+                'style_instruction' => $styleInstruction,
                 'status' => 'uploaded'
             ]);
             Log::info('Database record created with ID: ' . $audioRecord->id);

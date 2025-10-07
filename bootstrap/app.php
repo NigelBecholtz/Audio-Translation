@@ -22,10 +22,12 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Enable error display for debugging
-        ini_set('display_errors', 1);
-        ini_set('display_startup_errors', 1);
-        error_reporting(E_ALL);
+        // Enable error display ONLY in local environment
+        if (app()->environment('local')) {
+            ini_set('display_errors', 1);
+            ini_set('display_startup_errors', 1);
+            error_reporting(E_ALL);
+        }
         
         // Handle PostTooLargeException
         $exceptions->render(function (\Illuminate\Http\Exceptions\PostTooLargeException $e, $request) {

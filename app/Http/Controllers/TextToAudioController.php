@@ -6,6 +6,7 @@ use App\Models\TextToAudio;
 use App\Models\CreditTransaction;
 use App\Services\GeminiTtsService;
 use App\Services\SimpleTtsService;
+use App\Services\SanitizationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -46,20 +47,27 @@ class TextToAudioController extends Controller
         }
         
         $request->validate([
-            'text_content' => 'required|string|max:50000', // Allow much longer texts - will be chunked automatically
+            'text_content' => 'required|string|max:50000',
             'language' => 'required|string|in:en,es,fr,de,it,pt,ru,ja,ko,zh,ar,hi,nl,sv,da,no,fi,pl,cs,sk,hu,ro,bg,hr,sl,el,tr,uk,lv,lt,et,ca,eu,th,vi,id,ms,tl,bn,ta,te,ml,kn,gu,pa,ur,si,my,km,lo,mn,af,sw,am,sq,hy,az,ka,he,fa,ps,ne',
             'voice' => 'required|string',
-            'style_instruction' => 'nullable|string|max:5000', // Allow longer style instructions
+            'style_instruction' => 'nullable|string|max:5000',
         ]);
 
         try {
+            // Sanitize inputs
+            $sanitizer = new SanitizationService();
+            $textContent = $sanitizer->sanitizeText($request->text_content);
+            $language = $sanitizer->sanitizeLanguageCode($request->language);
+            $voice = $sanitizer->sanitizeVoiceName($request->voice);
+            $styleInstruction = $sanitizer->sanitizeStyleInstruction($request->style_instruction);
+
             // Create database record
             $textToAudioRecord = TextToAudio::create([
                 'user_id' => $user->id,
-                'text_content' => $request->text_content,
-                'language' => $request->language,
-                'voice' => $request->voice,
-                'style_instruction' => $request->style_instruction,
+                'text_content' => $textContent,
+                'language' => $language,
+                'voice' => $voice,
+                'style_instruction' => $styleInstruction,
                 'status' => 'processing'
             ]);
 

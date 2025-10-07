@@ -21,7 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'is_admin',
+        // 'is_admin' removed from fillable for security - use setAdmin() method instead
         'subscription_type',
         'translations_used',
         'translations_limit',
@@ -117,5 +117,15 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->is_admin;
+    }
+
+    /**
+     * Safely set admin status (not mass assignable)
+     * Only use this in admin-controlled contexts
+     */
+    public function setAdmin(bool $isAdmin): void
+    {
+        $this->is_admin = $isAdmin;
+        $this->save();
     }
 }
