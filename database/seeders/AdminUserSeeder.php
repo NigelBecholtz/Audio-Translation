@@ -15,10 +15,11 @@ class AdminUserSeeder extends Seeder
     public function run(): void
     {
         // Create admin user
+        // NOTE: Change password in production!
         User::create([
             'name' => 'Admin',
-            'email' => 'support@optimasys.es',
-            'password' => Hash::make('Artemis-123'),
+            'email' => env('ADMIN_EMAIL', 'admin@example.com'),
+            'password' => Hash::make(env('ADMIN_PASSWORD', 'change-me-in-production')),
             'is_admin' => true,
             'subscription_type' => 'free',
             'translations_used' => 0,
@@ -27,7 +28,7 @@ class AdminUserSeeder extends Seeder
         ]);
 
         $this->command->info('Admin user created successfully!');
-        $this->command->info('Email: support@optimasys.es');
-        $this->command->info('Password: Artemis-123');
+        $this->command->info('Email: ' . env('ADMIN_EMAIL', 'admin@example.com'));
+        $this->command->info('Password: [SET IN .env]');
     }
 }

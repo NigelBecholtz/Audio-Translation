@@ -48,8 +48,8 @@ sudo mysql
 
 # In MySQL console:
 CREATE DATABASE audio_translation CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'audio_user'@'localhost' IDENTIFIED BY 'JouwSterkWachtwoord123!';
-GRANT ALL PRIVILEGES ON audio_translation.* TO 'audio_user'@'localhost';
+CREATE USER 'admin'@'localhost' IDENTIFIED BY 'YOUR_STRONG_PASSWORD_HERE';
+GRANT ALL PRIVILEGES ON audio_translation.* TO 'admin'@'localhost';
 FLUSH PRIVILEGES;
 EXIT;
 ```
@@ -73,8 +73,8 @@ DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=audio_translation
-DB_USERNAME=audio_user
-DB_PASSWORD=JouwSterkWachtwoord123!
+DB_USERNAME=admin
+DB_PASSWORD=YOUR_STRONG_PASSWORD_HERE
 ```
 
 ---
