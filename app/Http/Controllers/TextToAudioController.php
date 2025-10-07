@@ -3,14 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\TextToAudio;
-use App\Models\CreditTransaction;
-use App\Services\GeminiTtsService;
-use App\Services\SimpleTtsService;
+use App\Services\AudioProcessingService;
 use App\Services\SanitizationService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-use OpenAI\Laravel\Facades\OpenAI;
 
 class TextToAudioController extends Controller
 {
@@ -124,91 +120,38 @@ class TextToAudioController extends Controller
 
     private function processTextToAudio($textToAudioId)
     {
-        Log::info('=== TEXT TO AUDIO PROCESSING DEBUG START ===');
-        Log::info('Processing text to audio ID: ' . $textToAudioId);
-        
         $textToAudioFile = TextToAudio::findOrFail($textToAudioId);
-        Log::info('Text to audio file found');
+        $processingService = new AudioProcessingService();
         
         try {
             // Generate audio with TTS
-            Log::info('Starting TTS generation...');
-            $audioPath = $this->generateAudio($textToAudioFile->text_content, $textToAudioFile->language, $textToAudioFile->voice, $textToAudioFile->style_instruction);
+            $audioPath = $processingService->generateAudio(
+                $textToAudioFile->text_content,
+                $textToAudioFile->language,
+                $textToAudioFile->voice,
+                $textToAudioFile->style_instruction
+            );
+            
             $textToAudioFile->update([
                 'audio_path' => $audioPath,
                 'status' => 'completed'
             ]);
-            Log::info('TTS generation completed, path: ' . $audioPath);
             
-            // Update user usage
-            $this->updateUserUsage($textToAudioFile->user);
-            
-            Log::info('=== TEXT TO AUDIO PROCESSING DEBUG END - SUCCESS ===');
+            // Deduct credits
+            $processingService->deductCredits(
+                $textToAudioFile->user,
+                0.5,
+                'Credits used for text to audio conversion'
+            );
 
         } catch (\Exception $e) {
-            Log::error('Text to audio processing failed: ' . $e->getMessage());
-            Log::error('Exception trace: ' . $e->getTraceAsString());
+            Log::error('Text to audio processing failed', [
+                'text_to_audio_id' => $textToAudioId,
+                'error' => $e->getMessage()
+            ]);
             $textToAudioFile->update([
                 'status' => 'failed',
                 'error_message' => $e->getMessage()
-            ]);
-            Log::info('=== TEXT TO AUDIO PROCESSING DEBUG END - FAILED ===');
-        }
-    }
-
-    private function generateAudio($text, $language, $voice, $styleInstruction = null)
-    {
-        try {
-            Log::info('=== GEMINI TTS GENERATION DEBUG ===');
-            Log::info('Language: ' . $language);
-            Log::info('Voice: ' . $voice);
-            Log::info('Text length: ' . strlen($text));
-            Log::info('Text preview: ' . substr($text, 0, 100) . '...');
-            
-            // Initialize Gemini TTS service
-            $geminiTts = new GeminiTtsService();
-            
-            // Use Gemini TTS for better accent support
-            Log::info('Using Gemini 2.5 Pro TTS for improved accent support');
-            $path = $geminiTts->generateAudio($text, $language, $voice, $styleInstruction);
-            
-            Log::info('Gemini TTS audio generated successfully', [
-                'language' => $language,
-                'voice' => $voice,
-                'file_path' => $path
-            ]);
-            
-            return $path;
-            
-        } catch (\Exception $e) {
-            Log::error('Gemini TTS generation failed', [
-                'language' => $language,
-                'error' => $e->getMessage()
-            ]);
-
-            throw new \Exception('Audio generation failed: ' . $e->getMessage());
-        }
-    }
-
-
-    private function updateUserUsage($user)
-    {
-        // Use free translations first
-        if ($user->translations_used < $user->translations_limit) {
-            $user->increment('translations_used');
-        } else {
-            // Then use credits
-            $user->decrement('credits', 0.50); // €0.50 per translation
-            $newBalance = $user->fresh()->credits;
-            
-            // Create credit transaction record for usage
-            CreditTransaction::create([
-                'user_id' => $user->id,
-                'admin_id' => null, // System transaction
-                'amount' => -0.50, // Negative amount for usage
-                'type' => 'usage',
-                'description' => 'Credits used for text to audio conversion',
-                'balance_after' => $newBalance,
             ]);
         }
     }

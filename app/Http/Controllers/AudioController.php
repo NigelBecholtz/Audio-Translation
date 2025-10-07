@@ -5,13 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\AudioFile;
 use App\Models\CreditTransaction;
 use App\Models\TextToAudio;
-use App\Services\GeminiTtsService;
-use App\Services\SimpleTtsService;
+use App\Services\AudioProcessingService;
 use App\Services\SanitizationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-use OpenAI\Laravel\Facades\OpenAI;
 
 class AudioController extends Controller
 {
@@ -203,215 +201,54 @@ class AudioController extends Controller
 
     private function processAudio($audioFileId)
     {
-        Log::info('=== AI PROCESSING DEBUG START ===');
-        Log::info('Processing audio file ID: ' . $audioFileId);
-        
         $audioFile = AudioFile::findOrFail($audioFileId);
-        Log::info('Audio file found: ' . $audioFile->original_filename);
+        $processingService = new AudioProcessingService();
         
         try {
             // Step 1: Transcribe with Whisper
-            Log::info('Step 1: Starting transcription...');
             $audioFile->update(['status' => 'transcribing']);
-            $transcription = $this->transcribeWithWhisper($audioFile);
+            $transcription = $processingService->transcribeAudio($audioFile);
             $audioFile->update(['transcription' => $transcription]);
-            Log::info('Step 1: Transcription completed, length: ' . strlen($transcription));
 
             // Step 2: Translate text
-            Log::info('Step 2: Starting translation...');
             $audioFile->update(['status' => 'translating']);
-            $translatedText = $this->translateText($transcription, $audioFile->source_language, $audioFile->target_language);
+            $translatedText = $processingService->translateText(
+                $transcription,
+                $audioFile->source_language,
+                $audioFile->target_language
+            );
             $audioFile->update(['translated_text' => $translatedText]);
-            Log::info('Step 2: Translation completed, length: ' . strlen($translatedText));
 
             // Step 3: Generate audio with TTS
-            Log::info('Step 3: Starting TTS generation...');
             $audioFile->update(['status' => 'generating_audio']);
-            $translatedAudioPath = $this->generateAudio($translatedText, $audioFile->target_language, $audioFile->voice, $audioFile->style_instruction);
+            $translatedAudioPath = $processingService->generateAudio(
+                $translatedText,
+                $audioFile->target_language,
+                $audioFile->voice,
+                $audioFile->style_instruction
+            );
             $audioFile->update([
                 'translated_audio_path' => $translatedAudioPath,
                 'status' => 'completed'
             ]);
-            Log::info('Step 3: TTS generation completed, path: ' . $translatedAudioPath);
             
-            // Update user usage
-            $this->updateUserUsage($audioFile->user);
-            
-            Log::info('=== AI PROCESSING DEBUG END - SUCCESS ===');
+            // Deduct credits
+            $processingService->deductCredits(
+                $audioFile->user,
+                0.5,
+                'Credits used for audio translation'
+            );
 
         } catch (\Exception $e) {
-            Log::error('AI processing failed: ' . $e->getMessage());
-            Log::error('Exception trace: ' . $e->getTraceAsString());
+            Log::error('Audio processing failed', [
+                'audio_file_id' => $audioFileId,
+                'error' => $e->getMessage()
+            ]);
             $audioFile->update([
                 'status' => 'failed',
                 'error_message' => $e->getMessage()
             ]);
-            Log::info('=== AI PROCESSING DEBUG END - FAILED ===');
         }
     }
 
-    private function transcribeWithWhisper(AudioFile $audioFile)
-    {
-        Log::info('=== WHISPER TRANSCRIPTION DEBUG ===');
-        Log::info('Audio file ID: ' . $audioFile->id);
-        Log::info('Source language: ' . $audioFile->source_language);
-        
-        try {
-            $audioPath = Storage::disk('public')->path($audioFile->file_path);
-            Log::info('Audio path: ' . $audioPath);
-            Log::info('File exists: ' . (file_exists($audioPath) ? 'YES' : 'NO'));
-            
-            if (!file_exists($audioPath)) {
-                throw new \Exception('Audio file not found: ' . $audioPath);
-            }
-            
-            Log::info('Calling OpenAI Whisper API...');
-            $response = OpenAI::audio()->transcribe([
-                'file' => fopen($audioPath, 'r'),
-                'model' => 'whisper-1',
-                'language' => $audioFile->source_language,
-                'response_format' => 'json'
-            ]);
-
-            Log::info('Whisper API response received');
-            Log::info('Transcription length: ' . strlen($response->text));
-            Log::info('Transcription preview: ' . substr($response->text, 0, 100) . '...');
-
-            return $response->text;
-            
-        } catch (\Exception $e) {
-            Log::error('Whisper transcription failed: ' . $e->getMessage());
-            Log::error('Exception trace: ' . $e->getTraceAsString());
-            throw new \Exception('Transcription failed: ' . $e->getMessage());
-        }
-    }
-
-    private function translateText($text, $sourceLanguage, $targetLanguage)
-    {
-        try {
-            // Skip translation if source and target are the same
-            if ($sourceLanguage === $targetLanguage) {
-                return $text;
-            }
-            
-            $languageNames = [
-                'en' => 'English',
-                'es' => 'Spanish', 
-                'fr' => 'French',
-                'de' => 'German',
-                'nl' => 'Dutch',
-                'it' => 'Italian',
-                'pt' => 'Portuguese',
-                'ru' => 'Russian',
-                'ja' => 'Japanese',
-                'ko' => 'Korean',
-                'zh' => 'Chinese',
-                'ar' => 'Arabic',
-                'hi' => 'Hindi',
-                'sv' => 'Swedish',
-                'sq' => 'Albanian',
-                'bg' => 'Bulgarian',
-                'sk' => 'Slovak',
-                'lv' => 'Latvian',
-                'fi' => 'Finnish',
-                'el' => 'Greek',
-                'ro' => 'Romanian',
-                'ca' => 'Catalan'
-            ];
-            
-            $sourceLangName = $languageNames[$sourceLanguage] ?? $sourceLanguage;
-            $targetLangName = $languageNames[$targetLanguage] ?? $targetLanguage;
-            
-            $response = OpenAI::chat()->create([
-                'model' => 'gpt-3.5-turbo',
-                'messages' => [
-                    [
-                        'role' => 'system',
-                        'content' => "You are a professional translator. Translate the following text from {$sourceLangName} to {$targetLangName}. Only return the translated text, nothing else."
-                    ],
-                    [
-                        'role' => 'user',
-                        'content' => $text
-                    ]
-                ],
-                'max_tokens' => 1000,
-                'temperature' => 0.3
-            ]);
-            
-            $translatedText = trim($response->choices[0]->message->content);
-            
-            Log::info('Translation completed', [
-                'source_language' => $sourceLanguage,
-                'target_language' => $targetLanguage,
-                'text_length' => strlen($text),
-                'translated_length' => strlen($translatedText)
-            ]);
-            
-            return $translatedText;
-            
-        } catch (\Exception $e) {
-            Log::error('Translation failed', [
-                'source_language' => $sourceLanguage,
-                'target_language' => $targetLanguage,
-                'error' => $e->getMessage()
-            ]);
-            throw new \Exception('Translation failed: ' . $e->getMessage());
-        }
-    }
-
-    private function generateAudio($text, $language, $voice = null, $styleInstruction = null)
-    {
-        try {
-            Log::info('=== GEMINI TTS GENERATION DEBUG ===');
-            Log::info('Language: ' . $language);
-            Log::info('Text length: ' . strlen($text));
-            Log::info('Text preview: ' . substr($text, 0, 100) . '...');
-            
-            // Initialize Gemini TTS service
-            $geminiTts = new GeminiTtsService();
-            
-            // Use Gemini TTS for better accent support
-            Log::info('Using Gemini 2.5 Pro TTS for improved accent support');
-            $path = $geminiTts->generateAudio($text, $language, $voice, $styleInstruction ?? null);
-            
-            Log::info('Gemini TTS audio generated successfully', [
-                'language' => $language,
-                'voice' => $voice,
-                'file_path' => $path
-            ]);
-            
-            return $path;
-            
-        } catch (\Exception $e) {
-            Log::error('Gemini TTS generation failed', [
-                'language' => $language,
-                'error' => $e->getMessage()
-            ]);
-
-            throw new \Exception('Audio generation failed: ' . $e->getMessage());
-        }
-    }
-
-
-    private function updateUserUsage($user)
-    {
-        // Use free translations first
-        if ($user->translations_used < $user->translations_limit) {
-            $user->increment('translations_used');
-        } else {
-            // Then use credits
-            $user->decrement('credits', 0.50); // €0.50 per translation
-            $newBalance = $user->fresh()->credits;
-            
-            // Create credit transaction record for usage
-            CreditTransaction::create([
-                'user_id' => $user->id,
-                'admin_id' => null, // System transaction
-                'amount' => -0.50, // Negative amount for usage
-                'type' => 'usage',
-                'description' => 'Credits used for audio translation',
-                'balance_after' => $newBalance,
-            ]);
-        }
-    }
 }
