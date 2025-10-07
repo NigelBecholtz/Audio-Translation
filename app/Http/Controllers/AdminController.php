@@ -44,7 +44,7 @@ class AdminController extends Controller
         // Monthly revenue chart data
         $monthlyRevenue = Payment::where('status', 'completed')
             ->select(
-                DB::raw('strftime("%Y-%m", created_at) as month'),
+                DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month'),
                 DB::raw('SUM(amount) as revenue'),
                 DB::raw('COUNT(*) as payments')
             )
