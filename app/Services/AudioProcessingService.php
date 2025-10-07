@@ -210,7 +210,7 @@ class AudioProcessingService
      */
     public function deductCredits($user, float $amount = 0.5, string $description = 'Credits used for audio processing'): void
     {
-        $this->creditService->deductCredits($user, $amount, $description);
+        $this->creditService->deductCredit($user, $description, $amount);
     }
 }
 
