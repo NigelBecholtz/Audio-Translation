@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\TextToAudio;
+use App\Services\CreditService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -100,23 +101,7 @@ class ProcessTextToAudioJob implements ShouldQueue
 
     private function updateUserUsage($user)
     {
-        // Use free translations first
-        if ($user->translations_used < $user->translations_limit) {
-            $user->increment('translations_used');
-        } else {
-            // Then use credits
-            $user->decrement('credits', 0.50); // €0.50 per translation
-            $newBalance = $user->fresh()->credits;
-            
-            // Create credit transaction record for usage
-            \App\Models\CreditTransaction::create([
-                'user_id' => $user->id,
-                'admin_id' => null, // System transaction
-                'amount' => -0.50, // Negative amount for usage
-                'type' => 'usage', // Add required type field
-                'description' => 'Credits used for text to audio conversion',
-                'balance_after' => $newBalance,
-            ]);
-        }
+        $creditService = new CreditService();
+        $creditService->deductCredit($user, 'Credits used for text to audio conversion', 0.50);
     }
 }

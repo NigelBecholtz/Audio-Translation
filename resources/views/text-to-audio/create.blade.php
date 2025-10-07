@@ -27,10 +27,10 @@
                                 </label>
                                 <textarea id="text_content" 
                                           name="text_content" 
-                                          rows="8"
-                                          required
-                                          maxlength="50000"
-                                          placeholder="Enter the text you want to convert to audio..."
+                                         rows="8"
+                                         required
+                                         maxlength="{{ config('audio.max_text_length') }}"
+                                         placeholder="Enter the text you want to convert to audio..."
                                           class="w-full px-6 py-4 text-lg border-3 border-blue-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all bg-white shadow-lg resize-none"
                                           style="font-family: inherit;">{{ old('text_content') }}</textarea>
                                 <div class="flex justify-between items-center mt-2">

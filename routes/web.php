@@ -27,13 +27,13 @@ Route::get('/admin/login', [AdminLoginController::class, 'showLoginForm'])->name
 Route::post('/admin/login', [AdminLoginController::class, 'login']);
 Route::post('/admin/logout', [AdminLoginController::class, 'logout'])->name('admin.logout');
 
-// Protected Routes
-Route::middleware('auth')->group(function () {
+// Protected Routes with rate limiting
+Route::middleware(['auth', 'throttle:60,1'])->group(function () {
     Route::resource('audio', AudioController::class);
     Route::get('audio/{id}/download', [AudioController::class, 'download'])->name('audio.download');
     
-    // Text to Audio Routes
-    Route::resource('text-to-audio', TextToAudioController::class);
+    // Text to Audio Routes with stricter rate limiting
+    Route::resource('text-to-audio', TextToAudioController::class)->middleware('throttle:20,1');
     Route::get('text-to-audio/{id}/download', [TextToAudioController::class, 'download'])->name('text-to-audio.download');
     
     // Payment Routes

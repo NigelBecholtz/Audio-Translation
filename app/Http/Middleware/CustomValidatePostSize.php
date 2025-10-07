@@ -15,19 +15,21 @@ class CustomValidatePostSize
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Increase PHP limits for large file uploads
-        ini_set('upload_max_filesize', '50M');
-        ini_set('post_max_size', '50M');
-        ini_set('max_execution_time', 300);
-        ini_set('max_input_time', 300);
-        ini_set('memory_limit', '256M');
+        // Increase PHP limits for large file uploads (from config)
+        $maxSize = config('audio.max_file_size', 50);
+        ini_set('upload_max_filesize', $maxSize . 'M');
+        ini_set('post_max_size', $maxSize . 'M');
+        ini_set('max_execution_time', config('audio.max_execution_time', 600));
+        ini_set('max_input_time', config('audio.max_input_time', 600));
+        ini_set('memory_limit', config('audio.memory_limit', '512M'));
         
-        // Check if the request is too large (50MB limit)
+        // Check if the request is too large
         $contentLength = $request->header('content-length');
-        if ($contentLength && $contentLength > 50 * 1024 * 1024) {
+        $maxBytes = $maxSize * 1024 * 1024;
+        if ($contentLength && $contentLength > $maxBytes) {
             return response()->json([
-                'error' => 'File too large. Maximum 50MB allowed.',
-                'max_size' => '50MB'
+                'error' => 'File too large. Maximum ' . $maxSize . 'MB allowed.',
+                'max_size' => $maxSize . 'MB'
             ], 413);
         }
         

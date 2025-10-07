@@ -523,9 +523,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function handleFile(file) {
-        // Validate file type - check both MIME type and file extension
-        const allowedTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/mp4', 'audio/m4a', 'audio/x-m4a', 'audio/mp4a-latm', 'audio/x-mp4'];
-        const allowedExtensions = ['.mp3', '.wav', '.m4a', '.mp4'];
+        // Get allowed types from backend config
+        const allowedTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/mp4', 'audio/m4a', 'audio/x-m4a', 'audio/mp4a-latm', 'audio/x-mp4', 'audio/ogg', 'audio/flac', 'audio/x-flac'];
+        const allowedExtensions = ['.mp3', '.wav', '.m4a', '.mp4', '.ogg', '.flac'];
         const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
         
         // Check if either MIME type OR file extension is allowed
@@ -534,13 +534,14 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (!isValidMimeType && !isValidExtension) {
             console.log('File type:', file.type, 'Extension:', fileExtension);
-            alert('Only MP3, WAV and M4A files are allowed.');
+            alert('Only audio files are allowed (MP3, WAV, M4A, MP4, OGG, FLAC).');
             return;
         }
 
-        // Validate file size (50MB)
-        if (file.size > 50 * 1024 * 1024) {
-            alert('File is too large. Maximum 50MB allowed.');
+        // Validate file size (from backend config - default 50MB)
+        const maxSize = {{ config('audio.max_file_size') }} * 1024 * 1024;
+        if (file.size > maxSize) {
+            alert('File is too large. Maximum {{ config("audio.max_file_size") }}MB allowed.');
             return;
         }
 

@@ -33,86 +33,159 @@ class GeminiTtsService
     public function generateAudio(string $text, string $language, ?string $voice = null, ?string $styleInstruction = null): string
     {
         try {
-            Log::info('=== GEMINI TTS GENERATION DEBUG ===');
-            Log::info('Language: ' . $language);
-            Log::info('Text length: ' . strlen($text));
+            if (app()->environment('local')) {
+                Log::info('Gemini TTS: Generating audio', [
+                    'language' => $language,
+                    'text_length' => strlen($text)
+                ]);
+            }
 
             // Get voice for language if not specified
             if (!$voice) {
                 $voice = $this->getVoiceForLanguage($language);
             }
-            
-            Log::info('Selected voice: ' . $voice);
 
-            // Get OAuth2 access token
-            $accessToken = $this->oauthService->getAccessToken();
+            // Check if text needs chunking (900 bytes limit)
+            $chunkSize = config('audio.tts_chunk_size', 900);
             
-            // Prepare TTS payload
-            $ttsPayload = [
-                'input' => [
-                    'text' => $text
-                ],
-                'voice' => [
-                    'languageCode' => $this->getLanguageCode($language),
-                    'name' => $voice,
-                    'model_name' => 'gemini-2.5-pro-tts'
-                ],
-                'audioConfig' => [
-                    'audioEncoding' => 'MP3',
-                    'sampleRateHertz' => 24000
-                ]
-            ];
-
-            // Add style instruction as prompt if provided
-            if (!empty($styleInstruction)) {
-                $ttsPayload['input']['prompt'] = $styleInstruction;
+            if (strlen($text) <= $chunkSize && strlen($styleInstruction ?? '') <= $chunkSize) {
+                // Single chunk - direct API call
+                return $this->generateSingleChunk($text, $language, $voice, $styleInstruction);
+            } else {
+                // Multiple chunks needed - split and concatenate
+                Log::warning('Text exceeds 900 bytes - using chunking (voice consistency may vary)');
+                return $this->generateWithChunking($text, $language, $voice, $styleInstruction);
             }
-
-            Log::info('Calling Gemini TTS API...');
-            
-            $response = Http::timeout($this->timeout)
-                ->retry(2, 1000)
-                ->withHeaders([
-                    'Content-Type' => 'application/json',
-                    'Authorization' => 'Bearer ' . $accessToken,
-                ])
-                ->post('https://texttospeech.googleapis.com/v1/text:synthesize', $ttsPayload);
-
-            if (!$response->successful()) {
-                throw new \Exception('Gemini TTS API request failed: ' . $response->body());
-            }
-
-            $responseData = $response->json();
-            
-            // Extract audio content from response
-            if (!isset($responseData['audioContent'])) {
-                throw new \Exception('No audio content received from Gemini TTS API');
-            }
-
-            $audioContent = base64_decode($responseData['audioContent']);
-
-            // Save the audio file
-            $filename = 'gemini_tts_' . time() . '.mp3';
-            $path = 'audio/' . $filename;
-            
-            Storage::disk('public')->put($path, $audioContent);
-            
-            Log::info('Gemini TTS audio generated successfully', [
-                'language' => $language,
-                'voice' => $voice,
-                'file_path' => $path
-            ]);
-
-            return $path;
 
         } catch (\Exception $e) {
             Log::error('Gemini TTS generation failed', [
                 'language' => $language,
-                'voice' => $voice,
                 'error' => $e->getMessage()
             ]);
-            throw new \Exception('Gemini TTS generation failed: ' . $e->getMessage());
+            throw $e;
         }
+    }
+
+    private function generateSingleChunk(string $text, string $language, string $voice, ?string $styleInstruction): string
+    {
+        // Truncate if needed
+        if (strlen($text) > 900) {
+            $text = substr($text, 0, 900);
+        }
+        if (!empty($styleInstruction) && strlen($styleInstruction) > 900) {
+            $styleInstruction = substr($styleInstruction, 0, 900);
+        }
+
+        $accessToken = $this->oauthService->getAccessToken();
+        
+        $ttsPayload = [
+            'input' => ['text' => $text],
+            'voice' => [
+                'languageCode' => $this->getLanguageCode($language),
+                'name' => $voice,
+                'model_name' => 'gemini-2.5-pro-tts'
+            ],
+            'audioConfig' => [
+                'audioEncoding' => 'MP3',
+                'sampleRateHertz' => 24000
+            ]
+        ];
+
+        if (!empty($styleInstruction)) {
+            $ttsPayload['input']['prompt'] = $styleInstruction;
+        }
+
+        $response = Http::timeout($this->timeout)
+            ->retry(2, 1000)
+            ->withHeaders([
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Bearer ' . $accessToken,
+            ])
+            ->post('https://texttospeech.googleapis.com/v1/text:synthesize', $ttsPayload);
+
+        if (!$response->successful()) {
+            throw new \Exception('Gemini TTS API failed: ' . $response->body());
+        }
+
+        $responseData = $response->json();
+        
+        if (!isset($responseData['audioContent'])) {
+            throw new \Exception('No audio content received');
+        }
+
+        $audioContent = base64_decode($responseData['audioContent']);
+        $filename = 'gemini_tts_' . time() . '_' . rand(1000, 9999) . '.mp3';
+        $path = 'audio/' . $filename;
+        
+        Storage::disk('public')->put($path, $audioContent);
+
+        return $path;
+    }
+
+    private function generateWithChunking(string $text, string $language, string $voice, ?string $styleInstruction): string
+    {
+        // Simple sentence-based chunking
+        $chunks = $this->chunkText($text, 900);
+        $audioPaths = [];
+
+        foreach ($chunks as $index => $chunk) {
+            $audioPaths[] = $this->generateSingleChunk($chunk, $language, $voice, $styleInstruction);
+            
+            // Delay between chunks
+            if ($index < count($chunks) - 1) {
+                sleep(config('audio.tts_chunk_delay', 2));
+            }
+        }
+
+        // Concatenate chunks
+        return $this->concatenateAudio($audioPaths);
+    }
+
+    private function chunkText(string $text, int $maxBytes): array
+    {
+        $chunks = [];
+        $sentences = preg_split('/(?<=[.!?])\s+/', $text);
+        $currentChunk = '';
+
+        foreach ($sentences as $sentence) {
+            if (strlen($currentChunk) + strlen($sentence) <= $maxBytes) {
+                $currentChunk .= ($currentChunk ? ' ' : '') . $sentence;
+            } else {
+                if ($currentChunk) {
+                    $chunks[] = $currentChunk;
+                }
+                $currentChunk = $sentence;
+            }
+        }
+
+        if ($currentChunk) {
+            $chunks[] = $currentChunk;
+        }
+
+        return $chunks ?: [$text];
+    }
+
+    private function concatenateAudio(array $audioPaths): string
+    {
+        if (count($audioPaths) === 1) {
+            return $audioPaths[0];
+        }
+
+        // Simple binary concatenation (works for MP3)
+        $concatenated = '';
+        foreach ($audioPaths as $path) {
+            $fullPath = storage_path('app/public/' . $path);
+            if (file_exists($fullPath)) {
+                $concatenated .= file_get_contents($fullPath);
+                unlink($fullPath); // Cleanup chunk
+            }
+        }
+
+        $filename = 'gemini_tts_concat_' . time() . '.mp3';
+        $path = 'audio/' . $filename;
+        Storage::disk('public')->put($path, $concatenated);
+
+        return $path;
     }
 
     private function getVoiceForLanguage(string $language): string
