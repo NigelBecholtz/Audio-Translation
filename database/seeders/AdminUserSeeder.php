@@ -17,8 +17,8 @@ class AdminUserSeeder extends Seeder
         // Create admin user
         User::create([
             'name' => 'Admin',
-            'email' => 'admin@audio-vertaler.com',
-            'password' => Hash::make('admin123'),
+            'email' => 'support@optimasys.es',
+            'password' => Hash::make('Artemis-123'),
             'is_admin' => true,
             'subscription_type' => 'free',
             'translations_used' => 0,
@@ -27,7 +27,7 @@ class AdminUserSeeder extends Seeder
         ]);
 
         $this->command->info('Admin user created successfully!');
-        $this->command->info('Email: admin@audio-vertaler.com');
-        $this->command->info('Password: admin123');
+        $this->command->info('Email: support@optimasys.es');
+        $this->command->info('Password: Artemis-123');
     }
 }
