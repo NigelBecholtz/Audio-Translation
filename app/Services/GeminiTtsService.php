@@ -78,11 +78,14 @@ class GeminiTtsService
 
         $accessToken = $this->oauthService->getAccessToken();
         
+        // Capitalize first letter of voice name (Gemini expects proper case)
+        $voiceName = ucfirst(strtolower($voice));
+        
         $ttsPayload = [
             'input' => ['text' => $text],
             'voice' => [
                 'languageCode' => $this->getLanguageCode($language),
-                'name' => $voice,
+                'name' => $voiceName,
                 'model_name' => 'gemini-2.5-pro-tts'
             ],
             'audioConfig' => [
