@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\AudioFile;
 use App\Models\CreditTransaction;
+use App\Models\TextToAudio;
+use App\Services\GeminiTtsService;
+use App\Services\SimpleTtsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -14,9 +17,10 @@ class AudioController extends Controller
     public function index()
     {
         $audioFiles = auth()->user()->audioFiles()->orderBy('created_at', 'desc')->paginate(10);
+        $textToAudioFiles = auth()->user()->textToAudioFiles()->orderBy('created_at', 'desc')->paginate(10);
         $user = auth()->user();
         
-        return view('audio.index', compact('audioFiles', 'user'));
+        return view('audio.index', compact('audioFiles', 'textToAudioFiles', 'user'));
     }
 
     public function create()
@@ -95,8 +99,10 @@ class AudioController extends Controller
         Log::info('Starting validation...');
         $request->validate([
             'audio' => 'required|file|mimes:mp3,wav,m4a,mp4|max:51200', // 50MB max, including M4A and MP4
-            'source_language' => 'required|string|in:en,es,fr,de,nl,it,pt,ru,ja,ko,zh,ar,hi,sv,sq,bg,sk,lv,fi,el,ro,ca',
-            'target_language' => 'required|string|in:en,es,fr,de,nl,it,pt,ru,ja,ko,zh,ar,hi,sv,sq,bg,sk,lv,fi,el,ro,ca',
+            'source_language' => 'required|string|in:en,es,fr,de,it,pt,ru,ja,ko,zh,ar,hi,nl,sv,da,no,fi,pl,cs,sk,hu,ro,bg,hr,sl,el,tr,uk,lv,lt,et,ca,eu,th,vi,id,ms,tl,bn,ta,te,ml,kn,gu,pa,ur,si,my,km,lo,mn,af,sw,am,sq,hy,az,ka,he,fa,ps,ne',
+            'target_language' => 'required|string|in:en,es,fr,de,it,pt,ru,ja,ko,zh,ar,hi,nl,sv,da,no,fi,pl,cs,sk,hu,ro,bg,hr,sl,el,tr,uk,lv,lt,et,ca,eu,th,vi,id,ms,tl,bn,ta,te,ml,kn,gu,pa,ur,si,my,km,lo,mn,af,sw,am,sq,hy,az,ka,he,fa,ps,ne',
+            'voice' => 'required|string',
+            'style_instruction' => 'nullable|string|max:5000', // Allow longer style instructions
         ]);
         Log::info('Validation passed!');
 
@@ -120,18 +126,20 @@ class AudioController extends Controller
                 'file_size' => $audioFile->getSize(),
                 'source_language' => $request->source_language,
                 'target_language' => $request->target_language,
+                'voice' => $request->voice,
+                'style_instruction' => $request->style_instruction,
                 'status' => 'uploaded'
             ]);
             Log::info('Database record created with ID: ' . $audioRecord->id);
 
-            // Start processing immediately
+            // Process immediately (sync queue)
             Log::info('Starting AI processing...');
             $this->processAudio($audioRecord->id);
             Log::info('AI processing completed');
 
             Log::info('Redirecting to show page: ' . route('audio.show', $audioRecord->id));
             return redirect()->route('audio.show', $audioRecord->id)
-                ->with('success', 'Audio file uploaded! Processing started...');
+                ->with('success', 'Audio file processed successfully!');
 
         } catch (\Exception $e) {
             Log::error('Upload failed with exception: ' . $e->getMessage());
@@ -210,7 +218,7 @@ class AudioController extends Controller
             // Step 3: Generate audio with TTS
             Log::info('Step 3: Starting TTS generation...');
             $audioFile->update(['status' => 'generating_audio']);
-            $translatedAudioPath = $this->generateAudio($translatedText, $audioFile->target_language);
+            $translatedAudioPath = $this->generateAudio($translatedText, $audioFile->target_language, $audioFile->voice, $audioFile->style_instruction);
             $audioFile->update([
                 'translated_audio_path' => $translatedAudioPath,
                 'status' => 'completed'
@@ -342,124 +350,39 @@ class AudioController extends Controller
         }
     }
 
-    private function generateAudio($text, $language)
+    private function generateAudio($text, $language, $voice = null, $styleInstruction = null)
     {
         try {
-            Log::info('=== TTS GENERATION DEBUG ===');
+            Log::info('=== GEMINI TTS GENERATION DEBUG ===');
             Log::info('Language: ' . $language);
             Log::info('Text length: ' . strlen($text));
             Log::info('Text preview: ' . substr($text, 0, 100) . '...');
             
-            // Map language codes to OpenAI TTS voices
-            $voiceMap = [
-                'en' => 'alloy',
-                'es' => 'nova', 
-                'fr' => 'nova',
-                'de' => 'nova',
-                'nl' => 'nova',
-                'it' => 'nova',
-                'pt' => 'nova',
-                'ru' => 'nova',
-                'ja' => 'nova',
-                'ko' => 'nova',
-                'zh' => 'nova',
-                'ar' => 'nova',
-                'hi' => 'nova',
-                'sv' => 'nova',
-                'sq' => 'nova',
-                'bg' => 'nova',
-                'sk' => 'nova',
-                'lv' => 'nova',
-                'fi' => 'nova',
-                'el' => 'nova',
-                'ro' => 'nova',
-                'ca' => 'nova'
-            ];
+            // Initialize Gemini TTS service
+            $geminiTts = new GeminiTtsService();
             
-            $voice = $voiceMap[$language] ?? 'alloy';
-            Log::info('Selected voice: ' . $voice);
+            // Use Gemini TTS for better accent support
+            Log::info('Using Gemini 2.5 Pro TTS for improved accent support');
+            $path = $geminiTts->generateAudio($text, $language, $voice, $styleInstruction ?? null);
             
-            // Limit text length to prevent timeouts (OpenAI TTS has limits)
-            $maxLength = 4000; // OpenAI TTS limit is 4096 characters
-            if (strlen($text) > $maxLength) {
-                $text = substr($text, 0, $maxLength) . '...';
-                Log::info('Text truncated to ' . $maxLength . ' characters');
-            }
-            
-            Log::info('Calling OpenAI TTS API...');
-            
-            // Retry mechanism for TTS generation
-            $maxRetries = 3;
-            $retryDelay = 2; // seconds
-            
-            for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
-                try {
-                    Log::info("TTS attempt {$attempt}/{$maxRetries}");
-                    
-                    $response = OpenAI::audio()->speech([
-                        'model' => 'tts-1',
-                        'input' => $text,
-                        'voice' => $voice,
-                        'response_format' => 'mp3'
-                    ]);
-                    
-                    Log::info("TTS attempt {$attempt} successful");
-                    break; // Success, exit retry loop
-                    
-                } catch (\Exception $e) {
-                    Log::warning("TTS attempt {$attempt} failed: " . $e->getMessage());
-                    
-                    if ($attempt === $maxRetries) {
-                        throw $e; // Last attempt failed, re-throw exception
-                    }
-                    
-                    Log::info("Waiting {$retryDelay} seconds before retry...");
-                    sleep($retryDelay);
-                    $retryDelay *= 2; // Exponential backoff
-                }
-            }
-            
-            Log::info('TTS API response received');
-            Log::info('Response type: ' . gettype($response));
-            
-            // Handle different response types
-            $audioContent = $response;
-            if (is_object($response) && method_exists($response, 'getContents')) {
-                $audioContent = $response->getContents();
-                Log::info('Extracted content from response object');
-            } elseif (is_object($response) && method_exists($response, 'getBody')) {
-                $audioContent = $response->getBody();
-                Log::info('Extracted body from response object');
-            } else {
-                Log::info('Using response as-is (string)');
-            }
-            
-            $filename = 'translated_' . time() . '.mp3';
-            $path = 'audio/' . $filename;
-            
-            Log::info('Saving audio to: ' . $path);
-            // Save the audio content to storage
-            Storage::disk('public')->put($path, $audioContent);
-            
-            Log::info('TTS audio generated', [
+            Log::info('Gemini TTS audio generated successfully', [
                 'language' => $language,
                 'voice' => $voice,
-                'text_length' => strlen($text),
-                'file_path' => $path,
-                'file_size' => Storage::disk('public')->size($path)
+                'file_path' => $path
             ]);
             
             return $path;
             
         } catch (\Exception $e) {
-            Log::error('TTS generation failed', [
+            Log::error('Gemini TTS generation failed', [
                 'language' => $language,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'error' => $e->getMessage()
             ]);
+
             throw new \Exception('Audio generation failed: ' . $e->getMessage());
         }
     }
+
 
     private function updateUserUsage($user)
     {

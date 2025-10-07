@@ -188,6 +188,122 @@
             </a>
         </div>
     @endif
+
+    <!-- Text-to-Audio Section -->
+    <div style="margin-top: 64px;">
+        <div style="text-align: center; margin-bottom: 32px;">
+            <h2 style="font-size: 36px; font-weight: bold; color: #f9fafb; margin-bottom: 16px;">Text to Audio</h2>
+            <p style="font-size: 18px; color: #d1d5db; margin-bottom: 24px;">Convert your text to speech with AI voices</p>
+            <a href="{{ route('text-to-audio.create') }}" class="btn-primary" style="font-size: 16px; padding: 12px 24px;">
+                <i class="fas fa-plus"></i>
+                Create New Text to Audio
+            </a>
+        </div>
+
+        @if($textToAudioFiles->count() > 0)
+            <!-- Text-to-Audio Files Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                @foreach($textToAudioFiles as $textToAudio)
+                    <div class="bg-gray-800 rounded-2xl shadow-xl border-2 border-gray-600 hover:border-gray-500 hover:shadow-2xl transition-all duration-200 hover-lift fade-in">
+                        <div class="p-6">
+                            <!-- Status Badge -->
+                            <div class="flex justify-between items-start mb-4">
+                                @if($textToAudio->isCompleted())
+                                    <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-green-600 text-white border-2 border-green-500">
+                                        <i class="fas fa-check-circle mr-2"></i>
+                                        Completed
+                                    </span>
+                                @elseif($textToAudio->isFailed())
+                                    <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-red-600 text-white border-2 border-red-500">
+                                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                                        Failed
+                                    </span>
+                                @elseif($textToAudio->isProcessing())
+                                    <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-yellow-600 text-white border-2 border-yellow-500 pulse-animation">
+                                        <i class="fas fa-spinner fa-spin mr-2"></i>
+                                        Processing...
+                                    </span>
+                                @endif
+                                <span class="text-xs text-white font-medium">{{ $textToAudio->created_at->diffForHumans() }}</span>
+                            </div>
+
+                            <!-- Text Content Preview -->
+                            <div class="mb-4">
+                                <h3 class="text-lg font-semibold text-white mb-2">
+                                    Text to Audio
+                                </h3>
+                                <div class="flex items-center space-x-4 text-sm text-white mb-2">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-language mr-1"></i>
+                                        {{ strtoupper($textToAudio->language) }}
+                                    </div>
+                                    <div class="flex items-center">
+                                        <i class="fas fa-microphone mr-1"></i>
+                                        {{ ucfirst($textToAudio->voice) }}
+                                    </div>
+                                </div>
+                                <p class="text-sm text-white line-clamp-3">
+                                    {{ Str::limit($textToAudio->text_content, 150) }}
+                                </p>
+                            </div>
+
+                            <!-- Progress Bar for Processing -->
+                            @if($textToAudio->isProcessing())
+                                <div class="mb-4">
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-gradient-to-r from-indigo-500 to-purple-600 h-2 rounded-full animate-pulse" style="width: 60%"></div>
+                                    </div>
+                                    <p class="text-xs text-white mt-1">Generating audio...</p>
+                                </div>
+                            @endif
+
+                            <!-- Actions -->
+                            <div class="flex space-x-2">
+                                <a href="{{ route('text-to-audio.show', $textToAudio->id) }}" class="flex-1 bg-gray-600 text-gray-100 px-4 py-3 rounded-xl hover:bg-gray-500 transition-colors text-center text-sm font-bold border-2 border-gray-500 hover:border-gray-400">
+                                    <i class="fas fa-eye mr-2"></i>
+                                    View
+                                </a>
+                                @if($textToAudio->isCompleted())
+                                    <a href="{{ route('text-to-audio.download', $textToAudio->id) }}" class="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-3 rounded-xl hover:from-green-600 hover:to-green-700 transition-all text-center text-sm font-bold shadow-lg hover:shadow-xl">
+                                        <i class="fas fa-download mr-2"></i>
+                                        Download
+                                    </a>
+                                @endif
+                                <form method="POST" action="{{ route('text-to-audio.destroy', $textToAudio->id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this text-to-audio conversion?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="bg-red-600 text-red-100 px-4 py-3 rounded-xl hover:bg-red-500 transition-colors text-center text-sm font-bold border-2 border-red-500 hover:border-red-400 cursor-pointer">
+                                        <i class="fas fa-trash mr-2"></i>
+                                        Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <!-- Pagination for Text-to-Audio -->
+            <div class="flex justify-center">
+                {{ $textToAudioFiles->links() }}
+            </div>
+        @else
+            <!-- Empty State for Text-to-Audio -->
+            <div style="text-align: center; padding: 48px 0;">
+                <div style="width: 96px; height: 96px; background: linear-gradient(135deg, #374151 0%, #4b5563 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; border: 3px solid #6b7280;">
+                    <i class="fas fa-text-width" style="font-size: 36px; color: #d1d5db;"></i>
+                </div>
+                <h3 style="font-size: 24px; font-weight: bold; color: #f9fafb; margin-bottom: 12px;">No text-to-audio conversions yet</h3>
+                <p style="color: #d1d5db; margin-bottom: 24px; max-width: 400px; margin-left: auto; margin-right: auto; font-size: 16px;">
+                    Convert your text to speech with AI voices in multiple languages
+                </p>
+                <a href="{{ route('text-to-audio.create') }}" class="btn-primary" style="font-size: 16px; padding: 12px 24px;">
+                    <i class="fas fa-plus"></i>
+                    Create your first text-to-audio
+                </a>
+            </div>
+        @endif
+    </div>
 </div>
 
 @endsection

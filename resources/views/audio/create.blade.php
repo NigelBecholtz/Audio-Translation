@@ -98,28 +98,84 @@
                                             required
                                             class="w-full pl-6 pr-10 py-4 text-lg border-3 border-blue-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all bg-white shadow-lg">
                                         <option value="">Select source language</option>
-                                        <option value="en">🇺🇸 English</option>
-                                        <option value="es">🇪🇸 Spanish</option>
-                                        <option value="fr">🇫🇷 French</option>
-                                        <option value="de">🇩🇪 German</option>
-                                        <option value="nl">🇳🇱 Dutch</option>
-                                        <option value="it">🇮🇹 Italian</option>
-                                        <option value="pt">🇵🇹 Portuguese</option>
-                                        <option value="ru">🇷🇺 Russian</option>
-                                        <option value="ja">🇯🇵 Japanese</option>
-                                        <option value="ko">🇰🇷 Korean</option>
-                                        <option value="zh">🇨🇳 Chinese</option>
-                                        <option value="ar">🇸🇦 Arabic</option>
-                                        <option value="hi">🇮🇳 Hindi</option>
-                                        <option value="sv">🇸🇪 Swedish</option>
-                                        <option value="sq">🇦🇱 Albanian</option>
-                                        <option value="bg">🇧🇬 Bulgarian</option>
-                                        <option value="sk">🇸🇰 Slovak</option>
-                                        <option value="lv">🇱🇻 Latvian</option>
-                                        <option value="fi">🇫🇮 Finnish</option>
-                                        <option value="el">🇬🇷 Greek</option>
-                                        <option value="ro">🇷🇴 Romanian</option>
-                                        <option value="ca">🇪🇸 Catalan</option>
+                                        
+                                        <!-- Major Languages -->
+                                        <optgroup label="🌍 Major Languages">
+                                            <option value="en">🇺🇸 English</option>
+                                            <option value="es">🇪🇸 Spanish</option>
+                                            <option value="fr">🇫🇷 French</option>
+                                            <option value="de">🇩🇪 German</option>
+                                            <option value="it">🇮🇹 Italian</option>
+                                            <option value="pt">🇵🇹 Portuguese</option>
+                                            <option value="ru">🇷🇺 Russian</option>
+                                            <option value="ja">🇯🇵 Japanese</option>
+                                            <option value="ko">🇰🇷 Korean</option>
+                                            <option value="zh">🇨🇳 Chinese</option>
+                                            <option value="ar">🇸🇦 Arabic</option>
+                                            <option value="hi">🇮🇳 Hindi</option>
+                                        </optgroup>
+                                        
+                                        <!-- European Languages -->
+                                        <optgroup label="🇪🇺 European Languages">
+                                            <option value="nl">🇳🇱 Dutch</option>
+                                            <option value="sv">🇸🇪 Swedish</option>
+                                            <option value="da">🇩🇰 Danish</option>
+                                            <option value="no">🇳🇴 Norwegian</option>
+                                            <option value="fi">🇫🇮 Finnish</option>
+                                            <option value="pl">🇵🇱 Polish</option>
+                                            <option value="cs">🇨🇿 Czech</option>
+                                            <option value="sk">🇸🇰 Slovak</option>
+                                            <option value="hu">🇭🇺 Hungarian</option>
+                                            <option value="ro">🇷🇴 Romanian</option>
+                                            <option value="bg">🇧🇬 Bulgarian</option>
+                                            <option value="hr">🇭🇷 Croatian</option>
+                                            <option value="sl">🇸🇮 Slovenian</option>
+                                            <option value="el">🇬🇷 Greek</option>
+                                            <option value="tr">🇹🇷 Turkish</option>
+                                            <option value="uk">🇺🇦 Ukrainian</option>
+                                            <option value="lv">🇱🇻 Latvian</option>
+                                            <option value="lt">🇱🇹 Lithuanian</option>
+                                            <option value="et">🇪🇪 Estonian</option>
+                                            <option value="ca">🇪🇸 Catalan</option>
+                                            <option value="eu">🇪🇸 Basque</option>
+                                        </optgroup>
+                                        
+                                        <!-- Asian Languages -->
+                                        <optgroup label="🌏 Asian Languages">
+                                            <option value="th">🇹🇭 Thai</option>
+                                            <option value="vi">🇻🇳 Vietnamese</option>
+                                            <option value="id">🇮🇩 Indonesian</option>
+                                            <option value="ms">🇲🇾 Malay</option>
+                                            <option value="tl">🇵🇭 Filipino</option>
+                                            <option value="bn">🇧🇩 Bengali</option>
+                                            <option value="ta">🇮🇳 Tamil</option>
+                                            <option value="te">🇮🇳 Telugu</option>
+                                            <option value="ml">🇮🇳 Malayalam</option>
+                                            <option value="kn">🇮🇳 Kannada</option>
+                                            <option value="gu">🇮🇳 Gujarati</option>
+                                            <option value="pa">🇮🇳 Punjabi</option>
+                                            <option value="ur">🇵🇰 Urdu</option>
+                                            <option value="si">🇱🇰 Sinhala</option>
+                                            <option value="my">🇲🇲 Burmese</option>
+                                            <option value="km">🇰🇭 Khmer</option>
+                                            <option value="lo">🇱🇦 Lao</option>
+                                            <option value="mn">🇲🇳 Mongolian</option>
+                                        </optgroup>
+                                        
+                                        <!-- African & Other Languages -->
+                                        <optgroup label="🌍 African & Other Languages">
+                                            <option value="af">🇿🇦 Afrikaans</option>
+                                            <option value="sw">🇰🇪 Swahili</option>
+                                            <option value="am">🇪🇹 Amharic</option>
+                                            <option value="sq">🇦🇱 Albanian</option>
+                                            <option value="hy">🇦🇲 Armenian</option>
+                                            <option value="az">🇦🇿 Azerbaijani</option>
+                                            <option value="ka">🇬🇪 Georgian</option>
+                                            <option value="he">🇮🇱 Hebrew</option>
+                                            <option value="fa">🇮🇷 Persian</option>
+                                            <option value="ps">🇦🇫 Pashto</option>
+                                            <option value="ne">🇳🇵 Nepali</option>
+                                        </optgroup>
                                     </select>
                                     @error('source_language')
                                         <p class="mt-2 text-sm text-red-600 flex items-center font-bold">
@@ -140,28 +196,84 @@
                                             required
                                             class="w-full pl-6 pr-10 py-4 text-lg border-3 border-green-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-300 focus:border-green-500 transition-all bg-white shadow-lg">
                                         <option value="">Select target language</option>
-                                        <option value="en">🇺🇸 English</option>
-                                        <option value="es">🇪🇸 Spanish</option>
-                                        <option value="fr">🇫🇷 French</option>
-                                        <option value="de">🇩🇪 German</option>
-                                        <option value="nl">🇳🇱 Dutch</option>
-                                        <option value="it">🇮🇹 Italian</option>
-                                        <option value="pt">🇵🇹 Portuguese</option>
-                                        <option value="ru">🇷🇺 Russian</option>
-                                        <option value="ja">🇯🇵 Japanese</option>
-                                        <option value="ko">🇰🇷 Korean</option>
-                                        <option value="zh">🇨🇳 Chinese</option>
-                                        <option value="ar">🇸🇦 Arabic</option>
-                                        <option value="hi">🇮🇳 Hindi</option>
-                                        <option value="sv">🇸🇪 Swedish</option>
-                                        <option value="sq">🇦🇱 Albanian</option>
-                                        <option value="bg">🇧🇬 Bulgarian</option>
-                                        <option value="sk">🇸🇰 Slovak</option>
-                                        <option value="lv">🇱🇻 Latvian</option>
-                                        <option value="fi">🇫🇮 Finnish</option>
-                                        <option value="el">🇬🇷 Greek</option>
-                                        <option value="ro">🇷🇴 Romanian</option>
-                                        <option value="ca">🇪🇸 Catalan</option>
+                                        
+                                        <!-- Major Languages -->
+                                        <optgroup label="🌍 Major Languages">
+                                            <option value="en">🇺🇸 English</option>
+                                            <option value="es">🇪🇸 Spanish</option>
+                                            <option value="fr">🇫🇷 French</option>
+                                            <option value="de">🇩🇪 German</option>
+                                            <option value="it">🇮🇹 Italian</option>
+                                            <option value="pt">🇵🇹 Portuguese</option>
+                                            <option value="ru">🇷🇺 Russian</option>
+                                            <option value="ja">🇯🇵 Japanese</option>
+                                            <option value="ko">🇰🇷 Korean</option>
+                                            <option value="zh">🇨🇳 Chinese</option>
+                                            <option value="ar">🇸🇦 Arabic</option>
+                                            <option value="hi">🇮🇳 Hindi</option>
+                                        </optgroup>
+                                        
+                                        <!-- European Languages -->
+                                        <optgroup label="🇪🇺 European Languages">
+                                            <option value="nl">🇳🇱 Dutch</option>
+                                            <option value="sv">🇸🇪 Swedish</option>
+                                            <option value="da">🇩🇰 Danish</option>
+                                            <option value="no">🇳🇴 Norwegian</option>
+                                            <option value="fi">🇫🇮 Finnish</option>
+                                            <option value="pl">🇵🇱 Polish</option>
+                                            <option value="cs">🇨🇿 Czech</option>
+                                            <option value="sk">🇸🇰 Slovak</option>
+                                            <option value="hu">🇭🇺 Hungarian</option>
+                                            <option value="ro">🇷🇴 Romanian</option>
+                                            <option value="bg">🇧🇬 Bulgarian</option>
+                                            <option value="hr">🇭🇷 Croatian</option>
+                                            <option value="sl">🇸🇮 Slovenian</option>
+                                            <option value="el">🇬🇷 Greek</option>
+                                            <option value="tr">🇹🇷 Turkish</option>
+                                            <option value="uk">🇺🇦 Ukrainian</option>
+                                            <option value="lv">🇱🇻 Latvian</option>
+                                            <option value="lt">🇱🇹 Lithuanian</option>
+                                            <option value="et">🇪🇪 Estonian</option>
+                                            <option value="ca">🇪🇸 Catalan</option>
+                                            <option value="eu">🇪🇸 Basque</option>
+                                        </optgroup>
+                                        
+                                        <!-- Asian Languages -->
+                                        <optgroup label="🌏 Asian Languages">
+                                            <option value="th">🇹🇭 Thai</option>
+                                            <option value="vi">🇻🇳 Vietnamese</option>
+                                            <option value="id">🇮🇩 Indonesian</option>
+                                            <option value="ms">🇲🇾 Malay</option>
+                                            <option value="tl">🇵🇭 Filipino</option>
+                                            <option value="bn">🇧🇩 Bengali</option>
+                                            <option value="ta">🇮🇳 Tamil</option>
+                                            <option value="te">🇮🇳 Telugu</option>
+                                            <option value="ml">🇮🇳 Malayalam</option>
+                                            <option value="kn">🇮🇳 Kannada</option>
+                                            <option value="gu">🇮🇳 Gujarati</option>
+                                            <option value="pa">🇮🇳 Punjabi</option>
+                                            <option value="ur">🇵🇰 Urdu</option>
+                                            <option value="si">🇱🇰 Sinhala</option>
+                                            <option value="my">🇲🇲 Burmese</option>
+                                            <option value="km">🇰🇭 Khmer</option>
+                                            <option value="lo">🇱🇦 Lao</option>
+                                            <option value="mn">🇲🇳 Mongolian</option>
+                                        </optgroup>
+                                        
+                                        <!-- African & Other Languages -->
+                                        <optgroup label="🌍 African & Other Languages">
+                                            <option value="af">🇿🇦 Afrikaans</option>
+                                            <option value="sw">🇰🇪 Swahili</option>
+                                            <option value="am">🇪🇹 Amharic</option>
+                                            <option value="sq">🇦🇱 Albanian</option>
+                                            <option value="hy">🇦🇲 Armenian</option>
+                                            <option value="az">🇦🇿 Azerbaijani</option>
+                                            <option value="ka">🇬🇪 Georgian</option>
+                                            <option value="he">🇮🇱 Hebrew</option>
+                                            <option value="fa">🇮🇷 Persian</option>
+                                            <option value="ps">🇦🇫 Pashto</option>
+                                            <option value="ne">🇳🇵 Nepali</option>
+                                        </optgroup>
                                     </select>
                                     @error('target_language')
                                         <p class="mt-2 text-sm text-red-600 flex items-center font-bold">
@@ -170,6 +282,67 @@
                                         </p>
                                     @enderror
                                 </div>
+                            </div>
+
+                            <!-- Voice Selection -->
+                            <div>
+                                <label for="voice" class="block text-xl font-bold text-white mb-4">
+                                    <i class="fas fa-microphone mr-3 text-purple-400"></i>
+                                    Voice Selection
+                                </label>
+                                <select id="voice" 
+                                        name="voice" 
+                                        required
+                                        class="w-full pl-6 pr-10 py-4 text-lg border-3 border-purple-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-purple-300 focus:border-purple-500 transition-all bg-white shadow-lg">
+                                    <option value="">Select voice for translation</option>
+                                    
+                                    <!-- Gemini 2.5 Pro TTS Voices -->
+                <optgroup label="🎯 Gemini 2.5 Pro TTS Voices">
+                    <!-- Female Voices -->
+                    <option value="achernar">👩 Achernar - Clear and expressive female voice</option>
+                    <option value="aoede">👩 Aoede - Warm and engaging female voice</option>
+                    <option value="autonoe">👩 Autonoe - Soft and gentle female voice</option>
+                    <option value="callirrhoe">👩 Callirrhoe - Bright and energetic female voice</option>
+                    <option value="despina">👩 Despina - Smooth and professional female voice</option>
+                    <option value="erinome">👩 Erinome - Wise and calm female voice</option>
+                    <option value="gacrux">👩 Gacrux - Vibrant and lively female voice</option>
+                    <option value="kore">👩 Kore - Balanced and versatile female voice</option>
+                    <option value="laomedeia">👩 Laomedeia - Warm and engaging female voice</option>
+                    <option value="leda">👩 Leda - Clear and expressive female voice</option>
+                    <option value="pulcherrima">👩 Pulcherrima - Bright and energetic female voice</option>
+                    <option value="sulafat">👩 Sulafat - Soft and gentle female voice</option>
+                    <option value="vindemiatrix">👩 Vindemiatrix - Smooth and professional female voice</option>
+                    <option value="zephyr">👩 Zephyr - Vibrant and lively female voice</option>
+                    
+                    <!-- Male Voices -->
+                    <option value="achird">👨 Achird - Deep and authoritative male voice</option>
+                    <option value="algenib">👨 Algenib - Strong and confident male voice</option>
+                    <option value="algieba">👨 Algieba - Warm and engaging male voice</option>
+                    <option value="alnilam">👨 Alnilam - Clear and expressive male voice</option>
+                    <option value="charon">👨 Charon - Deep and authoritative male voice</option>
+                    <option value="enceladus">👨 Enceladus - Strong and confident male voice</option>
+                    <option value="fenrir">👨 Fenrir - Powerful and commanding male voice</option>
+                    <option value="lapetus">👨 Lapetus - Warm and engaging male voice</option>
+                    <option value="orus">👨 Orus - Clear and expressive male voice</option>
+                    <option value="puck">👨 Puck - Energetic and lively male voice</option>
+                    <option value="rasalgethi">👨 Rasalgethi - Deep and authoritative male voice</option>
+                    <option value="sadachbia">👨 Sadachbia - Strong and confident male voice</option>
+                    <option value="sadaltager">👨 Sadaltager - Warm and engaging male voice</option>
+                    <option value="schedar">👨 Schedar - Clear and expressive male voice</option>
+                    <option value="umbriel">👨 Umbriel - Deep and authoritative male voice</option>
+                    <option value="zubenelgenubi">👨 Zubenelgenubi - Strong and confident male voice</option>
+                </optgroup>
+                                </select>
+                                <p class="mt-2 text-sm text-white">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Choose the voice that will speak your translated text. Gemini 2.5 Pro TTS offers better accent support and more natural pronunciation.
+                                </p>
+                                @error('voice')
+                                    <p class="mt-2 text-sm text-red-600 flex items-center font-bold">
+                                        <i class="fas fa-exclamation-circle mr-2"></i>
+                                        {{ $message }}
+                                    </p>
+                                @enderror
                             </div>
 
                             <!-- Upload Progress -->
@@ -186,6 +359,29 @@
                                     </div>
                                     <p id="progressText" class="text-sm text-blue-700">Preparing upload...</p>
                                 </div>
+                            </div>
+
+                            <!-- Style Instruction (Optional) -->
+                            <div>
+                                <label for="style_instruction" class="block text-xl font-bold text-white mb-4">
+                                    <i class="fas fa-palette mr-3 text-green-400"></i>
+                                    Style Instruction (Optional)
+                                </label>
+                                <textarea id="style_instruction" 
+                                        name="style_instruction" 
+                                        rows="3"
+                                        placeholder="e.g., 'Speak with enthusiasm and energy', 'Use a calm and soothing tone', 'Sound professional and authoritative' (up to 5000 characters)"
+                                        class="w-full pl-6 pr-6 py-4 text-lg border-3 border-green-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-300 focus:border-green-500 transition-all bg-white shadow-lg resize-none">{{ old('style_instruction') }}</textarea>
+                                <p class="mt-2 text-sm text-white">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Provide style instructions to customize how the voice should speak (tone, emotion, pace, etc.). Only works with Gemini 2.5 Pro TTS voices.
+                                </p>
+                                @error('style_instruction')
+                                    <p class="mt-2 text-sm text-red-600 flex items-center font-bold">
+                                        <i class="fas fa-exclamation-circle mr-2"></i>
+                                        {{ $message }}
+                                    </p>
+                                @enderror
                             </div>
 
                             <!-- Submit Button -->
@@ -219,7 +415,7 @@
                             </div>
                             <div>
                                 <h4 class="font-semibold text-white">Upload Audio</h4>
-                                <p class="text-sm text-gray-300">Upload your MP3, WAV or M4A file (max 5 minutes)</p>
+                                <p class="text-sm text-white">Upload your MP3, WAV or M4A file (max 5 minutes)</p>
                             </div>
                         </div>
                         
@@ -229,7 +425,7 @@
                             </div>
                             <div>
                                 <h4 class="font-semibold text-white">Select Languages</h4>
-                                <p class="text-sm text-gray-300">Choose the source and target language for translation</p>
+                                <p class="text-sm text-white">Choose the source and target language for translation</p>
                             </div>
                         </div>
                         
@@ -239,7 +435,7 @@
                             </div>
                             <div>
                                 <h4 class="font-semibold text-white">AI Processing</h4>
-                                <p class="text-sm text-gray-300">Whisper transcribes and translates automatically</p>
+                                <p class="text-sm text-white">Whisper transcribes and translates automatically</p>
                             </div>
                         </div>
                         
@@ -249,7 +445,7 @@
                             </div>
                             <div>
                                 <h4 class="font-semibold text-white">Download Result</h4>
-                                <p class="text-sm text-gray-300">Download your translated audio file</p>
+                                <p class="text-sm text-white">Download your translated audio file</p>
                             </div>
                         </div>
                     </div>
@@ -259,7 +455,7 @@
                             <i class="fas fa-lightbulb mr-2 text-yellow-400"></i>
                             Pro Tip
                         </h4>
-                        <p class="text-sm text-gray-300">
+                        <p class="text-sm text-white">
                             For best results, use clear audio without background noise.
                         </p>
                     </div>

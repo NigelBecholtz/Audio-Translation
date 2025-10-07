@@ -74,6 +74,19 @@
         .status-processing { background: #fef3c7; color: #92400e; border: 2px solid #fde68a; }
         .status-failed { background: #fee2e2; color: #991b1b; border: 2px solid #fecaca; }
         .status-uploaded { background: #dbeafe; color: #1e40af; border: 2px solid #bfdbfe; }
+        
+        /* Responsive Navigation */
+        @media (max-width: 767px) {
+            .hidden.md\\:flex { display: none !important; }
+            .md\\:hidden { display: block !important; }
+        }
+        
+        @media (min-width: 768px) {
+            .hidden.md\\:flex { display: flex !important; }
+            .md\\:hidden { display: none !important; }
+        }
+        
+        .mobile-menu.hidden { display: none !important; }
     </style>
 </head>
 <body class="bg-gradient-to-br from-gray-900 via-slate-900 to-black min-h-screen">
@@ -81,6 +94,7 @@
     <nav style="background: #1f2937; box-shadow: 0 4px 20px rgba(0,0,0,0.3); border-bottom: 3px solid #374151; position: sticky; top: 0; z-index: 50;">
         <div style="max-width: 1200px; margin: 0 auto; padding: 0 24px;">
             <div style="display: flex; justify-content: space-between; align-items: center; height: 80px;">
+                <!-- Logo -->
                 <div style="display: flex; align-items: center;">
                     <a href="{{ route('audio.index') }}" style="display: flex; align-items: center; gap: 12px; text-decoration: none; color: #f9fafb; font-weight: bold; font-size: 24px;">
                         <div style="width: 48px; height: 48px; background: #1e3a8a; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);">
@@ -94,26 +108,43 @@
                         </div>
                     </a>
                 </div>
-                <div style="display: flex; align-items: center; gap: 16px;">
+
+                <!-- Desktop Navigation -->
+                <div style="display: flex; align-items: center; gap: 16px;" class="hidden md:flex">
                     @auth
+                        <!-- Dashboard -->
                         <a href="{{ route('audio.index') }}" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: all 0.2s;">
                             <i class="fas fa-list"></i>
                             <span>Dashboard</span>
                         </a>
-                        <a href="{{ route('audio.create') }}" class="btn-primary" style="font-size: 18px; padding: 16px 32px;">
-                            <i class="fas fa-plus"></i>
-                            New Translation
+
+                        <!-- Audio Translation -->
+                        <a href="{{ route('audio.create') }}" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: all 0.2s; background: #374151; border: 2px solid #4b5563;">
+                            <i class="fas fa-microphone"></i>
+                            <span>Audio Translation</span>
                         </a>
+
+                        <!-- Text to Audio -->
+                        <a href="{{ route('text-to-audio.create') }}" class="btn-primary" style="font-size: 14px; padding: 8px 16px;">
+                            <i class="fas fa-plus"></i>
+                            Text to Audio
+                        </a>
+
+                        <!-- Credits -->
                         <a href="{{ route('payment.credits') }}" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: all 0.2s; background: #374151; border: 2px solid #4b5563;">
                             <i class="fas fa-coins"></i>
                             <span>Credits</span>
                         </a>
+
+                        <!-- Admin -->
                         @if(auth()->user()->isAdmin())
                             <a href="{{ route('admin.dashboard') }}" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: all 0.2s; background: #4b5563; border: 2px solid #6b7280;">
                                 <i class="fas fa-chart-bar"></i>
                                 <span>Admin</span>
                             </a>
                         @endif
+
+                        <!-- User Info -->
                         <div style="display: flex; align-items: center; gap: 8px; color: #d1d5db; font-weight: 600;">
                             <i class="fas fa-user"></i>
                             <span>{{ auth()->user()->name }}</span>
@@ -121,6 +152,8 @@
                                 {{ auth()->user()->getRemainingTranslations() }} left
                             </span>
                         </div>
+
+                        <!-- Logout -->
                         <form method="POST" action="{{ route('logout') }}" style="display: inline;">
                             @csrf
                             <button type="submit" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: all 0.2s; background: none; border: none; cursor: pointer;">
@@ -129,16 +162,81 @@
                             </button>
                         </form>
                     @else
+                        <!-- Login -->
                         <a href="{{ route('login') }}" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: all 0.2s;">
                             <i class="fas fa-sign-in-alt"></i>
                             <span>Login</span>
                         </a>
-                        <a href="{{ route('register') }}" class="btn-primary" style="font-size: 18px; padding: 16px 32px;">
+
+                        <!-- Register -->
+                        <a href="{{ route('register') }}" class="btn-primary" style="font-size: 14px; padding: 8px 16px;">
                             <i class="fas fa-user-plus"></i>
                             Register
                         </a>
                     @endauth
                 </div>
+
+                <!-- Mobile menu button -->
+                <div class="md:hidden">
+                    <button type="button" class="mobile-menu-button" style="color: #9ca3af; background: none; border: none; cursor: pointer; padding: 8px;" onclick="toggleMobileMenu()">
+                        <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Navigation Menu -->
+            <div class="mobile-menu hidden md:hidden" style="background: #374151; border-radius: 8px; margin-top: 8px; padding: 16px;">
+                @auth
+                    <a href="{{ route('audio.index') }}" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 12px 16px; border-radius: 8px; margin-bottom: 8px;">
+                        <i class="fas fa-list"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="{{ route('audio.create') }}" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 12px 16px; border-radius: 8px; margin-bottom: 8px;">
+                        <i class="fas fa-microphone"></i>
+                        <span>Audio Translation</span>
+                    </a>
+                    <a href="{{ route('text-to-audio.create') }}" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 12px 16px; border-radius: 8px; margin-bottom: 8px;">
+                        <i class="fas fa-plus"></i>
+                        <span>Text to Audio</span>
+                    </a>
+                    <a href="{{ route('payment.credits') }}" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 12px 16px; border-radius: 8px; margin-bottom: 8px;">
+                        <i class="fas fa-coins"></i>
+                        <span>Credits</span>
+                    </a>
+                    @if(auth()->user()->isAdmin())
+                        <a href="{{ route('admin.dashboard') }}" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 12px 16px; border-radius: 8px; margin-bottom: 8px;">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Admin</span>
+                        </a>
+                    @endif
+                    <div style="display: flex; align-items: center; justify-content: space-between; color: #d1d5db; font-weight: 600; padding: 12px 16px; margin-bottom: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-user"></i>
+                            <span>{{ auth()->user()->name }}</span>
+                        </div>
+                        <span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">
+                            {{ auth()->user()->getRemainingTranslations() }} left
+                        </span>
+                    </div>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 12px 16px; border-radius: 8px; background: none; border: none; cursor: pointer; width: 100%; text-align: left;">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 12px 16px; border-radius: 8px; margin-bottom: 8px;">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>Login</span>
+                    </a>
+                    <a href="{{ route('register') }}" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 12px 16px; border-radius: 8px; margin-bottom: 8px;">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Register</span>
+                    </a>
+                @endauth
             </div>
         </div>
     </nav>
@@ -183,6 +281,31 @@
             </div>
         </div>
     </footer>
+
+    <!-- Mobile Menu JavaScript -->
+    <script>
+        function toggleMobileMenu() {
+            const mobileMenu = document.querySelector('.mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        }
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const mobileMenu = document.querySelector('.mobile-menu');
+            const mobileMenuButton = document.querySelector('.mobile-menu-button');
+            
+            if (!mobileMenu.contains(event.target) && !mobileMenuButton.contains(event.target)) {
+                mobileMenu.classList.add('hidden');
+            }
+        });
+
+        // Close mobile menu when window is resized to desktop
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 768) {
+                document.querySelector('.mobile-menu').classList.add('hidden');
+            }
+        });
+    </script>
 </body>
 </html>
 

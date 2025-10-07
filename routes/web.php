@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AudioController;
+use App\Http\Controllers\TextToAudioController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\PaymentController;
@@ -30,6 +31,10 @@ Route::post('/admin/logout', [AdminLoginController::class, 'logout'])->name('adm
 Route::middleware('auth')->group(function () {
     Route::resource('audio', AudioController::class);
     Route::get('audio/{id}/download', [AudioController::class, 'download'])->name('audio.download');
+    
+    // Text to Audio Routes
+    Route::resource('text-to-audio', TextToAudioController::class);
+    Route::get('text-to-audio/{id}/download', [TextToAudioController::class, 'download'])->name('text-to-audio.download');
     
     // Payment Routes
     Route::get('/credits', [PaymentController::class, 'showCredits'])->name('payment.credits');

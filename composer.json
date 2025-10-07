@@ -55,8 +55,11 @@
             "@php artisan migrate --graceful --ansi"
         ],
         "dev": [
+            "npm run dev"
+        ],
+        "dev:full": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"npm run dev\" --names='server,queue,vite'"
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan serve\" \"php artisan queue:work database --timeout=600 --tries=3 --memory=512 --sleep=3\" \"npm run dev\" --names='server,queue,vite'"
         ],
         "test": [
             "@php artisan config:clear --ansi",

@@ -73,6 +73,11 @@ class User extends Authenticatable
         return $this->hasMany(CreditTransaction::class);
     }
 
+    public function textToAudioFiles()
+    {
+        return $this->hasMany(TextToAudio::class);
+    }
+
     // Subscription methods
     public function canMakeTranslation(): bool
     {

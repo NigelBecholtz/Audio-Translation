@@ -8,10 +8,10 @@
         <!-- Header -->
         <div class="flex justify-between items-center mb-8 fade-in">
             <div>
-                <h1 class="text-4xl font-bold text-gray-100 mb-2">Audio Translation Details</h1>
-                <p class="text-gray-300 text-lg">View the progress and results of your translation</p>
+                <h1 class="text-4xl font-bold text-white mb-2">Audio Translation Details</h1>
+                <p class="text-white text-lg">View the progress and results of your translation</p>
             </div>
-            <a href="{{ route('audio.index') }}" class="flex items-center px-4 py-2 bg-gray-600 text-gray-100 rounded-xl hover:bg-gray-500 transition-colors">
+            <a href="{{ route('audio.index') }}" class="flex items-center px-4 py-2 bg-gray-600 text-white rounded-xl hover:bg-gray-500 transition-colors">
                 <i class="fas fa-arrow-left mr-2"></i>
                 Back to overview
             </a>
@@ -23,7 +23,7 @@
                 <!-- Status Card -->
                 <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
                     <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-xl font-bold text-gray-100">Status</h3>
+                        <h3 class="text-xl font-bold text-white">Status</h3>
                         @if($audioFile->isCompleted())
                             <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800">
                                 <i class="fas fa-check-circle mr-2"></i>
@@ -55,8 +55,8 @@
                                 <i class="fas fa-check text-green-600"></i>
                             </div>
                             <div class="flex-1">
-                                <h4 class="font-semibold text-gray-100 text-lg">Audio Uploaded</h4>
-                                <p class="text-sm text-gray-300">{{ $audioFile->created_at->format('d-m-Y H:i') }}</p>
+                                <h4 class="font-semibold text-white text-lg">Audio Uploaded</h4>
+                                <p class="text-sm text-white">{{ $audioFile->created_at->format('d-m-Y H:i') }}</p>
                             </div>
                         </div>
 
@@ -67,24 +67,24 @@
                                     <i class="fas fa-check text-green-600"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <h4 class="font-semibold text-gray-100 text-lg">Audio Transcribed</h4>
-                                    <p class="text-sm text-gray-300">Whisper AI has converted the audio to text</p>
+                                    <h4 class="font-semibold text-white text-lg">Audio Transcribed</h4>
+                                    <p class="text-sm text-white">Whisper AI has converted the audio to text</p>
                                 </div>
                             @elseif($audioFile->status === 'transcribing')
                                 <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
                                     <i class="fas fa-spinner fa-spin text-yellow-600"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <h4 class="font-semibold text-gray-100 text-lg">Transcribing Audio...</h4>
-                                    <p class="text-sm text-gray-300">Whisper AI is converting audio to text</p>
+                                    <h4 class="font-semibold text-white text-lg">Transcribing Audio...</h4>
+                                    <p class="text-sm text-white">Whisper AI is converting audio to text</p>
                                 </div>
                             @else
                                 <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-clock text-gray-400"></i>
+                                    <i class="fas fa-clock text-white"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <h4 class="font-semibold text-gray-100 text-lg">Waiting for Transcription</h4>
-                                    <p class="text-sm text-gray-300">The audio will be transcribed soon</p>
+                                    <h4 class="font-semibold text-white text-lg">Waiting for Transcription</h4>
+                                    <p class="text-sm text-white">The audio will be transcribed soon</p>
                                 </div>
                             @endif
                         </div>
@@ -96,24 +96,24 @@
                                     <i class="fas fa-check text-green-600"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <h4 class="font-semibold text-gray-100 text-lg">Text Translated</h4>
-                                    <p class="text-sm text-gray-300">The text has been translated to {{ strtoupper($audioFile->target_language) }}</p>
+                                    <h4 class="font-semibold text-white text-lg">Text Translated</h4>
+                                    <p class="text-sm text-white">The text has been translated to {{ strtoupper($audioFile->target_language) }}</p>
                                 </div>
                             @elseif($audioFile->status === 'translating')
                                 <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
                                     <i class="fas fa-spinner fa-spin text-yellow-600"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <h4 class="font-semibold text-gray-100 text-lg">Translating Text...</h4>
-                                    <p class="text-sm text-gray-300">The text is being translated to {{ strtoupper($audioFile->target_language) }}</p>
+                                    <h4 class="font-semibold text-white text-lg">Translating Text...</h4>
+                                    <p class="text-sm text-white">The text is being translated to {{ strtoupper($audioFile->target_language) }}</p>
                                 </div>
                             @else
                                 <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-clock text-gray-400"></i>
+                                    <i class="fas fa-clock text-white"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <h4 class="font-semibold text-gray-100 text-lg">Waiting for Translation</h4>
-                                    <p class="text-sm text-gray-300">The text will be translated soon</p>
+                                    <h4 class="font-semibold text-white text-lg">Waiting for Translation</h4>
+                                    <p class="text-sm text-white">The text will be translated soon</p>
                                 </div>
                             @endif
                         </div>
@@ -125,24 +125,24 @@
                                     <i class="fas fa-check text-green-600"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <h4 class="font-semibold text-gray-100 text-lg">Audio Generated</h4>
-                                    <p class="text-sm text-gray-300">The translated audio file is ready</p>
+                                    <h4 class="font-semibold text-white text-lg">Audio Generated</h4>
+                                    <p class="text-sm text-white">The translated audio file is ready (Voice: {{ ucfirst($audioFile->voice) }})</p>
                                 </div>
                             @elseif($audioFile->status === 'generating_audio')
                                 <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
                                     <i class="fas fa-spinner fa-spin text-yellow-600"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <h4 class="font-semibold text-gray-100 text-lg">Generating Audio...</h4>
-                                    <p class="text-sm text-gray-300">The translated audio file is being generated</p>
+                                    <h4 class="font-semibold text-white text-lg">Generating Audio...</h4>
+                                    <p class="text-sm text-white">The translated audio file is being generated (Voice: {{ ucfirst($audioFile->voice) }})</p>
                                 </div>
                             @else
                                 <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-clock text-gray-400"></i>
+                                    <i class="fas fa-clock text-white"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <h4 class="font-semibold text-gray-100 text-lg">Waiting for Audio Generation</h4>
-                                    <p class="text-sm text-gray-300">The audio file will be generated soon</p>
+                                    <h4 class="font-semibold text-white text-lg">Waiting for Audio Generation</h4>
+                                    <p class="text-sm text-white">The audio file will be generated soon</p>
                                 </div>
                             @endif
                         </div>
@@ -152,12 +152,12 @@
                 <!-- Transcription -->
                 @if($audioFile->transcription)
                     <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
-                        <h3 class="text-xl font-bold text-gray-100 mb-4 flex items-center">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center">
                             <i class="fas fa-file-text mr-2 text-indigo-400"></i>
                             Transcription ({{ strtoupper($audioFile->source_language) }})
                         </h3>
                         <div class="bg-gray-700/50 p-6 rounded-xl border border-gray-600/30">
-                            <p class="text-gray-100 leading-relaxed text-lg">{{ $audioFile->transcription }}</p>
+                            <p class="text-white leading-relaxed text-lg">{{ $audioFile->transcription }}</p>
                         </div>
                     </div>
                 @endif
@@ -165,12 +165,12 @@
                 <!-- Translated Text -->
                 @if($audioFile->translated_text)
                     <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
-                        <h3 class="text-xl font-bold text-gray-100 mb-4 flex items-center">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center">
                             <i class="fas fa-language mr-2 text-green-400"></i>
                             Translated Text ({{ strtoupper($audioFile->target_language) }})
                         </h3>
                         <div class="bg-gradient-to-r from-green-900/30 to-blue-900/30 p-6 rounded-xl border border-gray-600/30">
-                            <p class="text-gray-100 leading-relaxed text-lg">{{ $audioFile->translated_text }}</p>
+                            <p class="text-white leading-relaxed text-lg">{{ $audioFile->translated_text }}</p>
                         </div>
                     </div>
                 @endif
@@ -180,37 +180,41 @@
             <div class="lg:col-span-1 space-y-6">
                 <!-- File Info Card -->
                 <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
-                    <h3 class="text-xl font-bold text-gray-100 mb-4 flex items-center">
+                    <h3 class="text-xl font-bold text-white mb-4 flex items-center">
                         <i class="fas fa-info-circle mr-2 text-indigo-400"></i>
                         File Information
                     </h3>
                     <dl class="space-y-4">
                         <div>
-                            <dt class="text-sm font-medium text-gray-400">Filename</dt>
-                            <dd class="text-sm text-gray-100 font-medium">{{ $audioFile->original_filename }}</dd>
+                            <dt class="text-sm font-medium text-white">Filename</dt>
+                            <dd class="text-sm text-white font-medium">{{ $audioFile->original_filename }}</dd>
                         </div>
                         <div>
-                            <dt class="text-sm font-medium text-gray-400">Size</dt>
-                            <dd class="text-sm text-gray-100">{{ number_format($audioFile->file_size / 1024, 2) }} KB</dd>
+                            <dt class="text-sm font-medium text-white">Size</dt>
+                            <dd class="text-sm text-white">{{ number_format($audioFile->file_size / 1024, 2) }} KB</dd>
                         </div>
                         <div>
-                            <dt class="text-sm font-medium text-gray-400">Source Language</dt>
-                            <dd class="text-sm text-gray-100">{{ strtoupper($audioFile->source_language) }}</dd>
+                            <dt class="text-sm font-medium text-white">Source Language</dt>
+                            <dd class="text-sm text-white">{{ strtoupper($audioFile->source_language) }}</dd>
                         </div>
                         <div>
-                            <dt class="text-sm font-medium text-gray-400">Target Language</dt>
-                            <dd class="text-sm text-gray-100">{{ strtoupper($audioFile->target_language) }}</dd>
+                            <dt class="text-sm font-medium text-white">Target Language</dt>
+                            <dd class="text-sm text-white">{{ strtoupper($audioFile->target_language) }}</dd>
                         </div>
                         <div>
-                            <dt class="text-sm font-medium text-gray-400">Uploaded on</dt>
-                            <dd class="text-sm text-gray-100">{{ $audioFile->created_at->format('d-m-Y H:i') }}</dd>
+                            <dt class="text-sm font-medium text-white">Voice</dt>
+                            <dd class="text-sm text-white capitalize">{{ $audioFile->voice }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-white">Uploaded on</dt>
+                            <dd class="text-sm text-white">{{ $audioFile->created_at->format('d-m-Y H:i') }}</dd>
                         </div>
                     </dl>
                 </div>
 
                 <!-- Actions Card -->
                 <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
-                    <h3 class="text-xl font-bold text-gray-100 mb-4 flex items-center">
+                    <h3 class="text-xl font-bold text-white mb-4 flex items-center">
                         <i class="fas fa-download mr-2 text-green-400"></i>
                         Actions
                     </h3>
@@ -250,14 +254,7 @@
     </div>
 </div>
 
-@if($audioFile->isProcessing())
-<script>
-// Auto-refresh page every 5 seconds when processing
-setTimeout(function() {
-    location.reload();
-}, 5000);
-</script>
-@endif
+{{-- No auto-refresh needed - processing is synchronous --}}
 
 @endsection
 
