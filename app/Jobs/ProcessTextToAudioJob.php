@@ -3,7 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\TextToAudio;
-use App\Services\CreditService;
+use App\Services\AudioProcessingService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -30,78 +30,42 @@ class ProcessTextToAudioJob implements ShouldQueue
      */
     public function handle(): void
     {
-        Log::info('=== TEXT TO AUDIO PROCESSING JOB START ===');
-        Log::info('Processing text to audio ID: ' . $this->textToAudioId);
-        
         $textToAudioFile = TextToAudio::findOrFail($this->textToAudioId);
-        Log::info('Text to audio file found');
+        $processingService = new AudioProcessingService();
         
         try {
             // Generate audio with TTS
-            Log::info('Starting TTS generation...');
-            $audioPath = $this->generateAudio($textToAudioFile->text_content, $textToAudioFile->language, $textToAudioFile->voice, $textToAudioFile->style_instruction);
+            $audioPath = $processingService->generateAudio(
+                $textToAudioFile->text_content,
+                $textToAudioFile->language,
+                $textToAudioFile->voice,
+                $textToAudioFile->style_instruction
+            );
+            
             $textToAudioFile->update([
                 'audio_path' => $audioPath,
                 'status' => 'completed'
             ]);
-            Log::info('TTS generation completed, path: ' . $audioPath);
             
-            // Update user usage
-            $this->updateUserUsage($textToAudioFile->user);
-            
-            Log::info('=== TEXT TO AUDIO PROCESSING JOB END - SUCCESS ===');
+            // Deduct credits
+            $processingService->deductCredits(
+                $textToAudioFile->user,
+                0.5,
+                'Credits used for text to audio conversion'
+            );
 
         } catch (\Exception $e) {
-            Log::error('Text to audio processing job failed: ' . $e->getMessage());
-            Log::error('Exception trace: ' . $e->getTraceAsString());
+            Log::error('Text to audio job failed', [
+                'text_to_audio_id' => $this->textToAudioId,
+                'error' => $e->getMessage()
+            ]);
             $textToAudioFile->update([
                 'status' => 'failed',
                 'error_message' => $e->getMessage()
             ]);
-            Log::info('=== TEXT TO AUDIO PROCESSING JOB END - FAILED ===');
             
             // Re-throw to trigger retry mechanism
             throw $e;
         }
-    }
-
-    private function generateAudio($text, $language, $voice, $styleInstruction = null)
-    {
-        try {
-            Log::info('=== GEMINI TTS GENERATION DEBUG ===');
-            Log::info('Language: ' . $language);
-            Log::info('Voice: ' . $voice);
-            Log::info('Text length: ' . strlen($text));
-            Log::info('Text preview: ' . substr($text, 0, 100) . '...');
-            
-            // Initialize Gemini TTS service
-            $geminiTts = new \App\Services\GeminiTtsService();
-            
-            // Use Gemini TTS
-            Log::info('Using Gemini 2.5 Pro TTS');
-            $path = $geminiTts->generateAudio($text, $language, $voice, $styleInstruction);
-            
-            Log::info('Gemini TTS audio generated successfully', [
-                'language' => $language,
-                'voice' => $voice,
-                'file_path' => $path
-            ]);
-            
-            return $path;
-            
-        } catch (\Exception $e) {
-            Log::error('Gemini TTS generation failed', [
-                'language' => $language,
-                'error' => $e->getMessage()
-            ]);
-
-            throw new \Exception('Gemini TTS generation failed: ' . $e->getMessage());
-        }
-    }
-
-    private function updateUserUsage($user)
-    {
-        $creditService = new CreditService();
-        $creditService->deductCredit($user, 'Credits used for text to audio conversion', 0.50);
     }
 }

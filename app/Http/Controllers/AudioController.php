@@ -53,49 +53,14 @@ class AudioController extends Controller
         ini_set('max_input_time', 300);
         ini_set('memory_limit', '256M');
         
-        // Debug: Log request start
-        Log::info('=== AUDIO UPLOAD DEBUG START ===');
-        Log::info('Request method: ' . $request->method());
-        Log::info('Request URL: ' . $request->fullUrl());
-        Log::info('Content-Length header: ' . $request->header('content-length'));
-        Log::info('Content-Type header: ' . $request->header('content-type'));
-        Log::info('Has file audio: ' . ($request->hasFile('audio') ? 'YES' : 'NO'));
-        
-        if ($request->hasFile('audio')) {
-            $file = $request->file('audio');
-            Log::info('File details:', [
-                'original_name' => $file->getClientOriginalName(),
-                'size' => $file->getSize(),
-                'mime_type' => $file->getMimeType(),
-                'extension' => $file->getClientOriginalExtension(),
-                'is_valid' => $file->isValid(),
-                'error' => $file->getError()
-            ]);
-        }
-        
-        Log::info('PHP limits set:', [
-            'upload_max_filesize' => ini_get('upload_max_filesize'),
-            'post_max_size' => ini_get('post_max_size'),
-            'max_execution_time' => ini_get('max_execution_time'),
-            'memory_limit' => ini_get('memory_limit')
-        ]);
-        
         // Check content length manually to bypass ValidatePostSize middleware
         $contentLength = $request->header('content-length');
-        Log::info('Content length check:', [
-            'content_length' => $contentLength,
-            'max_allowed' => 50 * 1024 * 1024,
-            'is_too_large' => $contentLength && $contentLength > 50 * 1024 * 1024
-        ]);
-        
         if ($contentLength && $contentLength > 50 * 1024 * 1024) {
-            Log::warning('File too large, redirecting back');
             return redirect()->back()->withErrors([
                 'audio' => 'File is too large. Maximum 50MB allowed.'
             ]);
         }
         
-        Log::info('Starting validation...');
         $request->validate([
             'audio' => 'required|file|mimes:mp3,wav,m4a,mp4|max:51200', // 50MB max, including M4A and MP4
             'source_language' => 'required|string|in:en,es,fr,de,it,pt,ru,ja,ko,zh,ar,hi,nl,sv,da,no,fi,pl,cs,sk,hu,ro,bg,hr,sl,el,tr,uk,lv,lt,et,ca,eu,th,vi,id,ms,tl,bn,ta,te,ml,kn,gu,pa,ur,si,my,km,lo,mn,af,sw,am,sq,hy,az,ka,he,fa,ps,ne',
@@ -103,11 +68,8 @@ class AudioController extends Controller
             'voice' => 'required|string',
             'style_instruction' => 'nullable|string|max:5000', // Allow longer style instructions
         ]);
-        Log::info('Validation passed!');
 
         try {
-            Log::info('Starting file upload...');
-            
             // Sanitize inputs
             $sanitizer = new SanitizationService();
             $sourceLanguage = $sanitizer->sanitizeLanguageCode($request->source_language);
@@ -119,13 +81,9 @@ class AudioController extends Controller
             $audioFile = $request->file('audio');
             $originalFilename = $sanitizer->sanitizeFilename($audioFile->getClientOriginalName());
             $filename = time() . '_' . $originalFilename;
-            Log::info('Generated filename: ' . $filename);
-            
             $path = $audioFile->storeAs('audio', $filename, 'public');
-            Log::info('File stored at path: ' . $path);
 
             // Create database record
-            Log::info('Creating database record...');
             $audioRecord = AudioFile::create([
                 'user_id' => $user->id,
                 'original_filename' => $originalFilename,
@@ -137,20 +95,18 @@ class AudioController extends Controller
                 'style_instruction' => $styleInstruction,
                 'status' => 'uploaded'
             ]);
-            Log::info('Database record created with ID: ' . $audioRecord->id);
 
             // Process immediately (sync queue)
-            Log::info('Starting AI processing...');
             $this->processAudio($audioRecord->id);
-            Log::info('AI processing completed');
 
-            Log::info('Redirecting to show page: ' . route('audio.show', $audioRecord->id));
             return redirect()->route('audio.show', $audioRecord->id)
                 ->with('success', 'Audio file processed successfully!');
 
         } catch (\Exception $e) {
-            Log::error('Upload failed with exception: ' . $e->getMessage());
-            Log::error('Exception trace: ' . $e->getTraceAsString());
+            Log::error('Audio upload failed', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
             return back()->with('error', 'Upload failed: ' . $e->getMessage());
         }
     }
