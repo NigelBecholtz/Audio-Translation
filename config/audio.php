@@ -7,7 +7,7 @@ return [
     |--------------------------------------------------------------------------
     */
 
-    'max_file_size' => env('AUDIO_MAX_FILE_SIZE', 50), // MB
+    'max_file_size' => env('AUDIO_MAX_FILE_SIZE', 25), // MB (OpenAI Whisper limit)
     'max_duration' => env('AUDIO_MAX_DURATION', 600), // seconds
     'max_execution_time' => env('AUDIO_MAX_EXECUTION_TIME', 600), // seconds
     'max_input_time' => env('AUDIO_MAX_INPUT_TIME', 600), // seconds

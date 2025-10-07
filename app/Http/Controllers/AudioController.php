@@ -55,14 +55,16 @@ class AudioController extends Controller
         
         // Check content length manually to bypass ValidatePostSize middleware
         $contentLength = $request->header('content-length');
-        if ($contentLength && $contentLength > 50 * 1024 * 1024) {
+        $maxSize = 25 * 1024 * 1024; // 25MB (OpenAI Whisper limit)
+        
+        if ($contentLength && $contentLength > $maxSize) {
             return redirect()->back()->withErrors([
-                'audio' => 'File is too large. Maximum 50MB allowed.'
+                'audio' => 'File is too large. Maximum 25MB allowed (OpenAI Whisper API limit).'
             ]);
         }
         
         $request->validate([
-            'audio' => 'required|file|mimes:mp3,wav,m4a,mp4|max:51200', // 50MB max, including M4A and MP4
+            'audio' => 'required|file|mimes:mp3,wav,m4a,mp4|max:25600', // 25MB max (OpenAI Whisper limit)
             'source_language' => 'required|string|in:en,es,fr,de,it,pt,ru,ja,ko,zh,ar,hi,nl,sv,da,no,fi,pl,cs,sk,hu,ro,bg,hr,sl,el,tr,uk,lv,lt,et,ca,eu,th,vi,id,ms,tl,bn,ta,te,ml,kn,gu,pa,ur,si,my,km,lo,mn,af,sw,am,sq,hy,az,ka,he,fa,ps,ne',
             'target_language' => 'required|string|in:en,es,fr,de,it,pt,ru,ja,ko,zh,ar,hi,nl,sv,da,no,fi,pl,cs,sk,hu,ro,bg,hr,sl,el,tr,uk,lv,lt,et,ca,eu,th,vi,id,ms,tl,bn,ta,te,ml,kn,gu,pa,ur,si,my,km,lo,mn,af,sw,am,sq,hy,az,ka,he,fa,ps,ne',
             'voice' => 'required|string',

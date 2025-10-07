@@ -180,7 +180,7 @@
             </div>
             <h3 style="font-size: 32px; font-weight: bold; color: #f9fafb; margin-bottom: 16px;">No audio files yet</h3>
             <p style="color: #d1d5db; margin-bottom: 32px; max-width: 400px; margin-left: auto; margin-right: auto; font-size: 18px;">
-                Upload your first audio file (MP3, WAV, M4A, max 50MB) and experience the power of AI-driven translations
+                Upload your first audio file (MP3, WAV, M4A, max 25MB) and experience the power of AI-driven translations
             </p>
             <a href="{{ route('audio.create') }}" class="btn-primary" style="font-size: 20px; padding: 20px 40px;">
                 <i class="fas fa-upload"></i>

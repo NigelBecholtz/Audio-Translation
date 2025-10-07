@@ -113,7 +113,7 @@
                     <div class="text-gray-300">Languages Supported</div>
                 </div>
                 <div class="bg-white/10 backdrop-blur-md rounded-2xl p-6">
-                    <div class="text-3xl font-bold text-white mb-2">50MB</div>
+                    <div class="text-3xl font-bold text-white mb-2">25MB</div>
                     <div class="text-gray-300">Max File Size</div>
                 </div>
                 <div class="bg-white/10 backdrop-blur-md rounded-2xl p-6">
@@ -147,7 +147,7 @@
                             </div>
                             <div>
                                 <h4 class="text-lg font-semibold text-white mb-2">1. Upload Audio</h4>
-                                <p class="text-gray-300">Upload your audio file (MP3, WAV, M4A, MP4) up to 50MB</p>
+                                <p class="text-gray-300">Upload your audio file (MP3, WAV, M4A, MP4) up to 25MB</p>
                             </div>
                         </div>
                         <div class="flex items-start">
@@ -326,7 +326,7 @@
                         </li>
                         <li class="flex items-center justify-center">
                             <i class="fas fa-check text-white mr-2"></i>
-                            <span class="text-gray-300">50MB files</span>
+                            <span class="text-gray-300">25MB files</span>
                         </li>
                     </ul>
                     @auth
@@ -356,7 +356,7 @@
                         </li>
                         <li class="flex items-center justify-center">
                             <i class="fas fa-check text-gray-900 mr-2"></i>
-                            <span class="text-gray-700">50MB files</span>
+                            <span class="text-gray-700">25MB files</span>
                         </li>
                         <li class="flex items-center justify-center">
                             <i class="fas fa-check text-gray-900 mr-2"></i>
