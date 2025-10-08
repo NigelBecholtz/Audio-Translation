@@ -166,20 +166,19 @@
                     </div>
                 </div>
 
-                <!-- Audio Preview (Original) - Temporarily disabled for debugging
-                @if($audioFile->file_path && $audioFile->status !== 'failed')
+                <!-- Audio Preview (Original) -->
+                @if($audioFile->file_path && $audioFile->status !== 'failed' && \Storage::disk('public')->exists($audioFile->file_path))
                     <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
                         <h3 class="text-xl font-bold text-white mb-4 flex items-center">
                             <i class="fas fa-headphones mr-2 text-blue-400"></i>
-                            Original Audio Preview
+                            Originele Audio Preview
                         </h3>
                         <audio controls class="w-full rounded-lg" preload="metadata">
                             <source src="{{ asset('storage/' . $audioFile->file_path) }}" type="audio/mpeg">
-                            Your browser does not support the audio element.
+                            Je browser ondersteunt geen audio element.
                         </audio>
                     </div>
                 @endif
-                -->
 
                 <!-- Transcription -->
                 @if($audioFile->transcription)
@@ -207,20 +206,19 @@
                     </div>
                 @endif
 
-                <!-- Translated Audio Preview - Temporarily disabled for debugging
-                @if($audioFile->translated_audio_path && $audioFile->isCompleted())
+                <!-- Translated Audio Preview -->
+                @if($audioFile->translated_audio_path && $audioFile->isCompleted() && \Storage::disk('public')->exists($audioFile->translated_audio_path))
                     <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
                         <h3 class="text-xl font-bold text-white mb-4 flex items-center">
                             <i class="fas fa-volume-up mr-2 text-green-400"></i>
-                            Translated Audio Preview
+                            Vertaalde Audio Preview
                         </h3>
                         <audio controls class="w-full rounded-lg" preload="metadata">
                             <source src="{{ asset('storage/' . $audioFile->translated_audio_path) }}" type="audio/mpeg">
-                            Your browser does not support the audio element.
+                            Je browser ondersteunt geen audio element.
                         </audio>
                     </div>
                 @endif
-                -->
             </div>
 
             <!-- Sidebar -->
