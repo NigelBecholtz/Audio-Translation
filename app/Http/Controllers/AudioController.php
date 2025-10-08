@@ -79,19 +79,19 @@ class AudioController extends Controller
 
     public function show($id)
     {
-        $audioFile = AudioFile::findOrFail($id);
-        $this->authorize('view', $audioFile);
+        // Use user's audioFiles relationship for automatic authorization
+        $audioFile = auth()->user()->audioFiles()->findOrFail($id);
         
         return view('audio.show', compact('audioFile'));
     }
 
     public function download($id)
     {
-        $audioFile = AudioFile::findOrFail($id);
-        $this->authorize('download', $audioFile);
+        // Use user's audioFiles relationship for automatic authorization
+        $audioFile = auth()->user()->audioFiles()->findOrFail($id);
         
         if (!$audioFile->isCompleted() || !$audioFile->translated_audio_path) {
-            return back()->with('error', 'Audio file is not ready for download yet.');
+            return back()->with('error', 'Audiobestand is nog niet klaar voor download.');
         }
 
         return Storage::disk('public')->download($audioFile->translated_audio_path);
@@ -100,8 +100,8 @@ class AudioController extends Controller
     public function destroy($id)
     {
         try {
-            $audioFile = AudioFile::findOrFail($id);
-            $this->authorize('delete', $audioFile);
+            // Use user's audioFiles relationship for automatic authorization
+            $audioFile = auth()->user()->audioFiles()->findOrFail($id);
             
             // Delete audio files using trait
             $this->deleteAudioFile($audioFile->file_path);
@@ -124,8 +124,8 @@ class AudioController extends Controller
      */
     public function status($id)
     {
-        $audioFile = AudioFile::findOrFail($id);
-        $this->authorize('view', $audioFile);
+        // Use user's audioFiles relationship for automatic authorization
+        $audioFile = auth()->user()->audioFiles()->findOrFail($id);
         
         return response()->json([
             'status' => $audioFile->status,

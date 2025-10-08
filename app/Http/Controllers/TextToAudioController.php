@@ -63,19 +63,19 @@ class TextToAudioController extends Controller
 
     public function show($id)
     {
-        $textToAudioFile = TextToAudio::findOrFail($id);
-        $this->authorize('view', $textToAudioFile);
+        // Use user's textToAudioFiles relationship for automatic authorization
+        $textToAudioFile = auth()->user()->textToAudioFiles()->findOrFail($id);
         
         return view('text-to-audio.show', compact('textToAudioFile'));
     }
 
     public function download($id)
     {
-        $textToAudioFile = TextToAudio::findOrFail($id);
-        $this->authorize('download', $textToAudioFile);
+        // Use user's textToAudioFiles relationship for automatic authorization
+        $textToAudioFile = auth()->user()->textToAudioFiles()->findOrFail($id);
         
         if (!$textToAudioFile->isCompleted() || !$textToAudioFile->audio_path) {
-            return back()->with('error', 'Audio file is not ready for download yet.');
+            return back()->with('error', 'Audiobestand is nog niet klaar voor download.');
         }
 
         return Storage::disk('public')->download($textToAudioFile->audio_path);
@@ -84,8 +84,8 @@ class TextToAudioController extends Controller
     public function destroy($id)
     {
         try {
-            $textToAudioFile = TextToAudio::findOrFail($id);
-            $this->authorize('delete', $textToAudioFile);
+            // Use user's textToAudioFiles relationship for automatic authorization
+            $textToAudioFile = auth()->user()->textToAudioFiles()->findOrFail($id);
             
             // Delete audio file using trait
             $this->deleteAudioFile($textToAudioFile->audio_path);
