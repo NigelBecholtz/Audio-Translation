@@ -41,10 +41,14 @@ class AdminController extends Controller
             ->limit(10)
             ->get();
         
-        // Monthly revenue chart data - using Query Builder
+        // Monthly revenue chart data - works for both MySQL and SQLite
         $monthlyRevenue = Payment::query()
             ->where('status', 'completed')
-            ->selectRaw("strftime('%Y-%m', created_at) as month")
+            ->selectRaw(
+                config('database.default') === 'sqlite' 
+                    ? "strftime('%Y-%m', created_at) as month"
+                    : "DATE_FORMAT(created_at, '%Y-%m') as month"
+            )
             ->selectRaw('SUM(amount) as revenue')
             ->selectRaw('COUNT(*) as payments')
             ->groupBy('month')
