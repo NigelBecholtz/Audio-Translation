@@ -41,15 +41,14 @@ class AdminController extends Controller
             ->limit(10)
             ->get();
         
-        // Monthly revenue chart data
-        $monthlyRevenue = Payment::where('status', 'completed')
-            ->select(
-                DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month'),
-                DB::raw('SUM(amount) as revenue'),
-                DB::raw('COUNT(*) as payments')
-            )
+        // Monthly revenue chart data - using Query Builder
+        $monthlyRevenue = Payment::query()
+            ->where('status', 'completed')
+            ->selectRaw("strftime('%Y-%m', created_at) as month")
+            ->selectRaw('SUM(amount) as revenue')
+            ->selectRaw('COUNT(*) as payments')
             ->groupBy('month')
-            ->orderBy('month', 'desc')
+            ->orderByDesc('month')
             ->limit(12)
             ->get();
 

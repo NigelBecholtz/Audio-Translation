@@ -21,6 +21,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'audio.limits' => \App\Http\Middleware\SetAudioProcessingLimits::class,
         ]);
+        
+        // Exclude Stripe webhook from CSRF verification
+        $middleware->validateCsrfTokens(except: [
+            'webhook/stripe',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Enable error display ONLY in local environment

@@ -10,12 +10,14 @@ use App\Models\CreditTransaction;
 use App\Models\TextToAudio;
 use App\Services\AudioProcessingService;
 use App\Services\SanitizationService;
+use App\Traits\HasAudioFiles;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 
 class AudioController extends Controller
 {
+    use HasAudioFiles;
     public function index()
     {
         // Eager load relationships to avoid N+1 queries
@@ -101,25 +103,19 @@ class AudioController extends Controller
             $audioFile = AudioFile::findOrFail($id);
             $this->authorize('delete', $audioFile);
             
-            // Delete original audio file
-            if ($audioFile->file_path && Storage::disk('public')->exists($audioFile->file_path)) {
-                Storage::disk('public')->delete($audioFile->file_path);
-            }
-            
-            // Delete translated audio file
-            if ($audioFile->translated_audio_path && Storage::disk('public')->exists($audioFile->translated_audio_path)) {
-                Storage::disk('public')->delete($audioFile->translated_audio_path);
-            }
+            // Delete audio files using trait
+            $this->deleteAudioFile($audioFile->file_path);
+            $this->deleteAudioFile($audioFile->translated_audio_path);
             
             // Delete database record (this will also delete related translations due to cascade)
             $audioFile->delete();
             
             return redirect()->route('audio.index')
-                ->with('success', 'Audio translation successfully deleted.');
+                ->with('success', 'Audiovertaling succesvol verwijderd.');
                 
         } catch (\Exception $e) {
             Log::error('Delete failed: ' . $e->getMessage());
-            return back()->with('error', 'Delete failed: ' . $e->getMessage());
+            return back()->with('error', 'Verwijderen mislukt: ' . $e->getMessage());
         }
     }
 

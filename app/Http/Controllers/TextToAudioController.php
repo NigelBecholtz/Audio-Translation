@@ -8,12 +8,14 @@ use App\Jobs\ProcessTextToAudioJob;
 use App\Models\TextToAudio;
 use App\Services\AudioProcessingService;
 use App\Services\SanitizationService;
+use App\Traits\HasAudioFiles;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 
 class TextToAudioController extends Controller
 {
+    use HasAudioFiles;
     public function index()
     {
         $textToAudioFiles = auth()->user()->textToAudioFiles()->orderBy('created_at', 'desc')->paginate(10);
@@ -85,20 +87,18 @@ class TextToAudioController extends Controller
             $textToAudioFile = TextToAudio::findOrFail($id);
             $this->authorize('delete', $textToAudioFile);
             
-            // Delete audio file
-            if ($textToAudioFile->audio_path && Storage::disk('public')->exists($textToAudioFile->audio_path)) {
-                Storage::disk('public')->delete($textToAudioFile->audio_path);
-            }
+            // Delete audio file using trait
+            $this->deleteAudioFile($textToAudioFile->audio_path);
             
             // Delete database record
             $textToAudioFile->delete();
             
             return redirect()->route('text-to-audio.index')
-                ->with('success', 'Text to audio conversion successfully deleted.');
+                ->with('success', 'Text naar audio conversie succesvol verwijderd.');
                 
         } catch (\Exception $e) {
             Log::error('Delete failed: ' . $e->getMessage());
-            return back()->with('error', 'Delete failed: ' . $e->getMessage());
+            return back()->with('error', 'Verwijderen mislukt: ' . $e->getMessage());
         }
     }
 }

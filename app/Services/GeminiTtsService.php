@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Constants\AudioConstants;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -45,15 +46,17 @@ class GeminiTtsService
                 $voice = $this->getVoiceForLanguage($language);
             }
 
-            // Check if text needs chunking (900 bytes limit)
-            $chunkSize = config('audio.tts_chunk_size', 900);
+            // Check if text needs chunking
+            $chunkSize = AudioConstants::TTS_CHUNK_SIZE_BYTES;
             
             if (strlen($text) <= $chunkSize && strlen($styleInstruction ?? '') <= $chunkSize) {
                 // Single chunk - direct API call
                 return $this->generateSingleChunk($text, $language, $voice, $styleInstruction);
             } else {
                 // Multiple chunks needed - split and concatenate
-                Log::warning('Text exceeds 900 bytes - using chunking (voice consistency may vary)');
+                Log::warning('Text exceeds chunk size - using chunking (voice consistency may vary)', [
+                    'chunk_size' => $chunkSize
+                ]);
                 return $this->generateWithChunking($text, $language, $voice, $styleInstruction);
             }
 
@@ -68,12 +71,14 @@ class GeminiTtsService
 
     private function generateSingleChunk(string $text, string $language, string $voice, ?string $styleInstruction): string
     {
+        $maxChunkSize = AudioConstants::TTS_CHUNK_SIZE_BYTES;
+        
         // Truncate if needed
-        if (strlen($text) > 900) {
-            $text = substr($text, 0, 900);
+        if (strlen($text) > $maxChunkSize) {
+            $text = substr($text, 0, $maxChunkSize);
         }
-        if (!empty($styleInstruction) && strlen($styleInstruction) > 900) {
-            $styleInstruction = substr($styleInstruction, 0, 900);
+        if (!empty($styleInstruction) && strlen($styleInstruction) > $maxChunkSize) {
+            $styleInstruction = substr($styleInstruction, 0, $maxChunkSize);
         }
 
         $accessToken = $this->oauthService->getAccessToken();
@@ -90,7 +95,7 @@ class GeminiTtsService
             ],
             'audioConfig' => [
                 'audioEncoding' => 'MP3',
-                'sampleRateHertz' => 24000
+                'sampleRateHertz' => AudioConstants::TTS_SAMPLE_RATE
             ]
         ];
 
@@ -128,7 +133,7 @@ class GeminiTtsService
     private function generateWithChunking(string $text, string $language, string $voice, ?string $styleInstruction): string
     {
         // Simple sentence-based chunking
-        $chunks = $this->chunkText($text, 900);
+        $chunks = $this->chunkText($text, AudioConstants::TTS_CHUNK_SIZE_BYTES);
         $audioPaths = [];
 
         foreach ($chunks as $index => $chunk) {
@@ -136,7 +141,7 @@ class GeminiTtsService
             
             // Delay between chunks
             if ($index < count($chunks) - 1) {
-                sleep(config('audio.tts_chunk_delay', 2));
+                sleep(AudioConstants::TTS_CHUNK_DELAY_SECONDS);
             }
         }
 

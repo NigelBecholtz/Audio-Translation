@@ -8,11 +8,15 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminLoginController;
+use App\Http\Controllers\WebhookController;
 use Illuminate\Support\Facades\Log;
 
 Route::get('/', function () {
     return view('welcome');
 });
+
+// Stripe Webhook (must be outside auth middleware and CSRF protection)
+Route::post('/webhook/stripe', [WebhookController::class, 'handleStripe'])->name('webhook.stripe');
 
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');

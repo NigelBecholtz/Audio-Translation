@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Constants\AudioConstants;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Process\Process;
@@ -99,7 +100,7 @@ class FFmpegService
      * @param float $maxSizeMB Maximum size in MB (default: 25)
      * @return string Path to file (original or compressed)
      */
-    public function compressIfNeeded(string $inputPath, float $maxSizeMB = 25): string
+    public function compressIfNeeded(string $inputPath, float $maxSizeMB = AudioConstants::WHISPER_MAX_FILE_SIZE_MB): string
     {
         $currentSize = $this->getFileSizeMB($inputPath);
         
@@ -119,13 +120,12 @@ class FFmpegService
         ]);
 
         // Calculate target bitrate to get under limit
-        // Start with 64kbps, go lower if needed
-        $targetBitrate = 64;
-        if ($currentSize > 50) {
-            $targetBitrate = 48;
+        $targetBitrate = AudioConstants::COMPRESSION_BITRATE_HIGH;
+        if ($currentSize > AudioConstants::COMPRESSION_THRESHOLD_MEDIUM) {
+            $targetBitrate = AudioConstants::COMPRESSION_BITRATE_MEDIUM;
         }
-        if ($currentSize > 75) {
-            $targetBitrate = 32;
+        if ($currentSize > AudioConstants::COMPRESSION_THRESHOLD_LOW) {
+            $targetBitrate = AudioConstants::COMPRESSION_BITRATE_LOW;
         }
 
         $compressedPath = $this->compressAudio($inputPath, $targetBitrate);
@@ -145,7 +145,7 @@ class FFmpegService
     public function isVideoFile(string $path): bool
     {
         $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-        return in_array($extension, ['mp4', 'avi', 'mov', 'mkv', 'flv', 'wmv', 'webm']);
+        return in_array($extension, AudioConstants::VIDEO_FORMATS);
     }
 
     /**
@@ -176,12 +176,12 @@ class FFmpegService
             '-i', $fullInputPath,
             '-vn',                          // No video
             '-acodec', 'libmp3lame',        // MP3 codec
-            '-b:a', '128k',                 // 128kbps bitrate
+            '-b:a', AudioConstants::EXTRACTION_BITRATE . 'k', // Bitrate
             '-y',                           // Overwrite output file
             $fullOutputPath
         ]);
 
-        $process->setTimeout(300); // 5 minutes max
+        $process->setTimeout(AudioConstants::EXTRACTION_TIMEOUT);
         
         try {
             $process->mustRun();

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Constants\AudioConstants;
 use App\Services\GeminiTtsService;
 use App\Services\FFmpegService;
 use Illuminate\Support\Facades\Log;
@@ -106,10 +107,10 @@ class AudioProcessingService
                     $audioFile->update(['file_path' => $processedPath]);
                 }
                 
-                // Step 2: Compress audio if needed (>25MB)
+                // Step 2: Compress audio if needed
                 $originalSize = $this->ffmpegService->getFileSizeMB($processedPath);
                 
-                if ($originalSize > 25) {
+                if ($originalSize > AudioConstants::WHISPER_MAX_FILE_SIZE_MB) {
                     $audioFile->update([
                         'processing_progress' => 20,
                         'processing_message' => 'Compressing large audio file...'
@@ -119,7 +120,7 @@ class AudioProcessingService
                         'original_size' => $originalSize . 'MB'
                     ]);
                     
-                    $processedPath = $this->ffmpegService->compressIfNeeded($processedPath, 25);
+                    $processedPath = $this->ffmpegService->compressIfNeeded($processedPath, AudioConstants::WHISPER_MAX_FILE_SIZE_MB);
                     
                     // Update database with compressed file path
                     $audioFile->update(['file_path' => $processedPath]);
