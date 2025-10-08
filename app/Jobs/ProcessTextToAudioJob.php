@@ -58,7 +58,7 @@ class ProcessTextToAudioJob implements ShouldQueue
             // Deduct credits
             $processingService->deductCredits(
                 $this->textToAudio->user,
-                config('stripe.default_cost_per_translation', 0.5),
+                config('stripe.default_cost_per_translation'),
                 'Credits used for text to audio conversion'
             );
 

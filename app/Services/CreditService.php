@@ -16,8 +16,11 @@ class CreditService
      * @param float $amount
      * @return void
      */
-    public function deductCredit(User $user, string $description = 'Credits used', float $amount = 0.50): void
+    public function deductCredit(User $user, string $description = 'Credits used', float $amount = null): void
     {
+        // Use default cost if not specified
+        $amount = $amount ?? config('stripe.default_cost_per_translation');
+        
         // Use free translations first
         if ($user->translations_used < $user->translations_limit) {
             $user->increment('translations_used');

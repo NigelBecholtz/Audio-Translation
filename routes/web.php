@@ -29,12 +29,21 @@ Route::post('/admin/logout', [AdminLoginController::class, 'logout'])->name('adm
 
 // Protected Routes with rate limiting
 Route::middleware(['auth', 'throttle:60,1'])->group(function () {
-    Route::resource('audio', AudioController::class);
+    // Audio routes with processing limits middleware
+    Route::middleware('audio.limits')->group(function () {
+        Route::post('audio', [AudioController::class, 'store'])->name('audio.store');
+    });
+    
+    Route::resource('audio', AudioController::class)->except(['store']);
     Route::get('audio/{id}/download', [AudioController::class, 'download'])->name('audio.download');
     Route::get('audio/{id}/status', [AudioController::class, 'status'])->name('audio.status');
     
-    // Text to Audio Routes with stricter rate limiting
-    Route::resource('text-to-audio', TextToAudioController::class)->middleware('throttle:20,1');
+    // Text to Audio Routes with stricter rate limiting and processing limits
+    Route::middleware(['throttle:20,1', 'audio.limits'])->group(function () {
+        Route::post('text-to-audio', [TextToAudioController::class, 'store'])->name('text-to-audio.store');
+    });
+    
+    Route::resource('text-to-audio', TextToAudioController::class)->except(['store'])->middleware('throttle:20,1');
     Route::get('text-to-audio/{id}/download', [TextToAudioController::class, 'download'])->name('text-to-audio.download');
     
     // Payment Routes

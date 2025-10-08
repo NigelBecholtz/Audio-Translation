@@ -103,7 +103,7 @@ class ProcessAudioJob implements ShouldQueue
             // Deduct credits
             $processingService->deductCredits(
                 $this->audioFile->user,
-                config('stripe.default_cost_per_translation', 0.5),
+                config('stripe.default_cost_per_translation'),
                 'Credits used for audio translation'
             );
 

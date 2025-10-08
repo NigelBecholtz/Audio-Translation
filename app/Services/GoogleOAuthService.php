@@ -2,14 +2,14 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class GoogleOAuthService
 {
     private $serviceAccountPath;
-    private $accessToken;
-    private $tokenExpiresAt;
+    private $cacheKey = 'gemini_oauth_access_token';
 
     public function __construct()
     {
@@ -18,12 +18,15 @@ class GoogleOAuthService
 
     public function getAccessToken(): string
     {
-        // Check if we have a valid cached token
-        if ($this->accessToken && $this->tokenExpiresAt && time() < $this->tokenExpiresAt) {
-            return $this->accessToken;
+        // Try to get cached token first
+        $cachedToken = Cache::get($this->cacheKey);
+        
+        if ($cachedToken) {
+            Log::debug('Using cached OAuth2 access token');
+            return $cachedToken;
         }
 
-        // Get new token
+        // Get new token and cache it
         return $this->requestNewToken();
     }
 
@@ -54,11 +57,19 @@ class GoogleOAuthService
             }
 
             $tokenData = $response->json();
-            $this->accessToken = $tokenData['access_token'];
-            $this->tokenExpiresAt = time() + $tokenData['expires_in'] - 60;
+            $accessToken = $tokenData['access_token'];
+            $expiresIn = $tokenData['expires_in'];
+            
+            // Cache the token for slightly less than its expiration time (minus 60 seconds for safety)
+            $cacheMinutes = floor(($expiresIn - 60) / 60);
+            Cache::put($this->cacheKey, $accessToken, now()->addMinutes($cacheMinutes));
 
-            Log::info('OAuth2 access token obtained successfully');
-            return $this->accessToken;
+            Log::info('OAuth2 access token obtained and cached', [
+                'expires_in' => $expiresIn,
+                'cached_for_minutes' => $cacheMinutes
+            ]);
+            
+            return $accessToken;
 
         } catch (\Exception $e) {
             Log::error('OAuth2 token request failed', ['error' => $e->getMessage()]);

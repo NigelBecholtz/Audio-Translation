@@ -87,7 +87,7 @@ class User extends Authenticatable
         }
         
         // Then check if user has credits
-        return $this->credits >= 0.50; // €0.50 per translation
+        return $this->credits >= config('stripe.default_cost_per_translation');
     }
 
     public function getRemainingTranslations(): int
@@ -96,7 +96,8 @@ class User extends Authenticatable
         $freeRemaining = max(0, $this->translations_limit - $this->translations_used);
         
         // Credits translations
-        $creditsTranslations = floor($this->credits / 0.50);
+        $costPerTranslation = config('stripe.default_cost_per_translation');
+        $creditsTranslations = floor($this->credits / $costPerTranslation);
         
         return $freeRemaining + $creditsTranslations;
     }
