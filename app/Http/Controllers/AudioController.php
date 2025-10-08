@@ -102,26 +102,25 @@ class AudioController extends Controller
                 'processing_message' => 'Upload complete! Starting processing...'
             ]);
 
+            $audioRecordId = $audioRecord->id;
+
+            // Start processing in background using shutdown function
+            register_shutdown_function(function() use ($audioRecordId) {
+                try {
+                    // Reopen database connection (might be closed after response)
+                    \DB::reconnect();
+                    $this->processAudio($audioRecordId);
+                } catch (\Exception $e) {
+                    \Log::error('Background processing failed', [
+                        'audio_id' => $audioRecordId,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            });
+
             // Redirect immediately to show page with progress bar
-            $redirectResponse = redirect()->route('audio.show', $audioRecord->id)
+            return redirect()->route('audio.show', $audioRecordId)
                 ->with('success', 'Audio file uploaded! Processing started...');
-
-            // Process after redirect (using output buffering trick for sync processing)
-            if (function_exists('fastcgi_finish_request')) {
-                // Send response to user immediately
-                session()->save();
-                fastcgi_finish_request();
-                
-                // Continue processing in background
-                $this->processAudio($audioRecord->id);
-            } else {
-                // Fallback: start processing in same request (will still redirect first due to response buffering)
-                register_shutdown_function(function() use ($audioRecord) {
-                    $this->processAudio($audioRecord->id);
-                });
-            }
-
-            return $redirectResponse;
 
         } catch (\Exception $e) {
             Log::error('Audio upload failed', [
