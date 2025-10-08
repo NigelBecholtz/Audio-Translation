@@ -24,28 +24,45 @@
                 <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="text-xl font-bold text-white">Status</h3>
-                        @if($audioFile->isCompleted())
-                            <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                                <i class="fas fa-check-circle mr-2"></i>
-                                Completed
+                        <span id="status-badge" class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium 
+                            @if($audioFile->isCompleted()) bg-green-100 text-green-800
+                            @elseif($audioFile->isFailed()) bg-red-100 text-red-800
+                            @elseif($audioFile->isProcessing()) bg-yellow-100 text-yellow-800 pulse-animation
+                            @else bg-gray-100 text-gray-800
+                            @endif">
+                            <i id="status-icon" class="mr-2 
+                                @if($audioFile->isCompleted()) fas fa-check-circle
+                                @elseif($audioFile->isFailed()) fas fa-exclamation-triangle
+                                @elseif($audioFile->isProcessing()) fas fa-spinner fa-spin
+                                @else fas fa-upload
+                                @endif"></i>
+                            <span id="status-text">
+                                @if($audioFile->isCompleted()) Completed
+                                @elseif($audioFile->isFailed()) Failed
+                                @elseif($audioFile->isProcessing()) Processing...
+                                @else Uploaded
+                                @endif
                             </span>
-                        @elseif($audioFile->isFailed())
-                            <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                                <i class="fas fa-exclamation-triangle mr-2"></i>
-                                Failed
-                            </span>
-                        @elseif($audioFile->isProcessing())
-                            <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 pulse-animation">
-                                <i class="fas fa-spinner fa-spin mr-2"></i>
-                                Processing...
-                            </span>
-                        @else
-                            <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
-                                <i class="fas fa-upload mr-2"></i>
-                                Uploaded
-                            </span>
-                        @endif
+                        </span>
                     </div>
+
+                    <!-- Progress Bar -->
+                    @if($audioFile->isProcessing() || !$audioFile->isCompleted())
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <span id="progress-message" class="text-sm font-medium text-white">
+                                {{ $audioFile->processing_message ?? 'Starting...' }}
+                            </span>
+                            <span id="progress-percentage" class="text-sm font-medium text-white">
+                                {{ $audioFile->processing_progress ?? 0 }}%
+                            </span>
+                        </div>
+                        <div class="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+                            <div id="progress-bar" class="bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full transition-all duration-500 ease-out" 
+                                 style="width: {{ $audioFile->processing_progress ?? 0 }}%"></div>
+                        </div>
+                    </div>
+                    @endif
 
                     <!-- Progress Steps -->
                     <div class="space-y-4">
@@ -254,7 +271,99 @@
     </div>
 </div>
 
-{{-- No auto-refresh needed - processing is synchronous --}}
+<script>
+// Real-time progress tracking
+@if($audioFile->isProcessing() || (!$audioFile->isCompleted() && !$audioFile->isFailed()))
+let pollInterval;
+const audioFileId = {{ $audioFile->id }};
+
+function updateProgress(data) {
+    // Update progress bar
+    const progressBar = document.getElementById('progress-bar');
+    const progressPercentage = document.getElementById('progress-percentage');
+    const progressMessage = document.getElementById('progress-message');
+    
+    if (progressBar && data.processing_progress !== null) {
+        progressBar.style.width = data.processing_progress + '%';
+    }
+    
+    if (progressPercentage && data.processing_progress !== null) {
+        progressPercentage.textContent = data.processing_progress + '%';
+    }
+    
+    if (progressMessage && data.processing_message) {
+        progressMessage.textContent = data.processing_message;
+    }
+    
+    // Update status badge
+    const statusBadge = document.getElementById('status-badge');
+    const statusIcon = document.getElementById('status-icon');
+    const statusText = document.getElementById('status-text');
+    
+    if (data.is_completed) {
+        if (statusBadge) {
+            statusBadge.className = 'inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800';
+        }
+        if (statusIcon) {
+            statusIcon.className = 'fas fa-check-circle mr-2';
+        }
+        if (statusText) {
+            statusText.textContent = 'Completed';
+        }
+        
+        // Stop polling and reload page to show results
+        clearInterval(pollInterval);
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
+    } else if (data.is_failed) {
+        if (statusBadge) {
+            statusBadge.className = 'inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-red-100 text-red-800';
+        }
+        if (statusIcon) {
+            statusIcon.className = 'fas fa-exclamation-triangle mr-2';
+        }
+        if (statusText) {
+            statusText.textContent = 'Failed';
+        }
+        
+        // Stop polling and show error
+        clearInterval(pollInterval);
+        if (data.error_message) {
+            alert('Processing failed: ' + data.error_message);
+        }
+        setTimeout(() => {
+            window.location.reload();
+        }, 2000);
+    }
+}
+
+function pollStatus() {
+    fetch(`/audio/${audioFileId}/status`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('Status update:', data);
+            updateProgress(data);
+        })
+        .catch(error => {
+            console.error('Error polling status:', error);
+        });
+}
+
+// Start polling every 2 seconds
+pollInterval = setInterval(pollStatus, 2000);
+
+// Initial poll
+pollStatus();
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    if (pollInterval) {
+        clearInterval(pollInterval);
+    }
+});
+@endif
+</script>
 
 @endsection
 

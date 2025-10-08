@@ -31,6 +31,7 @@ Route::post('/admin/logout', [AdminLoginController::class, 'logout'])->name('adm
 Route::middleware(['auth', 'throttle:60,1'])->group(function () {
     Route::resource('audio', AudioController::class);
     Route::get('audio/{id}/download', [AudioController::class, 'download'])->name('audio.download');
+    Route::get('audio/{id}/status', [AudioController::class, 'status'])->name('audio.status');
     
     // Text to Audio Routes with stricter rate limiting
     Route::resource('text-to-audio', TextToAudioController::class)->middleware('throttle:20,1');

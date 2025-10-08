@@ -22,6 +22,9 @@ class AudioFile extends Model
         'translated_text',
         'translated_audio_path',
         'status',
+        'processing_stage',
+        'processing_progress',
+        'processing_message',
         'error_message'
     ];
 

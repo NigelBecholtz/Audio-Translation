@@ -73,6 +73,13 @@ class AudioProcessingService
     public function transcribeAudio($audioFile): string
     {
         try {
+            // Update progress: Starting transcription
+            $audioFile->update([
+                'processing_stage' => 'transcribing',
+                'processing_progress' => 10,
+                'processing_message' => 'Preparing audio file...'
+            ]);
+
             if (app()->environment('local')) {
                 Log::info('Starting transcription', [
                     'file' => $audioFile->original_filename,
@@ -87,6 +94,11 @@ class AudioProcessingService
                 $originalSize = $this->ffmpegService->getFileSizeMB($audioFile->file_path);
                 
                 if ($originalSize > 25) {
+                    $audioFile->update([
+                        'processing_progress' => 20,
+                        'processing_message' => 'Compressing large audio file...'
+                    ]);
+
                     Log::info('File exceeds 25MB, compressing with FFmpeg', [
                         'original_size' => $originalSize . 'MB'
                     ]);
@@ -97,6 +109,11 @@ class AudioProcessingService
                     $audioFile->update(['file_path' => $processedPath]);
                 }
             }
+
+            $audioFile->update([
+                'processing_progress' => 30,
+                'processing_message' => 'Transcribing audio with AI...'
+            ]);
 
             $filePath = storage_path('app/public/' . $processedPath);
             
@@ -116,6 +133,11 @@ class AudioProcessingService
             if (empty($transcription)) {
                 throw new \Exception('Transcription returned empty result');
             }
+
+            $audioFile->update([
+                'processing_progress' => 40,
+                'processing_message' => 'Transcription completed!'
+            ]);
 
             if (app()->environment('local')) {
                 Log::info('Transcription completed', [

@@ -158,6 +158,25 @@ class AudioController extends Controller
         }
     }
 
+    /**
+     * Get processing status for AJAX polling
+     */
+    public function status($id)
+    {
+        $audioFile = AudioFile::findOrFail($id);
+        
+        return response()->json([
+            'status' => $audioFile->status,
+            'processing_stage' => $audioFile->processing_stage,
+            'processing_progress' => $audioFile->processing_progress,
+            'processing_message' => $audioFile->processing_message,
+            'error_message' => $audioFile->error_message,
+            'is_completed' => $audioFile->status === 'completed',
+            'is_failed' => $audioFile->status === 'failed',
+            'is_processing' => in_array($audioFile->status, ['uploaded', 'transcribing', 'translating', 'generating_audio']),
+        ]);
+    }
+
     private function processAudio($audioFileId)
     {
         $audioFile = AudioFile::findOrFail($audioFileId);
@@ -170,16 +189,30 @@ class AudioController extends Controller
             $audioFile->update(['transcription' => $transcription]);
 
             // Step 2: Translate text
-            $audioFile->update(['status' => 'translating']);
+            $audioFile->update([
+                'status' => 'translating',
+                'processing_stage' => 'translating',
+                'processing_progress' => 50,
+                'processing_message' => 'Translating text with AI...'
+            ]);
             $translatedText = $processingService->translateText(
                 $transcription,
                 $audioFile->source_language,
                 $audioFile->target_language
             );
-            $audioFile->update(['translated_text' => $translatedText]);
+            $audioFile->update([
+                'translated_text' => $translatedText,
+                'processing_progress' => 60,
+                'processing_message' => 'Translation completed!'
+            ]);
 
             // Step 3: Generate audio with TTS
-            $audioFile->update(['status' => 'generating_audio']);
+            $audioFile->update([
+                'status' => 'generating_audio',
+                'processing_stage' => 'generating_audio',
+                'processing_progress' => 70,
+                'processing_message' => 'Generating translated audio...'
+            ]);
             $translatedAudioPath = $processingService->generateAudio(
                 $translatedText,
                 $audioFile->target_language,
@@ -188,7 +221,10 @@ class AudioController extends Controller
             );
             $audioFile->update([
                 'translated_audio_path' => $translatedAudioPath,
-                'status' => 'completed'
+                'status' => 'completed',
+                'processing_stage' => 'completed',
+                'processing_progress' => 100,
+                'processing_message' => 'Processing complete!'
             ]);
             
             // Deduct credits
@@ -205,6 +241,9 @@ class AudioController extends Controller
             ]);
             $audioFile->update([
                 'status' => 'failed',
+                'processing_stage' => 'failed',
+                'processing_progress' => 0,
+                'processing_message' => 'Processing failed: ' . $e->getMessage(),
                 'error_message' => $e->getMessage()
             ]);
         }
