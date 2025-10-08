@@ -253,29 +253,35 @@
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
+        <!-- Flash Messages (fallback while debugging) -->
+        @if(session('success'))
+            <div class="bg-green-50 border-l-4 border-green-400 p-4 mb-6 rounded-r-lg shadow-sm fade-in">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-check-circle text-green-400"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-green-700">{{ session('success') }}</p>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6 rounded-r-lg shadow-sm fade-in">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-circle text-red-400"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-red-700">{{ session('error') }}</p>
+                    </div>
+                </div>
+            </div>
+        @endif
+        
         @yield('content')
     </main>
-
-    <!-- Toast Notifications -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            @if(session('success'))
-                Toast.success('{{ session('success') }}');
-            @endif
-
-            @if(session('error'))
-                Toast.error('{{ session('error') }}');
-            @endif
-
-            @if(session('warning'))
-                Toast.warning('{{ session('warning') }}');
-            @endif
-
-            @if(session('info'))
-                Toast.info('{{ session('info') }}');
-            @endif
-        });
-    </script>
 
     <!-- Footer -->
     <footer class="bg-gray-800/50 backdrop-blur-sm border-t border-gray-700/20 mt-16">
