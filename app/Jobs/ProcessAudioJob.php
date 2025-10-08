@@ -4,82 +4,146 @@ namespace App\Jobs;
 
 use App\Models\AudioFile;
 use App\Services\AudioProcessingService;
+use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
 class ProcessAudioJob implements ShouldQueue
 {
-    use Queueable;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $timeout = 600; // 10 minutes timeout
-    public $tries = 3; // Retry 3 times
+    /**
+     * The number of times the job may be attempted.
+     *
+     * @var int
+     */
+    public $tries = 3;
 
-    protected $audioFileId;
+    /**
+     * The maximum number of seconds the job can run.
+     *
+     * @var int
+     */
+    public $timeout = 600;
 
     /**
      * Create a new job instance.
      */
-    public function __construct($audioFileId)
-    {
-        $this->audioFileId = $audioFileId;
-    }
+    public function __construct(
+        public AudioFile $audioFile
+    ) {}
 
     /**
      * Execute the job.
      */
-    public function handle(): void
+    public function handle(AudioProcessingService $processingService): void
     {
-        $audioFile = AudioFile::findOrFail($this->audioFileId);
-        $processingService = new AudioProcessingService();
-        
         try {
             // Step 1: Transcribe with Whisper
-            $audioFile->update(['status' => 'transcribing']);
-            $transcription = $processingService->transcribeAudio($audioFile);
-            $audioFile->update(['transcription' => $transcription]);
+            $this->audioFile->update([
+                'status' => 'transcribing',
+                'processing_stage' => 'transcribing',
+                'processing_progress' => 10,
+                'processing_message' => 'Starting transcription...'
+            ]);
+
+            $transcription = $processingService->transcribeAudio($this->audioFile);
+            $this->audioFile->update([
+                'transcription' => $transcription,
+                'processing_progress' => 40,
+                'processing_message' => 'Transcription completed!'
+            ]);
 
             // Step 2: Translate text
-            $audioFile->update(['status' => 'translating']);
+            $this->audioFile->update([
+                'status' => 'translating',
+                'processing_stage' => 'translating',
+                'processing_progress' => 50,
+                'processing_message' => 'Translating text with AI...'
+            ]);
+
             $translatedText = $processingService->translateText(
                 $transcription,
-                $audioFile->source_language,
-                $audioFile->target_language
+                $this->audioFile->source_language,
+                $this->audioFile->target_language
             );
-            $audioFile->update(['translated_text' => $translatedText]);
+
+            $this->audioFile->update([
+                'translated_text' => $translatedText,
+                'processing_progress' => 60,
+                'processing_message' => 'Translation completed!'
+            ]);
 
             // Step 3: Generate audio with TTS
-            $audioFile->update(['status' => 'generating_audio']);
+            $this->audioFile->update([
+                'status' => 'generating_audio',
+                'processing_stage' => 'generating_audio',
+                'processing_progress' => 70,
+                'processing_message' => 'Generating translated audio...'
+            ]);
+
             $translatedAudioPath = $processingService->generateAudio(
                 $translatedText,
-                $audioFile->target_language,
-                $audioFile->voice,
-                $audioFile->style_instruction
+                $this->audioFile->target_language,
+                $this->audioFile->voice,
+                $this->audioFile->style_instruction
             );
-            $audioFile->update([
+
+            $this->audioFile->update([
                 'translated_audio_path' => $translatedAudioPath,
-                'status' => 'completed'
+                'status' => 'completed',
+                'processing_stage' => 'completed',
+                'processing_progress' => 100,
+                'processing_message' => 'Processing complete!'
             ]);
             
             // Deduct credits
             $processingService->deductCredits(
-                $audioFile->user,
-                0.5,
+                $this->audioFile->user,
+                config('stripe.default_cost_per_translation', 0.5),
                 'Credits used for audio translation'
             );
 
         } catch (\Exception $e) {
-            Log::error('Audio processing job failed', [
-                'audio_file_id' => $this->audioFileId,
-                'error' => $e->getMessage()
+            Log::error('Audio processing failed', [
+                'audio_file_id' => $this->audioFile->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
-            $audioFile->update([
+
+            $this->audioFile->update([
                 'status' => 'failed',
+                'processing_stage' => 'failed',
+                'processing_progress' => 0,
+                'processing_message' => 'Processing failed',
                 'error_message' => $e->getMessage()
             ]);
-            
+
             // Re-throw to trigger retry mechanism
             throw $e;
         }
+    }
+
+    /**
+     * Handle a job failure.
+     */
+    public function failed(\Throwable $exception): void
+    {
+        Log::error('Audio processing job failed permanently', [
+            'audio_file_id' => $this->audioFile->id,
+            'error' => $exception->getMessage(),
+            'attempts' => $this->attempts()
+        ]);
+
+        $this->audioFile->update([
+            'status' => 'failed',
+            'processing_stage' => 'failed',
+            'processing_progress' => 0,
+            'processing_message' => 'Processing failed',
+            'error_message' => 'Processing failed after ' . $this->tries . ' attempts: ' . $exception->getMessage()
+        ]);
     }
 }

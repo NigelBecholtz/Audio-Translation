@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ProcessTextToAudioJob;
 use App\Models\TextToAudio;
 use App\Services\AudioProcessingService;
 use App\Services\SanitizationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 
 class TextToAudioController extends Controller
@@ -67,11 +69,11 @@ class TextToAudioController extends Controller
                 'status' => 'processing'
             ]);
 
-            // Process immediately (sync queue)
-            $this->processTextToAudio($textToAudioRecord->id);
+            // Dispatch job to queue for background processing
+            ProcessTextToAudioJob::dispatch($textToAudioRecord);
 
             return redirect()->route('text-to-audio.show', $textToAudioRecord->id)
-                ->with('success', 'Audio generated successfully!');
+                ->with('success', 'Audio generation started!');
 
         } catch (\Exception $e) {
             Log::error('Text to audio failed: ' . $e->getMessage());
@@ -81,13 +83,16 @@ class TextToAudioController extends Controller
 
     public function show($id)
     {
-        $textToAudioFile = auth()->user()->textToAudioFiles()->findOrFail($id);
+        $textToAudioFile = TextToAudio::findOrFail($id);
+        $this->authorize('view', $textToAudioFile);
+        
         return view('text-to-audio.show', compact('textToAudioFile'));
     }
 
     public function download($id)
     {
-        $textToAudioFile = auth()->user()->textToAudioFiles()->findOrFail($id);
+        $textToAudioFile = TextToAudio::findOrFail($id);
+        $this->authorize('download', $textToAudioFile);
         
         if (!$textToAudioFile->isCompleted() || !$textToAudioFile->audio_path) {
             return back()->with('error', 'Audio file is not ready for download yet.');
@@ -99,7 +104,8 @@ class TextToAudioController extends Controller
     public function destroy($id)
     {
         try {
-            $textToAudioFile = auth()->user()->textToAudioFiles()->findOrFail($id);
+            $textToAudioFile = TextToAudio::findOrFail($id);
+            $this->authorize('delete', $textToAudioFile);
             
             // Delete audio file
             if ($textToAudioFile->audio_path && Storage::disk('public')->exists($textToAudioFile->audio_path)) {
@@ -115,44 +121,6 @@ class TextToAudioController extends Controller
         } catch (\Exception $e) {
             Log::error('Delete failed: ' . $e->getMessage());
             return back()->with('error', 'Delete failed: ' . $e->getMessage());
-        }
-    }
-
-    private function processTextToAudio($textToAudioId)
-    {
-        $textToAudioFile = TextToAudio::findOrFail($textToAudioId);
-        $processingService = new AudioProcessingService();
-        
-        try {
-            // Generate audio with TTS
-            $audioPath = $processingService->generateAudio(
-                $textToAudioFile->text_content,
-                $textToAudioFile->language,
-                $textToAudioFile->voice,
-                $textToAudioFile->style_instruction
-            );
-            
-            $textToAudioFile->update([
-                'audio_path' => $audioPath,
-                'status' => 'completed'
-            ]);
-            
-            // Deduct credits
-            $processingService->deductCredits(
-                $textToAudioFile->user,
-                0.5,
-                'Credits used for text to audio conversion'
-            );
-
-        } catch (\Exception $e) {
-            Log::error('Text to audio processing failed', [
-                'text_to_audio_id' => $textToAudioId,
-                'error' => $e->getMessage()
-            ]);
-            $textToAudioFile->update([
-                'status' => 'failed',
-                'error_message' => $e->getMessage()
-            ]);
         }
     }
 }

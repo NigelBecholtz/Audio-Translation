@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ProcessAudioJob;
 use App\Models\AudioFile;
 use App\Models\CreditTransaction;
 use App\Models\TextToAudio;
@@ -102,24 +103,11 @@ class AudioController extends Controller
                 'processing_message' => 'Upload complete! Starting processing...'
             ]);
 
-            $audioRecordId = $audioRecord->id;
-
-            // Start processing in background using shutdown function
-            register_shutdown_function(function() use ($audioRecordId) {
-                try {
-                    // Reopen database connection (might be closed after response)
-                    \DB::reconnect();
-                    $this->processAudio($audioRecordId);
-                } catch (\Exception $e) {
-                    \Log::error('Background processing failed', [
-                        'audio_id' => $audioRecordId,
-                        'error' => $e->getMessage()
-                    ]);
-                }
-            });
+            // Dispatch job to queue for background processing
+            ProcessAudioJob::dispatch($audioRecord);
 
             // Redirect immediately to show page with progress bar
-            return redirect()->route('audio.show', $audioRecordId)
+            return redirect()->route('audio.show', $audioRecord->id)
                 ->with('success', 'Audio file uploaded! Processing started...');
 
         } catch (\Exception $e) {
@@ -133,13 +121,16 @@ class AudioController extends Controller
 
     public function show($id)
     {
-        $audioFile = auth()->user()->audioFiles()->findOrFail($id);
+        $audioFile = AudioFile::findOrFail($id);
+        $this->authorize('view', $audioFile);
+        
         return view('audio.show', compact('audioFile'));
     }
 
     public function download($id)
     {
-        $audioFile = auth()->user()->audioFiles()->findOrFail($id);
+        $audioFile = AudioFile::findOrFail($id);
+        $this->authorize('download', $audioFile);
         
         if (!$audioFile->isCompleted() || !$audioFile->translated_audio_path) {
             return back()->with('error', 'Audio file is not ready for download yet.');
@@ -151,7 +142,8 @@ class AudioController extends Controller
     public function destroy($id)
     {
         try {
-            $audioFile = auth()->user()->audioFiles()->findOrFail($id);
+            $audioFile = AudioFile::findOrFail($id);
+            $this->authorize('delete', $audioFile);
             
             // Delete original audio file
             if ($audioFile->file_path && Storage::disk('public')->exists($audioFile->file_path)) {
@@ -181,6 +173,7 @@ class AudioController extends Controller
     public function status($id)
     {
         $audioFile = AudioFile::findOrFail($id);
+        $this->authorize('view', $audioFile);
         
         return response()->json([
             'status' => $audioFile->status,
@@ -193,77 +186,4 @@ class AudioController extends Controller
             'is_processing' => in_array($audioFile->status, ['uploaded', 'transcribing', 'translating', 'generating_audio']),
         ]);
     }
-
-    private function processAudio($audioFileId)
-    {
-        $audioFile = AudioFile::findOrFail($audioFileId);
-        $processingService = new AudioProcessingService();
-        
-        try {
-            // Step 1: Transcribe with Whisper
-            $audioFile->update(['status' => 'transcribing']);
-            $transcription = $processingService->transcribeAudio($audioFile);
-            $audioFile->update(['transcription' => $transcription]);
-
-            // Step 2: Translate text
-            $audioFile->update([
-                'status' => 'translating',
-                'processing_stage' => 'translating',
-                'processing_progress' => 50,
-                'processing_message' => 'Translating text with AI...'
-            ]);
-            $translatedText = $processingService->translateText(
-                $transcription,
-                $audioFile->source_language,
-                $audioFile->target_language
-            );
-            $audioFile->update([
-                'translated_text' => $translatedText,
-                'processing_progress' => 60,
-                'processing_message' => 'Translation completed!'
-            ]);
-
-            // Step 3: Generate audio with TTS
-            $audioFile->update([
-                'status' => 'generating_audio',
-                'processing_stage' => 'generating_audio',
-                'processing_progress' => 70,
-                'processing_message' => 'Generating translated audio...'
-            ]);
-            $translatedAudioPath = $processingService->generateAudio(
-                $translatedText,
-                $audioFile->target_language,
-                $audioFile->voice,
-                $audioFile->style_instruction
-            );
-            $audioFile->update([
-                'translated_audio_path' => $translatedAudioPath,
-                'status' => 'completed',
-                'processing_stage' => 'completed',
-                'processing_progress' => 100,
-                'processing_message' => 'Processing complete!'
-            ]);
-            
-            // Deduct credits
-            $processingService->deductCredits(
-                $audioFile->user,
-                0.5,
-                'Credits used for audio translation'
-            );
-
-        } catch (\Exception $e) {
-            Log::error('Audio processing failed', [
-                'audio_file_id' => $audioFileId,
-                'error' => $e->getMessage()
-            ]);
-            $audioFile->update([
-                'status' => 'failed',
-                'processing_stage' => 'failed',
-                'processing_progress' => 0,
-                'processing_message' => 'Processing failed: ' . $e->getMessage(),
-                'error_message' => $e->getMessage()
-            ]);
-        }
-    }
-
 }
