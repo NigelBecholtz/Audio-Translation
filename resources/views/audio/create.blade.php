@@ -25,6 +25,22 @@
                                     <i class="fas fa-upload mr-3 text-blue-400"></i>
                                     {{ __('Upload Audio File') }}
                                 </label>
+                                
+                                <!-- Upload Progress (Hidden by default) -->
+                                <div id="uploadProgress" class="hidden mb-6">
+                                    <div class="bg-blue-50 border-2 border-blue-300 rounded-xl p-6">
+                                        <div class="flex items-center mb-4">
+                                            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                                <i class="fas fa-spinner fa-spin text-blue-600"></i>
+                                            </div>
+                                            <h4 class="text-lg font-bold text-blue-800">Upload in progress...</h4>
+                                        </div>
+                                        <div class="w-full bg-blue-200 rounded-full h-3">
+                                            <div id="progressBar" class="bg-blue-600 h-3 rounded-full transition-all duration-300 animate-pulse" style="width: 60%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
                                 <div id="dropZone" class="relative border-4 border-dashed border-blue-400 rounded-2xl p-12 text-center bg-gradient-to-br from-gray-800 to-gray-700 cursor-pointer transition-all hover:border-blue-300 hover:bg-gradient-to-br hover:from-gray-700 hover:to-gray-600">
                                     <input type="file" 
                                            id="audio" 
@@ -467,6 +483,8 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Audio create page JavaScript loaded');
+    
     const dropZone = document.getElementById('dropZone');
     const dropZoneContent = document.getElementById('dropZoneContent');
     const fileInfo = document.getElementById('fileInfo');
@@ -477,44 +495,68 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitButton = document.getElementById('submitButton');
     const uploadProgress = document.getElementById('uploadProgress');
 
+    if (!dropZone || !audioInput) {
+        console.error('Required elements not found');
+        return;
+    }
+
     // Drag and drop functionality
     dropZone.addEventListener('dragover', function(e) {
         e.preventDefault();
-        dropZone.classList.add('border-indigo-400', 'bg-indigo-900/20');
+        e.stopPropagation();
+        dropZone.classList.add('border-indigo-400');
+        dropZone.classList.add('bg-indigo-900/20');
     });
 
     dropZone.addEventListener('dragleave', function(e) {
         e.preventDefault();
-        dropZone.classList.remove('border-indigo-400', 'bg-indigo-900/20');
+        e.stopPropagation();
+        dropZone.classList.remove('border-indigo-400');
+        dropZone.classList.remove('bg-indigo-900/20');
     });
 
     dropZone.addEventListener('drop', function(e) {
         e.preventDefault();
-        dropZone.classList.remove('border-indigo-400', 'bg-indigo-900/20');
+        e.stopPropagation();
+        dropZone.classList.remove('border-indigo-400');
+        dropZone.classList.remove('bg-indigo-900/20');
         
         const files = e.dataTransfer.files;
         if (files.length > 0) {
-            audioInput.files = files;
+            // Set files to input element
+            const dt = new DataTransfer();
+            dt.items.add(files[0]);
+            audioInput.files = dt.files;
             handleFile(files[0]);
         }
     });
 
     // File input change
     audioInput.addEventListener('change', function(e) {
+        console.log('File input changed', e.target.files);
         if (e.target.files.length > 0) {
             handleFile(e.target.files[0]);
         }
     });
 
     // Form submission
-    uploadForm.addEventListener('submit', function(e) {
-        uploadProgress.classList.remove('hidden');
-        submitButton.disabled = true;
-        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Uploading...';
-    });
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', function(e) {
+            console.log('Form submitting');
+            if (uploadProgress) {
+                uploadProgress.classList.remove('hidden');
+            }
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> {{ __("Uploading...") }}';
+            }
+        });
+    }
 
     function handleFile(file) {
-        const allowedTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/mp4', 'audio/m4a', 'audio/x-m4a', 'audio/mp4a-latm', 'audio/x-mp4', 'audio/ogg', 'audio/flac', 'audio/x-flac'];
+        console.log('Handling file:', file.name, file.type, file.size);
+        
+        const allowedTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/mp4', 'audio/m4a', 'audio/x-m4a', 'audio/mp4a-latm', 'audio/x-mp4', 'audio/ogg', 'audio/flac', 'audio/x-flac', 'video/mp4'];
         const allowedExtensions = ['.mp3', '.wav', '.m4a', '.mp4', '.ogg', '.flac'];
         const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
         
@@ -522,21 +564,27 @@ document.addEventListener('DOMContentLoaded', function() {
         const isValidExtension = allowedExtensions.includes(fileExtension);
         
         if (!isValidMimeType && !isValidExtension) {
+            console.log('Invalid file type:', file.type, fileExtension);
             alert('Only audio files are allowed (MP3, WAV, M4A, MP4, OGG, FLAC).');
+            audioInput.value = '';
             return;
         }
 
         const maxSize = {{ config('audio.max_upload_size', 100) }} * 1024 * 1024;
         if (file.size > maxSize) {
             alert('File is too large. Maximum {{ config("audio.max_upload_size", 100) }}MB allowed.');
+            audioInput.value = '';
             return;
         }
 
-        fileName.textContent = file.name;
-        fileSize.textContent = formatFileSize(file.size);
+        // Update UI
+        if (fileName) fileName.textContent = file.name;
+        if (fileSize) fileSize.textContent = formatFileSize(file.size);
         
-        dropZoneContent.classList.add('hidden');
-        fileInfo.classList.remove('hidden');
+        if (dropZoneContent) dropZoneContent.classList.add('hidden');
+        if (fileInfo) fileInfo.classList.remove('hidden');
+        
+        console.log('File accepted:', file.name);
     }
 
     function formatFileSize(bytes) {
