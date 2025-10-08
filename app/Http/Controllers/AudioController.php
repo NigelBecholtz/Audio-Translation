@@ -47,24 +47,25 @@ class AudioController extends Controller
         }
         
         // Set PHP limits FIRST, before any processing
-        ini_set('upload_max_filesize', '50M');
-        ini_set('post_max_size', '50M');
-        ini_set('max_execution_time', 300);
-        ini_set('max_input_time', 300);
-        ini_set('memory_limit', '256M');
+        $maxUploadSize = config('audio.max_upload_size', 100);
+        ini_set('upload_max_filesize', $maxUploadSize . 'M');
+        ini_set('post_max_size', ($maxUploadSize + 10) . 'M');
+        ini_set('max_execution_time', config('audio.max_execution_time', 600));
+        ini_set('max_input_time', config('audio.max_input_time', 600));
+        ini_set('memory_limit', config('audio.memory_limit', '512M'));
         
-        // Check content length manually to bypass ValidatePostSize middleware
+        // Check content length manually
         $contentLength = $request->header('content-length');
-        $maxSize = 25 * 1024 * 1024; // 25MB (OpenAI Whisper limit)
+        $maxSize = $maxUploadSize * 1024 * 1024;
         
         if ($contentLength && $contentLength > $maxSize) {
             return redirect()->back()->withErrors([
-                'audio' => 'File is too large. Maximum 25MB allowed (OpenAI Whisper API limit).'
+                'audio' => "File is too large. Maximum {$maxUploadSize}MB allowed (will be compressed automatically if needed)."
             ]);
         }
         
         $request->validate([
-            'audio' => 'required|file|mimes:mp3,wav,m4a,mp4|max:25600', // 25MB max (OpenAI Whisper limit)
+            'audio' => 'required|file|mimes:mp3,wav,m4a,mp4,ogg,flac|max:' . ($maxUploadSize * 1024), // 100MB max (will compress)
             'source_language' => 'required|string|in:en,es,fr,de,it,pt,ru,ja,ko,zh,ar,hi,nl,sv,da,no,fi,pl,cs,sk,hu,ro,bg,hr,sl,el,tr,uk,lv,lt,et,ca,eu,th,vi,id,ms,tl,bn,ta,te,ml,kn,gu,pa,ur,si,my,km,lo,mn,af,sw,am,sq,hy,az,ka,he,fa,ps,ne',
             'target_language' => 'required|string|in:en,es,fr,de,it,pt,ru,ja,ko,zh,ar,hi,nl,sv,da,no,fi,pl,cs,sk,hu,ro,bg,hr,sl,el,tr,uk,lv,lt,et,ca,eu,th,vi,id,ms,tl,bn,ta,te,ml,kn,gu,pa,ur,si,my,km,lo,mn,af,sw,am,sq,hy,az,ka,he,fa,ps,ne',
             'voice' => 'required|string',

@@ -69,7 +69,7 @@
                                     </div>
                                     <div style="display: flex; align-items: center; background: #374151; padding: 8px 16px; border-radius: 8px; border: 2px solid #10b981;">
                                         <i class="fas fa-weight" style="margin-right: 8px; color: #10b981;"></i>
-                                        <span style="font-size: 14px; font-weight: 600; color: #ffffff;">Max 25MB</span>
+                                        <span style="font-size: 14px; font-weight: 600; color: #ffffff;">Max {{ config('audio.max_upload_size', 100) }}MB</span>
                                     </div>
                                     <div style="display: flex; align-items: center; background: #374151; padding: 8px 16px; border-radius: 8px; border: 2px solid #8b5cf6;">
                                         <i class="fas fa-clock" style="margin-right: 8px; color: #8b5cf6;"></i>
@@ -538,10 +538,10 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Validate file size (from backend config - default 25MB for Whisper API)
-        const maxSize = {{ config('audio.max_file_size') }} * 1024 * 1024;
+        // Validate file size (from backend config - 100MB upload, will compress if >25MB)
+        const maxSize = {{ config('audio.max_upload_size', 100) }} * 1024 * 1024;
         if (file.size > maxSize) {
-            alert('File is too large. Maximum {{ config("audio.max_file_size") }}MB allowed.');
+            alert('File is too large. Maximum {{ config("audio.max_upload_size", 100) }}MB allowed. Files over 25MB will be automatically compressed.');
             return;
         }
 

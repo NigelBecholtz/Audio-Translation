@@ -3,17 +3,20 @@
 namespace App\Services;
 
 use App\Services\GeminiTtsService;
+use App\Services\FFmpegService;
 use Illuminate\Support\Facades\Log;
 
 class AudioProcessingService
 {
     protected $geminiTts;
     protected $creditService;
+    protected $ffmpegService;
 
     public function __construct()
     {
         $this->geminiTts = new GeminiTtsService();
         $this->creditService = new CreditService();
+        $this->ffmpegService = new FFmpegService();
     }
 
     /**
@@ -77,7 +80,25 @@ class AudioProcessingService
                 ]);
             }
 
-            $filePath = storage_path('app/public/' . $audioFile->file_path);
+            // Compress audio if needed (>25MB)
+            $processedPath = $audioFile->file_path;
+            
+            if ($this->ffmpegService->isInstalled()) {
+                $originalSize = $this->ffmpegService->getFileSizeMB($audioFile->file_path);
+                
+                if ($originalSize > 25) {
+                    Log::info('File exceeds 25MB, compressing with FFmpeg', [
+                        'original_size' => $originalSize . 'MB'
+                    ]);
+                    
+                    $processedPath = $this->ffmpegService->compressIfNeeded($audioFile->file_path, 25);
+                    
+                    // Update database with compressed file path
+                    $audioFile->update(['file_path' => $processedPath]);
+                }
+            }
+
+            $filePath = storage_path('app/public/' . $processedPath);
             
             if (!file_exists($filePath)) {
                 throw new \Exception('Audio file not found: ' . $filePath);
