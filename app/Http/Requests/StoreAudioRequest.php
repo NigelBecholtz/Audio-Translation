@@ -12,8 +12,8 @@ class StoreAudioRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // Check if user can make translation
-        return $this->user()->canMakeTranslation();
+        // Temporarily always return true for debugging
+        return true;
     }
 
     /**

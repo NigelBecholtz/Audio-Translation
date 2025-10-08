@@ -10,9 +10,12 @@ use Illuminate\Support\Facades\Log;
 
 class CreateAudioTranslationAction
 {
-    public function __construct(
-        private SanitizationService $sanitizer
-    ) {}
+    private SanitizationService $sanitizer;
+    
+    public function __construct(SanitizationService $sanitizer)
+    {
+        $this->sanitizer = $sanitizer;
+    }
 
     /**
      * Create a new audio translation record

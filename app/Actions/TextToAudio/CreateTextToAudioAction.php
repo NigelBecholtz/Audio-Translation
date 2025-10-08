@@ -9,9 +9,12 @@ use Illuminate\Support\Facades\Log;
 
 class CreateTextToAudioAction
 {
-    public function __construct(
-        private SanitizationService $sanitizer
-    ) {}
+    private SanitizationService $sanitizer;
+    
+    public function __construct(SanitizationService $sanitizer)
+    {
+        $this->sanitizer = $sanitizer;
+    }
 
     /**
      * Create a new text-to-audio record
