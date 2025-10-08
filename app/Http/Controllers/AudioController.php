@@ -96,14 +96,32 @@ class AudioController extends Controller
                 'target_language' => $targetLanguage,
                 'voice' => $voice,
                 'style_instruction' => $styleInstruction,
-                'status' => 'uploaded'
+                'status' => 'uploaded',
+                'processing_stage' => 'uploaded',
+                'processing_progress' => 5,
+                'processing_message' => 'Upload complete! Starting processing...'
             ]);
 
-            // Process immediately (sync queue)
-            $this->processAudio($audioRecord->id);
+            // Redirect immediately to show page with progress bar
+            $redirectResponse = redirect()->route('audio.show', $audioRecord->id)
+                ->with('success', 'Audio file uploaded! Processing started...');
 
-            return redirect()->route('audio.show', $audioRecord->id)
-                ->with('success', 'Audio file processed successfully!');
+            // Process after redirect (using output buffering trick for sync processing)
+            if (function_exists('fastcgi_finish_request')) {
+                // Send response to user immediately
+                session()->save();
+                fastcgi_finish_request();
+                
+                // Continue processing in background
+                $this->processAudio($audioRecord->id);
+            } else {
+                // Fallback: start processing in same request (will still redirect first due to response buffering)
+                register_shutdown_function(function() use ($audioRecord) {
+                    $this->processAudio($audioRecord->id);
+                });
+            }
+
+            return $redirectResponse;
 
         } catch (\Exception $e) {
             Log::error('Audio upload failed', [
