@@ -3,26 +3,26 @@
 @section('title', 'New Text to Audio')
 
 @section('content')
-<div class="px-4 py-6 sm:px-0">
-    <div class="max-w-4xl mx-auto">
+<div class="px-4 py-6 sm:px-6">
+    <div class="max-w-6xl mx-auto">
         <!-- Header -->
-        <div style="text-align: center; margin-bottom: 48px;">
-            <h1 style="font-size: 48px; font-weight: bold; color: #ffffff; margin-bottom: 16px;">New Text to Audio</h1>
-            <p style="font-size: 20px; color: #ffffff;">Convert your text to speech with AI voices</p>
+        <div class="text-center mb-12 fade-in">
+            <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">New Text to Audio</h1>
+            <p class="text-lg md:text-xl text-gray-300">Convert your text to speech with AI voices</p>
         </div>
         
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Text Input Form -->
-            <div style="grid-column: span 2;">
-                <div class="card" style="border: 3px solid #4b5563;">
-                    <div style="padding: 32px;">
+            <div class="lg:col-span-2">
+                <div class="card border-2 border-gray-600">
+                    <div class="p-6 md:p-8">
                         <form id="textToAudioForm" action="{{ route('text-to-audio.store') }}" method="POST" class="space-y-8">
                             @csrf
                             
                             <!-- Text Input -->
                             <div>
-                                <label style="display: block; font-size: 24px; font-weight: bold; color: #ffffff; margin-bottom: 24px;">
-                                    <i class="fas fa-file-text" style="margin-right: 12px; color: #60a5fa;"></i>
+                                <label class="block text-2xl font-bold text-white mb-6">
+                                    <i class="fas fa-file-text mr-3 text-blue-400"></i>
                                     Enter Your Text
                                 </label>
                                 <textarea id="text_content" 
@@ -31,12 +31,11 @@
                                          required
                                          maxlength="{{ config('audio.max_text_length') }}"
                                          placeholder="Enter the text you want to convert to audio..."
-                                          class="w-full px-6 py-4 text-lg border-3 border-blue-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all bg-white shadow-lg resize-none"
-                                          style="font-family: inherit;">{{ old('text_content') }}</textarea>
+                                          class="w-full px-6 py-4 text-lg border-2 border-blue-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-400 focus:border-blue-500 transition-all bg-white shadow-lg resize-none">{{ old('text_content') }}</textarea>
                                 <div class="flex justify-between items-center mt-2">
-                                    <p class="text-sm text-white">
+                                    <p class="text-sm text-gray-300">
                                         <i class="fas fa-info-circle mr-1"></i>
-                                        For best voice consistency, keep text under 900 characters. Longer texts will be chunked (voice may vary slightly between chunks).
+                                        For best voice consistency, keep text under 900 characters. Longer texts will be chunked (voice may vary slightly).
                                     </p>
                                     <span id="charCount" class="text-sm text-white">0 / 50000</span>
                                 </div>
@@ -47,7 +46,7 @@
                                     </p>
                                 </div>
                                 @error('text_content')
-                                    <p class="mt-2 text-sm text-red-600 flex items-center font-bold">
+                                    <p class="mt-2 text-sm text-red-400 flex items-center font-semibold">
                                         <i class="fas fa-exclamation-circle mr-2"></i>
                                         {{ $message }}
                                     </p>
@@ -59,13 +58,13 @@
                                 <!-- Language Selection -->
                                 <div>
                                     <label for="language" class="block text-xl font-bold text-white mb-4">
-                                        <i class="fas fa-language mr-3 text-blue-400"></i>
+                                        <i class="fas fa-language mr-2 text-blue-400"></i>
                                         Language
                                     </label>
                                     <select id="language" 
                                             name="language" 
                                             required
-                                            class="w-full pl-6 pr-10 py-4 text-lg border-3 border-blue-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all bg-white shadow-lg">
+                                            class="w-full px-6 py-4 text-lg border-2 border-blue-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-400 focus:border-blue-500 transition-all bg-white shadow-lg">
                                         <option value="">Select language</option>
                                         
                                         <!-- Major Languages -->
@@ -144,11 +143,10 @@
                                             <option value="fa" {{ old('language') == 'fa' ? 'selected' : '' }}>🇮🇷 Persian</option>
                                             <option value="ps" {{ old('language') == 'ps' ? 'selected' : '' }}>🇦🇫 Pashto</option>
                                             <option value="ne" {{ old('language') == 'ne' ? 'selected' : '' }}>🇳🇵 Nepali</option>
-                                            <option value="si" {{ old('language') == 'si' ? 'selected' : '' }}>🇱🇰 Sinhala</option>
                                         </optgroup>
                                     </select>
                                     @error('language')
-                                        <p class="mt-2 text-sm text-red-600 flex items-center font-bold">
+                                        <p class="mt-2 text-sm text-red-400 flex items-center font-semibold">
                                             <i class="fas fa-exclamation-circle mr-2"></i>
                                             {{ $message }}
                                         </p>
@@ -158,13 +156,13 @@
                                 <!-- Voice Selection -->
                                 <div>
                                     <label for="voice" class="block text-xl font-bold text-white mb-4">
-                                        <i class="fas fa-microphone mr-3 text-purple-400"></i>
+                                        <i class="fas fa-microphone mr-2 text-purple-400"></i>
                                         Voice Selection
                                     </label>
                                     <select id="voice" 
                                             name="voice" 
                                             required
-                                            class="w-full pl-6 pr-10 py-4 text-lg border-3 border-purple-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-purple-300 focus:border-purple-500 transition-all bg-white shadow-lg">
+                                            class="w-full px-6 py-4 text-lg border-2 border-purple-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-500 transition-all bg-white shadow-lg">
                                         <option value="">Select voice</option>
                                         
                                         <!-- Gemini 2.5 Pro TTS Voices -->
@@ -204,12 +202,12 @@
                     <option value="zubenelgenubi" {{ old('voice') == 'zubenelgenubi' ? 'selected' : '' }}>👨 Zubenelgenubi - Strong and confident male voice</option>
                 </optgroup>
                                     </select>
-                                    <p class="mt-2 text-sm text-white">
+                                    <p class="mt-2 text-sm text-gray-300">
                                         <i class="fas fa-info-circle mr-1"></i>
-                                        Choose the voice that will speak your text. Gemini 2.5 Pro TTS offers better accent support and more natural pronunciation.
+                                        Choose the voice that will speak your text. Gemini 2.5 Pro TTS offers better accent support.
                                     </p>
                                     @error('voice')
-                                        <p class="mt-2 text-sm text-red-600 flex items-center font-bold">
+                                        <p class="mt-2 text-sm text-red-400 flex items-center font-semibold">
                                             <i class="fas fa-exclamation-circle mr-2"></i>
                                             {{ $message }}
                                         </p>
@@ -220,20 +218,20 @@
                             <!-- Style Instruction (Optional) -->
                             <div>
                                 <label for="style_instruction" class="block text-xl font-bold text-white mb-4">
-                                    <i class="fas fa-palette mr-3 text-green-400"></i>
+                                    <i class="fas fa-palette mr-2 text-pink-400"></i>
                                     Style Instruction (Optional)
                                 </label>
                                 <textarea id="style_instruction" 
                                         name="style_instruction" 
                                         rows="3"
                                         placeholder="e.g., 'Speak with enthusiasm and energy', 'Use a calm and soothing tone', 'Sound professional and authoritative' (up to 5000 characters)"
-                                        class="w-full pl-6 pr-6 py-4 text-lg border-3 border-green-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-300 focus:border-green-500 transition-all bg-white shadow-lg resize-none">{{ old('style_instruction') }}</textarea>
-                                <p class="mt-2 text-sm text-white">
+                                        class="w-full px-6 py-4 text-lg border-2 border-pink-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-pink-400 focus:border-pink-500 transition-all bg-white shadow-lg resize-none">{{ old('style_instruction') }}</textarea>
+                                <p class="mt-2 text-sm text-gray-300">
                                     <i class="fas fa-info-circle mr-1"></i>
-                                    Provide style instructions to customize how the voice should speak (tone, emotion, pace, etc.). Only works with Gemini 2.5 Pro TTS voices.
+                                    Provide style instructions to customize how the voice should speak (tone, emotion, pace, etc.).
                                 </p>
                                 @error('style_instruction')
-                                    <p class="mt-2 text-sm text-red-600 flex items-center font-bold">
+                                    <p class="mt-2 text-sm text-red-400 flex items-center font-semibold">
                                         <i class="fas fa-exclamation-circle mr-2"></i>
                                         {{ $message }}
                                     </p>
@@ -241,13 +239,13 @@
                             </div>
 
                             <!-- Submit Button -->
-                            <div style="display: flex; justify-content: flex-end; gap: 24px;">
-                                <a href="{{ route('text-to-audio.index') }}" class="btn-secondary" style="font-size: 18px; padding: 16px 32px;">
-                                    <i class="fas fa-arrow-left"></i>
+                            <div class="flex justify-end gap-6">
+                                <a href="{{ route('text-to-audio.index') }}" class="btn-secondary text-lg px-8 py-4">
+                                    <i class="fas fa-arrow-left mr-2"></i>
                                     Cancel
                                 </a>
-                                <button type="submit" id="submitButton" class="btn-primary" style="font-size: 20px; padding: 16px 48px;">
-                                    <i class="fas fa-magic"></i>
+                                <button type="submit" id="submitButton" class="btn-primary text-xl px-12 py-4">
+                                    <i class="fas fa-magic mr-2"></i>
                                     Generate Audio
                                 </button>
                             </div>
@@ -258,60 +256,62 @@
 
             <!-- Info Sidebar -->
             <div class="lg:col-span-1">
-                <div class="card" style="border: 3px solid #4b5563;">
-                    <div style="padding: 32px;">
-                        <h3 class="text-xl font-bold text-white mb-6">How it works</h3>
-                        <div class="space-y-6">
-                            <div class="flex items-start space-x-3">
-                                <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                    <span class="text-sm font-bold text-indigo-600">1</span>
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold text-white">Enter Text</h4>
-                                    <p class="text-sm text-white">Type or paste your text (up to 50,000 characters)</p>
-                                </div>
+                <div class="card border-2 border-gray-600 sticky top-24">
+                    <h3 class="text-xl font-bold text-white mb-6 flex items-center">
+                        <i class="fas fa-info-circle mr-2 text-indigo-400"></i>
+                        How it works
+                    </h3>
+                    
+                    <div class="space-y-6">
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <span class="text-sm font-bold text-indigo-600">1</span>
                             </div>
-                            
-                            <div class="flex items-start space-x-3">
-                                <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                    <span class="text-sm font-bold text-indigo-600">2</span>
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold text-white">Select Language & Voice</h4>
-                                    <p class="text-sm text-white">Choose language and AI voice for your audio</p>
-                                </div>
-                            </div>
-                            
-                            <div class="flex items-start space-x-3">
-                                <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                    <span class="text-sm font-bold text-indigo-600">3</span>
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold text-white">AI Processing</h4>
-                                    <p class="text-sm text-white">Gemini 2.5 Pro TTS converts your text to audio with automatic chunking</p>
-                                </div>
-                            </div>
-                            
-                            <div class="flex items-start space-x-3">
-                                <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                    <span class="text-sm font-bold text-indigo-600">4</span>
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold text-white">Download Result</h4>
-                                    <p class="text-sm text-white">Download your generated audio file</p>
-                                </div>
+                            <div>
+                                <h4 class="font-semibold text-white">Enter Text</h4>
+                                <p class="text-sm text-gray-300">Type or paste your text (up to 50,000 characters)</p>
                             </div>
                         </div>
                         
-                        <div class="mt-8 p-4 bg-gradient-to-r from-gray-700 to-gray-600 rounded-xl">
-                            <h4 class="font-semibold text-white mb-2">
-                                <i class="fas fa-lightbulb mr-2 text-yellow-400"></i>
-                                Pro Tip
-                            </h4>
-                            <p class="text-sm text-white">
-                                For best results, use clear and well-formatted text without special characters.
-                            </p>
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <span class="text-sm font-bold text-indigo-600">2</span>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-white">Select Language & Voice</h4>
+                                <p class="text-sm text-gray-300">Choose language and AI voice for your audio</p>
+                            </div>
                         </div>
+                        
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <span class="text-sm font-bold text-indigo-600">3</span>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-white">AI Processing</h4>
+                                <p class="text-sm text-gray-300">Gemini 2.5 Pro TTS converts your text to audio</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <span class="text-sm font-bold text-indigo-600">4</span>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-white">Download Result</h4>
+                                <p class="text-sm text-gray-300">Download your generated audio file</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 p-4 bg-gradient-to-r from-gray-700 to-gray-600 rounded-xl">
+                        <h4 class="font-semibold text-white mb-2">
+                            <i class="fas fa-lightbulb mr-2 text-yellow-400"></i>
+                            Pro Tip
+                        </h4>
+                        <p class="text-sm text-gray-300">
+                            For best results, use clear and well-formatted text without special characters.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -323,11 +323,10 @@
 document.addEventListener('DOMContentLoaded', function() {
     const textarea = document.getElementById('text_content');
     const charCount = document.getElementById('charCount');
+    const chunkingWarning = document.getElementById('chunkingWarning');
     
     function updateCharCount() {
         const count = textarea.value.length;
-        const chunkingWarning = document.getElementById('chunkingWarning');
-        
         charCount.textContent = `${count} / 50000`;
         
         if (count > 50000) {

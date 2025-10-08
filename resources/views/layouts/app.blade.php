@@ -101,94 +101,94 @@
 </head>
 <body class="bg-gradient-to-br from-gray-900 via-slate-900 to-black min-h-screen">
     <!-- Navigation -->
-    <nav style="background: #1f2937; box-shadow: 0 4px 20px rgba(0,0,0,0.3); border-bottom: 3px solid #374151; position: sticky; top: 0; z-index: 50;">
-        <div style="max-width: 1200px; margin: 0 auto; padding: 0 24px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; height: 80px;">
+    <nav class="bg-gray-800 shadow-2xl border-b-2 border-gray-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+            <div class="flex justify-between items-center h-20">
                 <!-- Logo -->
-                <div style="display: flex; align-items: center;">
-                    <a href="{{ route('audio.index') }}" style="display: flex; align-items: center; gap: 12px; text-decoration: none; color: #f9fafb; font-weight: bold; font-size: 24px;">
-                        <div style="width: 48px; height: 48px; background: #1e3a8a; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);">
+                <div class="flex items-center">
+                    <a href="{{ route('audio.index') }}" class="flex items-center gap-3 no-underline text-gray-50 font-bold text-xl hover:opacity-90 transition">
+                        <div class="w-12 h-12 bg-blue-900 rounded-full flex items-center justify-center shadow-lg">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M12 1C10.9 1 10 1.9 10 3V12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12V3C14 1.9 13.1 1 12 1ZM19 10V12C19 15.9 15.9 19 12 19C8.1 19 5 15.9 5 12V10H7V12C7 14.8 9.2 17 12 17C14.8 17 17 14.8 17 12V10H19ZM12 21C13.1 21 14 20.1 14 19H10C10 20.1 10.9 21 12 21Z" fill="white"/>
                             </svg>
                         </div>
-                        <div style="display: flex; flex-direction: column; line-height: 1.1;">
-                            <span style="font-size: 18px; font-weight: 700;">AUDIO</span>
-                            <span style="font-size: 18px; font-weight: 700;">TRANSLATOR</span>
+                        <div class="flex flex-col leading-tight">
+                            <span class="text-base font-bold">AUDIO</span>
+                            <span class="text-base font-bold">TRANSLATOR</span>
                         </div>
                     </a>
                 </div>
 
                 <!-- Desktop Navigation -->
-                <div style="display: flex; align-items: center; gap: 16px;" class="hidden md:flex">
+                <div class="hidden md:flex items-center gap-4">
                     @auth
                         <!-- Dashboard -->
-                        <a href="{{ route('audio.index') }}" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: all 0.2s;">
+                        <a href="{{ route('audio.index') }}" class="flex items-center gap-2 text-gray-300 no-underline font-semibold px-4 py-2 rounded-lg hover:text-white hover:bg-gray-700 transition">
                             <i class="fas fa-list"></i>
-                            <span>Dashboard</span>
+                            <span>{{ __('Dashboard') }}</span>
                         </a>
 
                         <!-- Audio Translation -->
-                        <a href="{{ route('audio.create') }}" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: all 0.2s; background: #374151; border: 2px solid #4b5563;">
+                        <a href="{{ route('audio.create') }}" class="flex items-center gap-2 text-gray-300 no-underline font-semibold px-4 py-2 rounded-lg bg-gray-700 border-2 border-gray-600 hover:bg-gray-600 transition">
                             <i class="fas fa-microphone"></i>
-                            <span>Audio Translation</span>
+                            <span>{{ __('Audio Translation') }}</span>
                         </a>
 
                         <!-- Text to Audio -->
-                        <a href="{{ route('text-to-audio.create') }}" class="btn-primary" style="font-size: 14px; padding: 8px 16px;">
+                        <a href="{{ route('text-to-audio.create') }}" class="btn-primary text-sm px-4 py-2">
                             <i class="fas fa-plus"></i>
-                            Text to Audio
+                            {{ __('Text to Audio') }}
                         </a>
 
                         <!-- Credits -->
-                        <a href="{{ route('payment.credits') }}" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: all 0.2s; background: #374151; border: 2px solid #4b5563;">
+                        <a href="{{ route('payment.credits') }}" class="flex items-center gap-2 text-gray-300 no-underline font-semibold px-4 py-2 rounded-lg bg-gray-700 border-2 border-gray-600 hover:bg-gray-600 transition">
                             <i class="fas fa-coins"></i>
-                            <span>Credits</span>
+                            <span>{{ __('Credits') }}</span>
                         </a>
 
                         <!-- Admin -->
                         @if(auth()->user()->isAdmin())
-                            <a href="{{ route('admin.dashboard') }}" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: all 0.2s; background: #4b5563; border: 2px solid #6b7280;">
+                            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 text-gray-300 no-underline font-semibold px-4 py-2 rounded-lg bg-gray-600 border-2 border-gray-500 hover:bg-gray-500 transition">
                                 <i class="fas fa-chart-bar"></i>
-                                <span>Admin</span>
+                                <span>{{ __('Admin') }}</span>
                             </a>
                         @endif
 
                         <!-- User Info -->
-                        <div style="display: flex; align-items: center; gap: 8px; color: #d1d5db; font-weight: 600;">
+                        <div class="flex items-center gap-2 text-gray-300 font-semibold">
                             <i class="fas fa-user"></i>
                             <span>{{ auth()->user()->name }}</span>
-                            <span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">
-                                {{ auth()->user()->getRemainingTranslations() }} left
+                            <span class="bg-green-600 text-white px-2 py-1 rounded-full text-xs font-bold">
+                                {{ auth()->user()->getRemainingTranslations() }} {{ __('left') }}
                             </span>
                         </div>
 
                         <!-- Logout -->
-                        <form method="POST" action="{{ route('logout') }}" style="display: inline;">
+                        <form method="POST" action="{{ route('logout') }}" class="inline">
                             @csrf
-                            <button type="submit" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: all 0.2s; background: none; border: none; cursor: pointer;">
+                            <button type="submit" class="flex items-center gap-2 text-gray-300 font-semibold px-4 py-2 rounded-lg hover:text-white hover:bg-gray-700 transition bg-transparent border-0 cursor-pointer">
                                 <i class="fas fa-sign-out-alt"></i>
-                                <span>Logout</span>
+                                <span>{{ __('Logout') }}</span>
                             </button>
                         </form>
                     @else
                         <!-- Login -->
-                        <a href="{{ route('login') }}" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: all 0.2s;">
+                        <a href="{{ route('login') }}" class="flex items-center gap-2 text-gray-300 no-underline font-semibold px-4 py-2 rounded-lg hover:text-white hover:bg-gray-700 transition">
                             <i class="fas fa-sign-in-alt"></i>
-                            <span>Login</span>
+                            <span>{{ __('Login') }}</span>
                         </a>
 
                         <!-- Register -->
-                        <a href="{{ route('register') }}" class="btn-primary" style="font-size: 14px; padding: 8px 16px;">
+                        <a href="{{ route('register') }}" class="btn-primary text-sm px-4 py-2">
                             <i class="fas fa-user-plus"></i>
-                            Register
+                            {{ __('Register') }}
                         </a>
                     @endauth
                 </div>
 
                 <!-- Mobile menu button -->
                 <div class="md:hidden">
-                    <button type="button" class="mobile-menu-button" style="color: #9ca3af; background: none; border: none; cursor: pointer; padding: 8px;" onclick="toggleMobileMenu()">
+                    <button type="button" class="mobile-menu-button text-gray-400 bg-transparent border-0 cursor-pointer p-2 hover:text-white transition" onclick="toggleMobileMenu()">
                         <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
@@ -197,54 +197,54 @@
             </div>
 
             <!-- Mobile Navigation Menu -->
-            <div class="mobile-menu hidden md:hidden" style="background: #374151; border-radius: 8px; margin-top: 8px; padding: 16px;">
+            <div class="mobile-menu hidden md:hidden bg-gray-700 rounded-lg mt-2 p-4">
                 @auth
-                    <a href="{{ route('audio.index') }}" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 12px 16px; border-radius: 8px; margin-bottom: 8px;">
+                    <a href="{{ route('audio.index') }}" class="flex items-center gap-2 text-gray-300 no-underline font-semibold px-4 py-3 rounded-lg mb-2 hover:bg-gray-600 transition">
                         <i class="fas fa-list"></i>
-                        <span>Dashboard</span>
+                        <span>{{ __('Dashboard') }}</span>
                     </a>
-                    <a href="{{ route('audio.create') }}" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 12px 16px; border-radius: 8px; margin-bottom: 8px;">
+                    <a href="{{ route('audio.create') }}" class="flex items-center gap-2 text-gray-300 no-underline font-semibold px-4 py-3 rounded-lg mb-2 hover:bg-gray-600 transition">
                         <i class="fas fa-microphone"></i>
-                        <span>Audio Translation</span>
+                        <span>{{ __('Audio Translation') }}</span>
                     </a>
-                    <a href="{{ route('text-to-audio.create') }}" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 12px 16px; border-radius: 8px; margin-bottom: 8px;">
+                    <a href="{{ route('text-to-audio.create') }}" class="flex items-center gap-2 text-gray-300 no-underline font-semibold px-4 py-3 rounded-lg mb-2 hover:bg-gray-600 transition">
                         <i class="fas fa-plus"></i>
-                        <span>Text to Audio</span>
+                        <span>{{ __('Text to Audio') }}</span>
                     </a>
-                    <a href="{{ route('payment.credits') }}" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 12px 16px; border-radius: 8px; margin-bottom: 8px;">
+                    <a href="{{ route('payment.credits') }}" class="flex items-center gap-2 text-gray-300 no-underline font-semibold px-4 py-3 rounded-lg mb-2 hover:bg-gray-600 transition">
                         <i class="fas fa-coins"></i>
-                        <span>Credits</span>
+                        <span>{{ __('Credits') }}</span>
                     </a>
                     @if(auth()->user()->isAdmin())
-                        <a href="{{ route('admin.dashboard') }}" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 12px 16px; border-radius: 8px; margin-bottom: 8px;">
+                        <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 text-gray-300 no-underline font-semibold px-4 py-3 rounded-lg mb-2 hover:bg-gray-600 transition">
                             <i class="fas fa-chart-bar"></i>
-                            <span>Admin</span>
+                            <span>{{ __('Admin') }}</span>
                         </a>
                     @endif
-                    <div style="display: flex; align-items: center; justify-content: space-between; color: #d1d5db; font-weight: 600; padding: 12px 16px; margin-bottom: 8px;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
+                    <div class="flex items-center justify-between text-gray-300 font-semibold px-4 py-3 mb-2">
+                        <div class="flex items-center gap-2">
                             <i class="fas fa-user"></i>
                             <span>{{ auth()->user()->name }}</span>
                         </div>
-                        <span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">
-                            {{ auth()->user()->getRemainingTranslations() }} left
+                        <span class="bg-green-600 text-white px-2 py-1 rounded-full text-xs font-bold">
+                            {{ auth()->user()->getRemainingTranslations() }} {{ __('left') }}
                         </span>
                     </div>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 12px 16px; border-radius: 8px; background: none; border: none; cursor: pointer; width: 100%; text-align: left;">
+                        <button type="submit" class="flex items-center gap-2 text-gray-300 font-semibold px-4 py-3 rounded-lg bg-transparent border-0 cursor-pointer w-full text-left hover:bg-gray-600 transition">
                             <i class="fas fa-sign-out-alt"></i>
-                            <span>Logout</span>
+                            <span>{{ __('Logout') }}</span>
                         </button>
                     </form>
                 @else
-                    <a href="{{ route('login') }}" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 12px 16px; border-radius: 8px; margin-bottom: 8px;">
+                    <a href="{{ route('login') }}" class="flex items-center gap-2 text-gray-300 no-underline font-semibold px-4 py-3 rounded-lg mb-2 hover:bg-gray-600 transition">
                         <i class="fas fa-sign-in-alt"></i>
-                        <span>Login</span>
+                        <span>{{ __('Login') }}</span>
                     </a>
-                    <a href="{{ route('register') }}" style="display: flex; align-items: center; gap: 8px; color: #d1d5db; text-decoration: none; font-weight: 600; padding: 12px 16px; border-radius: 8px; margin-bottom: 8px;">
+                    <a href="{{ route('register') }}" class="flex items-center gap-2 text-gray-300 no-underline font-semibold px-4 py-3 rounded-lg mb-2 hover:bg-gray-600 transition">
                         <i class="fas fa-user-plus"></i>
-                        <span>Register</span>
+                        <span>{{ __('Register') }}</span>
                     </a>
                 @endauth
             </div>
@@ -286,8 +286,8 @@
     <!-- Footer -->
     <footer class="bg-gray-800/50 backdrop-blur-sm border-t border-gray-700/20 mt-16">
         <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-            <div class="text-center text-white">
-                <p class="text-white" style="color: #ffffff !important;">&copy; 2025 Audio Translator. Made by <a href="https://becholtz.com" class="text-white hover:text-gray-100" style="color: #ffffff !important;">Nigel Becholtz.</a></p>
+            <div class="text-center">
+                <p class="text-white">&copy; 2025 {{ __('Audio Translator') }}. {{ __('Made by') }} <a href="https://becholtz.com" class="text-white hover:text-gray-300 transition">Nigel Becholtz.</a></p>
             </div>
         </div>
     </footer>

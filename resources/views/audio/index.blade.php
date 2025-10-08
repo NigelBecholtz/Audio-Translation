@@ -3,72 +3,85 @@
 @section('title', 'Audio Translations')
 
 @section('content')
-<div style="padding: 32px 24px; max-width: 1200px; margin: 0 auto;">
+<div class="px-4 sm:px-6 py-8 max-w-7xl mx-auto">
     <!-- Header Section -->
-    <div style="text-align: center; margin-bottom: 48px;">
-        <h1 style="font-size: 48px; font-weight: bold; color: #f9fafb; margin-bottom: 16px;">Audio Translations</h1>
-        <p style="font-size: 20px; color: #d1d5db; margin-bottom: 32px;">Transform your audio to any desired language with AI</p>
-        <a href="{{ route('audio.create') }}" class="btn-primary" style="font-size: 20px; padding: 20px 40px;">
+    <div class="text-center mb-12 fade-in">
+        <h1 class="text-4xl md:text-5xl font-bold text-gray-50 mb-4">
+            {{ __('Audio Translations') }}
+        </h1>
+        <p class="text-lg md:text-xl text-gray-300 mb-8">
+            {{ __('Transform your audio to any desired language with AI') }}
+        </p>
+        <a href="{{ route('audio.create') }}" class="btn-primary inline-flex items-center gap-2 text-lg px-10 py-4">
             <i class="fas fa-plus"></i>
-            Start New Translation
+            {{ __('Start New Translation') }}
         </a>
     </div>
 
     @if($audioFiles->count() > 0)
         <!-- Stats Cards -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; margin-bottom: 32px;">
-            <div class="card" style="border: 3px solid #4b5563;">
-                <div style="display: flex; align-items: center;">
-                    <div style="padding: 16px; border-radius: 50%; background: linear-gradient(135deg, #374151 0%, #4b5563 100%); margin-right: 16px;">
-                        <i class="fas fa-file-audio" style="color: #d1d5db; font-size: 24px;"></i>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+            <!-- Total -->
+            <div class="card border-2 border-gray-600">
+                <div class="flex items-center">
+                    <div class="p-4 rounded-full bg-gradient-to-br from-gray-700 to-gray-600 mr-4">
+                        <i class="fas fa-file-audio text-gray-300 text-2xl"></i>
                     </div>
                     <div>
-                        <p style="font-size: 14px; font-weight: 600; color: #9ca3af; margin: 0;">Total</p>
-                        <p style="font-size: 32px; font-weight: bold; color: #f9fafb; margin: 0;">{{ $audioFiles->total() }}</p>
+                        <p class="text-sm font-semibold text-gray-400">{{ __('Total') }}</p>
+                        <p class="text-3xl font-bold text-gray-50">{{ $audioFiles->total() }}</p>
                     </div>
                 </div>
             </div>
-            <div class="card" style="border: 3px solid #6b7280;">
-                <div style="display: flex; align-items: center;">
-                    <div style="padding: 16px; border-radius: 50%; background: linear-gradient(135deg, #4b5563 0%, #6b7280 100%); margin-right: 16px;">
-                        <i class="fas fa-gift" style="color: #d1d5db; font-size: 24px;"></i>
+            
+            <!-- Left -->
+            <div class="card border-2 border-gray-500">
+                <div class="flex items-center">
+                    <div class="p-4 rounded-full bg-gradient-to-br from-gray-600 to-gray-500 mr-4">
+                        <i class="fas fa-gift text-gray-300 text-2xl"></i>
                     </div>
                     <div>
-                        <p style="font-size: 14px; font-weight: 600; color: #9ca3af; margin: 0;">Left</p>
-                        <p style="font-size: 32px; font-weight: bold; color: #f9fafb; margin: 0;">{{ $user->getRemainingTranslations() }}</p>
+                        <p class="text-sm font-semibold text-gray-400">{{ __('Left') }}</p>
+                        <p class="text-3xl font-bold text-gray-50">{{ $user->getRemainingTranslations() }}</p>
                     </div>
                 </div>
             </div>
-            <div class="card" style="border: 3px solid #10b981;">
-                <div style="display: flex; align-items: center;">
-                    <div style="padding: 16px; border-radius: 50%; background: linear-gradient(135deg, #065f46 0%, #047857 100%); margin-right: 16px;">
-                        <i class="fas fa-check-circle" style="color: #10b981; font-size: 24px;"></i>
+            
+            <!-- Completed -->
+            <div class="card border-2 border-green-600">
+                <div class="flex items-center">
+                    <div class="p-4 rounded-full bg-gradient-to-br from-green-700 to-green-600 mr-4">
+                        <i class="fas fa-check-circle text-green-400 text-2xl"></i>
                     </div>
                     <div>
-                        <p style="font-size: 14px; font-weight: 600; color: #9ca3af; margin: 0;">Completed</p>
-                        <p style="font-size: 32px; font-weight: bold; color: #10b981; margin: 0;">{{ $audioFiles->where('status', 'completed')->count() }}</p>
+                        <p class="text-sm font-semibold text-gray-400">{{ __('Completed') }}</p>
+                        <p class="text-3xl font-bold text-green-500">{{ $audioFiles->where('status', 'completed')->count() }}</p>
                     </div>
                 </div>
             </div>
-            <div class="card" style="border: 3px solid #f59e0b;">
-                <div style="display: flex; align-items: center;">
-                    <div style="padding: 16px; border-radius: 50%; background: linear-gradient(135deg, #92400e 0%, #b45309 100%); margin-right: 16px;">
-                        <i class="fas fa-clock" style="color: #f59e0b; font-size: 24px;"></i>
+            
+            <!-- Processing -->
+            <div class="card border-2 border-yellow-600">
+                <div class="flex items-center">
+                    <div class="p-4 rounded-full bg-gradient-to-br from-yellow-700 to-yellow-600 mr-4">
+                        <i class="fas fa-clock text-yellow-400 text-2xl"></i>
                     </div>
                     <div>
-                        <p style="font-size: 14px; font-weight: 600; color: #9ca3af; margin: 0;">Processing</p>
-                        <p style="font-size: 32px; font-weight: bold; color: #f59e0b; margin: 0;">{{ $audioFiles->whereIn('status', ['transcribing', 'translating', 'generating_audio'])->count() }}</p>
+                        <p class="text-sm font-semibold text-gray-400">{{ __('Processing') }}</p>
+                        <p class="text-3xl font-bold text-yellow-500">{{ $audioFiles->whereIn('status', ['transcribing', 'translating', 'generating_audio'])->count() }}</p>
                     </div>
                 </div>
             </div>
-            <div class="card" style="border: 3px solid #ef4444;">
-                <div style="display: flex; align-items: center;">
-                    <div style="padding: 16px; border-radius: 50%; background: linear-gradient(135deg, #991b1b 0%, #dc2626 100%); margin-right: 16px;">
-                        <i class="fas fa-exclamation-triangle" style="color: #ef4444; font-size: 24px;"></i>
+            
+            <!-- Failed -->
+            <div class="card border-2 border-red-600">
+                <div class="flex items-center">
+                    <div class="p-4 rounded-full bg-gradient-to-br from-red-700 to-red-600 mr-4">
+                        <i class="fas fa-exclamation-triangle text-red-400 text-2xl"></i>
                     </div>
                     <div>
-                        <p style="font-size: 14px; font-weight: 600; color: #9ca3af; margin: 0;">Failed</p>
-                        <p style="font-size: 32px; font-weight: bold; color: #ef4444; margin: 0;">{{ $audioFiles->where('status', 'failed')->count() }}</p>
+                        <p class="text-sm font-semibold text-gray-400">{{ __('Failed') }}</p>
+                        <p class="text-3xl font-bold text-red-500">{{ $audioFiles->where('status', 'failed')->count() }}</p>
                     </div>
                 </div>
             </div>
@@ -84,38 +97,38 @@
                             @if($audioFile->isCompleted())
                                 <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-green-600 text-white border-2 border-green-500">
                                     <i class="fas fa-check-circle mr-2"></i>
-                                    Completed
+                                    {{ __('Completed') }}
                                 </span>
                             @elseif($audioFile->isFailed())
                                 <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-red-600 text-white border-2 border-red-500">
                                     <i class="fas fa-exclamation-triangle mr-2"></i>
-                                    Failed
+                                    {{ __('Failed') }}
                                 </span>
                             @elseif($audioFile->isProcessing())
                                 <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-yellow-600 text-white border-2 border-yellow-500 pulse-animation">
                                     <i class="fas fa-spinner fa-spin mr-2"></i>
-                                    Processing...
+                                    {{ __('Processing...') }}
                                 </span>
                             @else
                                 <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-blue-600 text-white border-2 border-blue-500">
                                     <i class="fas fa-upload mr-2"></i>
-                                    Uploaded
+                                    {{ __('Uploaded') }}
                                 </span>
                             @endif
-                            <span class="text-xs text-white font-medium">{{ $audioFile->created_at->diffForHumans() }}</span>
+                            <span class="text-xs text-gray-400 font-medium">{{ $audioFile->created_at->diffForHumans() }}</span>
                         </div>
 
                         <!-- File Info -->
                         <div class="mb-4">
-                            <h3 class="text-lg font-semibold text-white mb-2 truncate">
+                            <h3 class="text-lg font-semibold text-gray-50 mb-2 truncate">
                                 {{ $audioFile->original_filename }}
                             </h3>
-                            <div class="flex items-center space-x-4 text-sm text-white">
+                            <div class="flex items-center space-x-4 text-sm text-gray-300">
                                 <div class="flex items-center">
                                     <i class="fas fa-language mr-1"></i>
                                     {{ strtoupper($audioFile->source_language) }}
                                 </div>
-                                <i class="fas fa-arrow-right text-white"></i>
+                                <i class="fas fa-arrow-right text-gray-500"></i>
                                 <div class="flex items-center">
                                     <i class="fas fa-language mr-1"></i>
                                     {{ strtoupper($audioFile->target_language) }}
@@ -126,40 +139,39 @@
                         <!-- Progress Bar for Processing -->
                         @if($audioFile->isProcessing())
                             <div class="mb-4">
-                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div class="bg-gradient-to-r from-indigo-500 to-purple-600 h-2 rounded-full animate-pulse" style="width: 60%"></div>
+                                <div class="w-full bg-gray-700 rounded-full h-2">
+                                    <div class="bg-gradient-to-r from-indigo-500 to-purple-600 h-2 rounded-full animate-pulse w-3/5"></div>
                                 </div>
-                                <p class="text-xs text-white mt-1">Processing in progress...</p>
+                                <p class="text-xs text-gray-400 mt-1">{{ __('Processing in progress...') }}</p>
                             </div>
                         @endif
 
                         <!-- Transcription Preview -->
                         @if($audioFile->transcription)
                             <div class="mb-4">
-                                <p class="text-sm text-white line-clamp-2">
+                                <p class="text-sm text-gray-300 line-clamp-2">
                                     {{ Str::limit($audioFile->transcription, 120) }}
                                 </p>
                             </div>
                         @endif
 
                         <!-- Actions -->
-                        <div class="flex space-x-2">
+                        <div class="flex gap-2">
                             <a href="{{ route('audio.show', $audioFile->id) }}" class="flex-1 bg-gray-600 text-gray-100 px-4 py-3 rounded-xl hover:bg-gray-500 transition-colors text-center text-sm font-bold border-2 border-gray-500 hover:border-gray-400">
                                 <i class="fas fa-eye mr-2"></i>
-                                View
+                                {{ __('View') }}
                             </a>
                             @if($audioFile->isCompleted())
                                 <a href="{{ route('audio.download', $audioFile->id) }}" class="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-3 rounded-xl hover:from-green-600 hover:to-green-700 transition-all text-center text-sm font-bold shadow-lg hover:shadow-xl">
                                     <i class="fas fa-download mr-2"></i>
-                                    Download
+                                    {{ __('Download') }}
                                 </a>
                             @endif
-                            <form method="POST" action="{{ route('audio.destroy', $audioFile->id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this translation?')">
+                            <form method="POST" action="{{ route('audio.destroy', $audioFile->id) }}" class="inline" onsubmit="return confirm('{{ __('Are you sure you want to delete this translation?') }}')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="bg-red-600 text-red-100 px-4 py-3 rounded-xl hover:bg-red-500 transition-colors text-center text-sm font-bold border-2 border-red-500 hover:border-red-400 cursor-pointer">
-                                    <i class="fas fa-trash mr-2"></i>
-                                    Delete
+                                    <i class="fas fa-trash"></i>
                                 </button>
                             </form>
                         </div>
@@ -174,29 +186,29 @@
         </div>
     @else
         <!-- Empty State -->
-        <div style="text-align: center; padding: 64px 0;">
-            <div style="width: 128px; height: 128px; background: linear-gradient(135deg, #374151 0%, #4b5563 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 32px; border: 4px solid #6b7280;">
-                <i class="fas fa-microphone" style="font-size: 48px; color: #d1d5db;"></i>
+        <div class="text-center py-16 fade-in">
+            <div class="w-32 h-32 bg-gradient-to-br from-gray-700 to-gray-600 rounded-full flex items-center justify-center mx-auto mb-8 border-4 border-gray-500">
+                <i class="fas fa-microphone text-5xl text-gray-300"></i>
             </div>
-            <h3 style="font-size: 32px; font-weight: bold; color: #f9fafb; margin-bottom: 16px;">No audio files yet</h3>
-            <p style="color: #d1d5db; margin-bottom: 32px; max-width: 400px; margin-left: auto; margin-right: auto; font-size: 18px;">
-                Upload your first audio file (MP3, WAV, M4A, MP4, max {{ config('audio.max_upload_size', 100) }}MB) and experience the power of AI-driven translations
+            <h3 class="text-3xl font-bold text-gray-50 mb-4">{{ __('No audio files yet') }}</h3>
+            <p class="text-gray-300 mb-8 max-w-md mx-auto text-lg">
+                {{ __('Upload your first audio file') }} (MP3, WAV, M4A, MP4, max {{ config('audio.max_upload_size', 100) }}MB) {{ __('and experience the power of AI-driven translations') }}
             </p>
-            <a href="{{ route('audio.create') }}" class="btn-primary" style="font-size: 20px; padding: 20px 40px;">
+            <a href="{{ route('audio.create') }}" class="btn-primary inline-flex items-center gap-2 text-lg px-10 py-4">
                 <i class="fas fa-upload"></i>
-                Upload your first audio file
+                {{ __('Upload your first audio file') }}
             </a>
         </div>
     @endif
 
     <!-- Text-to-Audio Section -->
-    <div style="margin-top: 64px;">
-        <div style="text-align: center; margin-bottom: 32px;">
-            <h2 style="font-size: 36px; font-weight: bold; color: #f9fafb; margin-bottom: 16px;">Text to Audio</h2>
-            <p style="font-size: 18px; color: #d1d5db; margin-bottom: 24px;">Convert your text to speech with AI voices</p>
-            <a href="{{ route('text-to-audio.create') }}" class="btn-primary" style="font-size: 16px; padding: 12px 24px;">
+    <div class="mt-16">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-50 mb-4">{{ __('Text to Audio') }}</h2>
+            <p class="text-lg text-gray-300 mb-6">{{ __('Convert your text to speech with AI voices') }}</p>
+            <a href="{{ route('text-to-audio.create') }}" class="btn-primary inline-flex items-center gap-2 px-6 py-3">
                 <i class="fas fa-plus"></i>
-                Create New Text to Audio
+                {{ __('Create New Text to Audio') }}
             </a>
         </div>
 
@@ -211,28 +223,28 @@
                                 @if($textToAudio->isCompleted())
                                     <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-green-600 text-white border-2 border-green-500">
                                         <i class="fas fa-check-circle mr-2"></i>
-                                        Completed
+                                        {{ __('Completed') }}
                                     </span>
                                 @elseif($textToAudio->isFailed())
                                     <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-red-600 text-white border-2 border-red-500">
                                         <i class="fas fa-exclamation-triangle mr-2"></i>
-                                        Failed
+                                        {{ __('Failed') }}
                                     </span>
                                 @elseif($textToAudio->isProcessing())
                                     <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-yellow-600 text-white border-2 border-yellow-500 pulse-animation">
                                         <i class="fas fa-spinner fa-spin mr-2"></i>
-                                        Processing...
+                                        {{ __('Processing...') }}
                                     </span>
                                 @endif
-                                <span class="text-xs text-white font-medium">{{ $textToAudio->created_at->diffForHumans() }}</span>
+                                <span class="text-xs text-gray-400 font-medium">{{ $textToAudio->created_at->diffForHumans() }}</span>
                             </div>
 
                             <!-- Text Content Preview -->
                             <div class="mb-4">
-                                <h3 class="text-lg font-semibold text-white mb-2">
-                                    Text to Audio
+                                <h3 class="text-lg font-semibold text-gray-50 mb-2">
+                                    {{ __('Text to Audio') }}
                                 </h3>
-                                <div class="flex items-center space-x-4 text-sm text-white mb-2">
+                                <div class="flex items-center gap-4 text-sm text-gray-300 mb-2">
                                     <div class="flex items-center">
                                         <i class="fas fa-language mr-1"></i>
                                         {{ strtoupper($textToAudio->language) }}
@@ -242,7 +254,7 @@
                                         {{ ucfirst($textToAudio->voice) }}
                                     </div>
                                 </div>
-                                <p class="text-sm text-white line-clamp-3">
+                                <p class="text-sm text-gray-300 line-clamp-3">
                                     {{ Str::limit($textToAudio->text_content, 150) }}
                                 </p>
                             </div>
@@ -250,31 +262,30 @@
                             <!-- Progress Bar for Processing -->
                             @if($textToAudio->isProcessing())
                                 <div class="mb-4">
-                                    <div class="w-full bg-gray-200 rounded-full h-2">
-                                        <div class="bg-gradient-to-r from-indigo-500 to-purple-600 h-2 rounded-full animate-pulse" style="width: 60%"></div>
+                                    <div class="w-full bg-gray-700 rounded-full h-2">
+                                        <div class="bg-gradient-to-r from-indigo-500 to-purple-600 h-2 rounded-full animate-pulse w-3/5"></div>
                                     </div>
-                                    <p class="text-xs text-white mt-1">Generating audio...</p>
+                                    <p class="text-xs text-gray-400 mt-1">{{ __('Generating audio...') }}</p>
                                 </div>
                             @endif
 
                             <!-- Actions -->
-                            <div class="flex space-x-2">
+                            <div class="flex gap-2">
                                 <a href="{{ route('text-to-audio.show', $textToAudio->id) }}" class="flex-1 bg-gray-600 text-gray-100 px-4 py-3 rounded-xl hover:bg-gray-500 transition-colors text-center text-sm font-bold border-2 border-gray-500 hover:border-gray-400">
                                     <i class="fas fa-eye mr-2"></i>
-                                    View
+                                    {{ __('View') }}
                                 </a>
                                 @if($textToAudio->isCompleted())
                                     <a href="{{ route('text-to-audio.download', $textToAudio->id) }}" class="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-3 rounded-xl hover:from-green-600 hover:to-green-700 transition-all text-center text-sm font-bold shadow-lg hover:shadow-xl">
                                         <i class="fas fa-download mr-2"></i>
-                                        Download
+                                        {{ __('Download') }}
                                     </a>
                                 @endif
-                                <form method="POST" action="{{ route('text-to-audio.destroy', $textToAudio->id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this text-to-audio conversion?')">
+                                <form method="POST" action="{{ route('text-to-audio.destroy', $textToAudio->id) }}" class="inline" onsubmit="return confirm('Are you sure you want to delete this text-to-audio conversion?')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="bg-red-600 text-red-100 px-4 py-3 rounded-xl hover:bg-red-500 transition-colors text-center text-sm font-bold border-2 border-red-500 hover:border-red-400 cursor-pointer">
-                                        <i class="fas fa-trash mr-2"></i>
-                                        Delete
+                                        <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
                             </div>
@@ -289,17 +300,17 @@
             </div>
         @else
             <!-- Empty State for Text-to-Audio -->
-            <div style="text-align: center; padding: 48px 0;">
-                <div style="width: 96px; height: 96px; background: linear-gradient(135deg, #374151 0%, #4b5563 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; border: 3px solid #6b7280;">
-                    <i class="fas fa-text-width" style="font-size: 36px; color: #d1d5db;"></i>
+            <div class="text-center py-12">
+                <div class="w-24 h-24 bg-gradient-to-br from-gray-700 to-gray-600 rounded-full flex items-center justify-center mx-auto mb-6 border-3 border-gray-500">
+                    <i class="fas fa-text-width text-4xl text-gray-300"></i>
                 </div>
-                <h3 style="font-size: 24px; font-weight: bold; color: #f9fafb; margin-bottom: 12px;">No text-to-audio conversions yet</h3>
-                <p style="color: #d1d5db; margin-bottom: 24px; max-width: 400px; margin-left: auto; margin-right: auto; font-size: 16px;">
-                    Convert your text to speech with AI voices in multiple languages
+                <h3 class="text-2xl font-bold text-gray-50 mb-3">{{ __('No text-to-audio conversions yet') }}</h3>
+                <p class="text-gray-300 mb-6 max-w-md mx-auto">
+                    {{ __('Convert your text to speech with AI voices in multiple languages') }}
                 </p>
-                <a href="{{ route('text-to-audio.create') }}" class="btn-primary" style="font-size: 16px; padding: 12px 24px;">
+                <a href="{{ route('text-to-audio.create') }}" class="btn-primary inline-flex items-center gap-2 px-6 py-3">
                     <i class="fas fa-plus"></i>
-                    Create your first text-to-audio
+                    {{ __('Create your first text-to-audio') }}
                 </a>
             </div>
         @endif
@@ -307,4 +318,3 @@
 </div>
 
 @endsection
-

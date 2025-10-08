@@ -20,7 +20,7 @@ class AdminMiddleware
         }
 
         if (!auth()->user()->isAdmin()) {
-            abort(403, 'Je hebt geen admin rechten om deze pagina te bekijken.');
+            abort(403, __('You do not have admin rights to view this page.'));
         }
 
         return $next($request);

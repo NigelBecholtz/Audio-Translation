@@ -12,8 +12,7 @@ class StoreTextToAudioRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // Temporarily always return true for debugging
-        return true;
+        return auth()->check() && auth()->user()->canMakeTranslation();
     }
 
     /**
@@ -59,17 +58,17 @@ class StoreTextToAudioRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'text_content.required' => 'Voer de tekst in die je naar audio wilt converteren.',
-            'text_content.min' => 'De tekst moet minimaal :min karakters bevatten.',
-            'text_content.max' => 'De tekst mag maximaal :max karakters bevatten.',
+            'text_content.required' => 'Please enter the text you want to convert to audio.',
+            'text_content.min' => 'The text must be at least :min characters.',
+            'text_content.max' => 'The text must not exceed :max characters.',
             
-            'language.required' => 'Selecteer de taal voor de audio.',
-            'language.in' => 'De geselecteerde taal is ongeldig.',
+            'language.required' => 'Please select the language for the audio.',
+            'language.in' => 'The selected language is invalid.',
             
-            'voice.required' => 'Selecteer een stem voor de audio.',
-            'voice.regex' => 'De geselecteerde stem is ongeldig.',
+            'voice.required' => 'Please select a voice for the audio.',
+            'voice.regex' => 'The selected voice is invalid.',
             
-            'style_instruction.max' => 'De stijlinstructie mag maximaal :max karakters bevatten.',
+            'style_instruction.max' => 'The style instruction must not exceed :max characters.',
         ];
     }
 
@@ -81,10 +80,10 @@ class StoreTextToAudioRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'text_content' => 'tekst',
-            'language' => 'taal',
-            'voice' => 'stem',
-            'style_instruction' => 'stijlinstructie',
+            'text_content' => 'text',
+            'language' => 'language',
+            'voice' => 'voice',
+            'style_instruction' => 'style instruction',
         ];
     }
 
@@ -98,7 +97,7 @@ class StoreTextToAudioRequest extends FormRequest
     protected function failedAuthorization()
     {
         throw new \Illuminate\Auth\Access\AuthorizationException(
-            'Je hebt geen vertalingen meer over. Koop credits om door te gaan!'
+            __('You have no more translations available. Purchase credits to continue!')
         );
     }
 }

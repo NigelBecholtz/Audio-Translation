@@ -66,14 +66,14 @@ class AudioController extends Controller
 
             // Redirect immediately to show page with progress bar
             return redirect()->route('audio.show', $audioRecord->id)
-                ->with('success', 'Audiobestand geüpload! Verwerking gestart...');
+                ->with('success', __('Audio file uploaded! Processing started...'));
 
         } catch (\Exception $e) {
             Log::error('Audio upload failed', [
                 'user_id' => auth()->id(),
                 'error' => $e->getMessage()
             ]);
-            return back()->with('error', 'Upload mislukt: ' . $e->getMessage());
+            return back()->with('error', __('Upload failed: ') . $e->getMessage());
         }
     }
 
@@ -91,7 +91,7 @@ class AudioController extends Controller
         $audioFile = auth()->user()->audioFiles()->findOrFail($id);
         
         if (!$audioFile->isCompleted() || !$audioFile->translated_audio_path) {
-            return back()->with('error', 'Audiobestand is nog niet klaar voor download.');
+            return back()->with('error', __('Audio file is not ready for download yet.'));
         }
 
         return Storage::disk('public')->download($audioFile->translated_audio_path);
@@ -111,11 +111,11 @@ class AudioController extends Controller
             $audioFile->delete();
             
             return redirect()->route('audio.index')
-                ->with('success', 'Audiovertaling succesvol verwijderd.');
+                ->with('success', __('Audio translation deleted successfully.'));
                 
         } catch (\Exception $e) {
             Log::error('Delete failed: ' . $e->getMessage());
-            return back()->with('error', 'Verwijderen mislukt: ' . $e->getMessage());
+            return back()->with('error', __('Delete failed: ') . $e->getMessage());
         }
     }
 

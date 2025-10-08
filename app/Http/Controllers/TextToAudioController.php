@@ -50,14 +50,14 @@ class TextToAudioController extends Controller
             ProcessTextToAudioJob::dispatch($textToAudioRecord);
 
             return redirect()->route('text-to-audio.show', $textToAudioRecord->id)
-                ->with('success', 'Audio generatie gestart!');
+                ->with('success', __('Audio generation started!'));
 
         } catch (\Exception $e) {
             Log::error('Text to audio failed', [
                 'user_id' => auth()->id(),
                 'error' => $e->getMessage()
             ]);
-            return back()->with('error', 'Text naar audio conversie mislukt: ' . $e->getMessage());
+            return back()->with('error', __('Text to audio conversion failed: ') . $e->getMessage());
         }
     }
 
@@ -75,7 +75,7 @@ class TextToAudioController extends Controller
         $textToAudioFile = auth()->user()->textToAudioFiles()->findOrFail($id);
         
         if (!$textToAudioFile->isCompleted() || !$textToAudioFile->audio_path) {
-            return back()->with('error', 'Audiobestand is nog niet klaar voor download.');
+            return back()->with('error', __('Audio file is not ready for download yet.'));
         }
 
         return Storage::disk('public')->download($textToAudioFile->audio_path);
@@ -94,11 +94,11 @@ class TextToAudioController extends Controller
             $textToAudioFile->delete();
             
             return redirect()->route('text-to-audio.index')
-                ->with('success', 'Text naar audio conversie succesvol verwijderd.');
+                ->with('success', __('Text to audio conversion deleted successfully.'));
                 
         } catch (\Exception $e) {
             Log::error('Delete failed: ' . $e->getMessage());
-            return back()->with('error', 'Verwijderen mislukt: ' . $e->getMessage());
+            return back()->with('error', __('Delete failed: ') . $e->getMessage());
         }
     }
 }

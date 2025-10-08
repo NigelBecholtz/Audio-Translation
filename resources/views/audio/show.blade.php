@@ -3,17 +3,17 @@
 @section('title', 'Audio Translation Details')
 
 @section('content')
-<div class="px-4 py-6 sm:px-0">
+<div class="px-4 py-6 sm:px-6">
     <div class="max-w-6xl mx-auto">
         <!-- Header -->
-        <div class="flex justify-between items-center mb-8 fade-in">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 fade-in">
             <div>
-                <h1 class="text-4xl font-bold text-white mb-2">Audio Translation Details</h1>
-                <p class="text-white text-lg">View the progress and results of your translation</p>
+                <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">{{ __('Audio Translation Details') }}</h1>
+                <p class="text-white text-lg">{{ __('View the progress and results of your translation') }}</p>
             </div>
-            <a href="{{ route('audio.index') }}" class="flex items-center px-4 py-2 bg-gray-600 text-white rounded-xl hover:bg-gray-500 transition-colors">
+            <a href="{{ route('audio.index') }}" class="flex items-center px-4 py-2 bg-gray-600 text-white rounded-xl hover:bg-gray-500 transition-colors font-semibold">
                 <i class="fas fa-arrow-left mr-2"></i>
-                Back to overview
+                {{ __('Back to overview') }}
             </a>
         </div>
 
@@ -22,8 +22,8 @@
             <div class="lg:col-span-2 space-y-8">
                 <!-- Status Card -->
                 <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-xl font-bold text-white">Status</h3>
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                        <h3 class="text-xl font-bold text-white">{{ __('Status') }}</h3>
                         <span id="status-badge" class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium 
                             @if($audioFile->isCompleted()) bg-green-100 text-green-800
                             @elseif($audioFile->isFailed()) bg-red-100 text-red-800
@@ -37,10 +37,10 @@
                                 @else fas fa-upload
                                 @endif"></i>
                             <span id="status-text">
-                                @if($audioFile->isCompleted()) Completed
-                                @elseif($audioFile->isFailed()) Failed
-                                @elseif($audioFile->isProcessing()) Processing...
-                                @else Uploaded
+                                @if($audioFile->isCompleted()) {{ __('Completed') }}
+                                @elseif($audioFile->isFailed()) {{ __('Failed') }}
+                                @elseif($audioFile->isProcessing()) {{ __('Processing...') }}
+                                @else {{ __('Uploaded') }}
                                 @endif
                             </span>
                         </span>
@@ -51,7 +51,7 @@
                     <div class="mb-6">
                         <div class="flex items-center justify-between mb-2">
                             <span id="progress-message" class="text-sm font-medium text-white">
-                                {{ $audioFile->processing_message ?? 'Starting...' }}
+                                {{ $audioFile->processing_message ?? __('Starting...') }}
                             </span>
                             <span id="progress-percentage" class="text-sm font-medium text-white">
                                 {{ $audioFile->processing_progress ?? 0 }}%
@@ -67,99 +67,99 @@
                     <!-- Progress Steps -->
                     <div class="space-y-4">
                         <!-- Step 1: Upload -->
-                        <div class="flex items-center space-x-4">
-                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
                                 <i class="fas fa-check text-green-600"></i>
                             </div>
                             <div class="flex-1">
-                                <h4 class="font-semibold text-white text-lg">Audio Uploaded</h4>
-                                <p class="text-sm text-white">{{ $audioFile->created_at->format('d-m-Y H:i') }}</p>
+                                <h4 class="font-semibold text-white text-lg">{{ __('Audio Uploaded') }}</h4>
+                                <p class="text-sm text-gray-400">{{ $audioFile->created_at->format('d-m-Y H:i') }}</p>
                             </div>
                         </div>
 
                         <!-- Step 2: Transcription -->
-                        <div class="flex items-center space-x-4">
+                        <div class="flex items-center gap-4">
                             @if($audioFile->transcription)
-                                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
                                     <i class="fas fa-check text-green-600"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <h4 class="font-semibold text-white text-lg">Audio Transcribed</h4>
-                                    <p class="text-sm text-white">Whisper AI has converted the audio to text</p>
+                                    <h4 class="font-semibold text-white text-lg">{{ __('Audio Transcribed') }}</h4>
+                                    <p class="text-sm text-gray-400">{{ __('Whisper AI has converted the audio to text') }}</p>
                                 </div>
                             @elseif($audioFile->status === 'transcribing')
-                                <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                                <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
                                     <i class="fas fa-spinner fa-spin text-yellow-600"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <h4 class="font-semibold text-white text-lg">Transcribing Audio...</h4>
-                                    <p class="text-sm text-white">Whisper AI is converting audio to text</p>
+                                    <h4 class="font-semibold text-white text-lg">{{ __('Transcribing Audio...') }}</h4>
+                                    <p class="text-sm text-gray-400">{{ __('Whisper AI is converting audio to text') }}</p>
                                 </div>
                             @else
-                                <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-clock text-white"></i>
+                                <div class="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-clock text-gray-400"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <h4 class="font-semibold text-white text-lg">Waiting for Transcription</h4>
-                                    <p class="text-sm text-white">The audio will be transcribed soon</p>
+                                    <h4 class="font-semibold text-white text-lg">{{ __('Waiting for Transcription') }}</h4>
+                                    <p class="text-sm text-gray-400">{{ __('The audio will be transcribed soon') }}</p>
                                 </div>
                             @endif
                         </div>
 
                         <!-- Step 3: Translation -->
-                        <div class="flex items-center space-x-4">
+                        <div class="flex items-center gap-4">
                             @if($audioFile->translated_text)
-                                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
                                     <i class="fas fa-check text-green-600"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <h4 class="font-semibold text-white text-lg">Text Translated</h4>
-                                    <p class="text-sm text-white">The text has been translated to {{ strtoupper($audioFile->target_language) }}</p>
+                                    <h4 class="font-semibold text-white text-lg">{{ __('Text Translated') }}</h4>
+                                    <p class="text-sm text-gray-400">{{ __('The text has been translated to') }} {{ strtoupper($audioFile->target_language) }}</p>
                                 </div>
                             @elseif($audioFile->status === 'translating')
-                                <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                                <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
                                     <i class="fas fa-spinner fa-spin text-yellow-600"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <h4 class="font-semibold text-white text-lg">Translating Text...</h4>
-                                    <p class="text-sm text-white">The text is being translated to {{ strtoupper($audioFile->target_language) }}</p>
+                                    <h4 class="font-semibold text-white text-lg">{{ __('Translating Text...') }}</h4>
+                                    <p class="text-sm text-gray-400">{{ __('The text is being translated to') }} {{ strtoupper($audioFile->target_language) }}</p>
                                 </div>
                             @else
-                                <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-clock text-white"></i>
+                                <div class="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-clock text-gray-400"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <h4 class="font-semibold text-white text-lg">Waiting for Translation</h4>
-                                    <p class="text-sm text-white">The text will be translated soon</p>
+                                    <h4 class="font-semibold text-white text-lg">{{ __('Waiting for Translation') }}</h4>
+                                    <p class="text-sm text-gray-400">{{ __('The text will be translated soon') }}</p>
                                 </div>
                             @endif
                         </div>
 
                         <!-- Step 4: Audio Generation -->
-                        <div class="flex items-center space-x-4">
+                        <div class="flex items-center gap-4">
                             @if($audioFile->translated_audio_path)
-                                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
                                     <i class="fas fa-check text-green-600"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <h4 class="font-semibold text-white text-lg">Audio Generated</h4>
-                                    <p class="text-sm text-white">The translated audio file is ready (Voice: {{ ucfirst($audioFile->voice) }})</p>
+                                    <h4 class="font-semibold text-white text-lg">{{ __('Audio Generated') }}</h4>
+                                    <p class="text-sm text-gray-400">{{ __('The translated audio file is ready') }} ({{ __('Voice:') }} {{ ucfirst($audioFile->voice) }})</p>
                                 </div>
                             @elseif($audioFile->status === 'generating_audio')
-                                <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                                <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
                                     <i class="fas fa-spinner fa-spin text-yellow-600"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <h4 class="font-semibold text-white text-lg">Generating Audio...</h4>
-                                    <p class="text-sm text-white">The translated audio file is being generated (Voice: {{ ucfirst($audioFile->voice) }})</p>
+                                    <h4 class="font-semibold text-white text-lg">{{ __('Generating Audio...') }}</h4>
+                                    <p class="text-sm text-gray-400">{{ __('The translated audio file is being generated') }} ({{ __('Voice:') }} {{ ucfirst($audioFile->voice) }})</p>
                                 </div>
                             @else
-                                <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-clock text-white"></i>
+                                <div class="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-clock text-gray-400"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <h4 class="font-semibold text-white text-lg">Waiting for Audio Generation</h4>
-                                    <p class="text-sm text-white">The audio file will be generated soon</p>
+                                    <h4 class="font-semibold text-white text-lg">{{ __('Waiting for Audio Generation') }}</h4>
+                                    <p class="text-sm text-gray-400">{{ __('The audio file will be generated soon') }}</p>
                                 </div>
                             @endif
                         </div>
@@ -171,11 +171,11 @@
                     <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
                         <h3 class="text-xl font-bold text-white mb-4 flex items-center">
                             <i class="fas fa-headphones mr-2 text-blue-400"></i>
-                            Originele Audio Preview
+                            {{ __('Original Audio Preview') }}
                         </h3>
                         <audio controls class="w-full rounded-lg" preload="metadata">
                             <source src="{{ asset('storage/' . $audioFile->file_path) }}" type="audio/mpeg">
-                            Je browser ondersteunt geen audio element.
+                            {{ __('Your browser does not support the audio element.') }}
                         </audio>
                     </div>
                 @endif
@@ -185,7 +185,7 @@
                     <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
                         <h3 class="text-xl font-bold text-white mb-4 flex items-center">
                             <i class="fas fa-file-text mr-2 text-indigo-400"></i>
-                            Transcription ({{ strtoupper($audioFile->source_language) }})
+                            {{ __('Transcription') }} ({{ strtoupper($audioFile->source_language) }})
                         </h3>
                         <div class="bg-gray-700/50 p-6 rounded-xl border border-gray-600/30">
                             <p class="text-white leading-relaxed text-lg">{{ $audioFile->transcription }}</p>
@@ -198,7 +198,7 @@
                     <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
                         <h3 class="text-xl font-bold text-white mb-4 flex items-center">
                             <i class="fas fa-language mr-2 text-green-400"></i>
-                            Translated Text ({{ strtoupper($audioFile->target_language) }})
+                            {{ __('Translated Text') }} ({{ strtoupper($audioFile->target_language) }})
                         </h3>
                         <div class="bg-gradient-to-r from-green-900/30 to-blue-900/30 p-6 rounded-xl border border-gray-600/30">
                             <p class="text-white leading-relaxed text-lg">{{ $audioFile->translated_text }}</p>
@@ -211,11 +211,11 @@
                     <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
                         <h3 class="text-xl font-bold text-white mb-4 flex items-center">
                             <i class="fas fa-volume-up mr-2 text-green-400"></i>
-                            Vertaalde Audio Preview
+                            {{ __('Translated Audio Preview') }}
                         </h3>
                         <audio controls class="w-full rounded-lg" preload="metadata">
                             <source src="{{ asset('storage/' . $audioFile->translated_audio_path) }}" type="audio/mpeg">
-                            Je browser ondersteunt geen audio element.
+                            {{ __('Your browser does not support the audio element.') }}
                         </audio>
                     </div>
                 @endif
@@ -227,31 +227,31 @@
                 <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
                     <h3 class="text-xl font-bold text-white mb-4 flex items-center">
                         <i class="fas fa-info-circle mr-2 text-indigo-400"></i>
-                        File Information
+                        {{ __('File Information') }}
                     </h3>
                     <dl class="space-y-4">
                         <div>
-                            <dt class="text-sm font-medium text-white">Filename</dt>
+                            <dt class="text-sm font-medium text-gray-400">{{ __('Filename') }}</dt>
                             <dd class="text-sm text-white font-medium">{{ $audioFile->original_filename }}</dd>
                         </div>
                         <div>
-                            <dt class="text-sm font-medium text-white">Size</dt>
+                            <dt class="text-sm font-medium text-gray-400">{{ __('Size') }}</dt>
                             <dd class="text-sm text-white">{{ number_format($audioFile->file_size / 1024, 2) }} KB</dd>
                         </div>
                         <div>
-                            <dt class="text-sm font-medium text-white">Source Language</dt>
+                            <dt class="text-sm font-medium text-gray-400">{{ __('Source Language') }}</dt>
                             <dd class="text-sm text-white">{{ strtoupper($audioFile->source_language) }}</dd>
                         </div>
                         <div>
-                            <dt class="text-sm font-medium text-white">Target Language</dt>
+                            <dt class="text-sm font-medium text-gray-400">{{ __('Target Language') }}</dt>
                             <dd class="text-sm text-white">{{ strtoupper($audioFile->target_language) }}</dd>
                         </div>
                         <div>
-                            <dt class="text-sm font-medium text-white">Voice</dt>
+                            <dt class="text-sm font-medium text-gray-400">{{ __('Voice') }}</dt>
                             <dd class="text-sm text-white capitalize">{{ $audioFile->voice }}</dd>
                         </div>
                         <div>
-                            <dt class="text-sm font-medium text-white">Uploaded on</dt>
+                            <dt class="text-sm font-medium text-gray-400">{{ __('Uploaded on') }}</dt>
                             <dd class="text-sm text-white">{{ $audioFile->created_at->format('d-m-Y H:i') }}</dd>
                         </div>
                     </dl>
@@ -261,35 +261,35 @@
                 <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
                     <h3 class="text-xl font-bold text-white mb-4 flex items-center">
                         <i class="fas fa-download mr-2 text-green-400"></i>
-                        Actions
+                        {{ __('Actions') }}
                     </h3>
                     <div class="space-y-3">
                         @if($audioFile->isCompleted())
                             <a href="{{ route('audio.download', $audioFile->id) }}" 
                                class="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg hover:shadow-xl hover-lift font-medium">
                                 <i class="fas fa-download mr-2"></i>
-                                Download Translated Audio
+                                {{ __('Download Translated Audio') }}
                             </a>
                         @endif
                         
                         @if($audioFile->isFailed())
                             <div class="p-4 bg-red-900/30 border border-red-600/30 rounded-xl">
                                 <div class="flex items-start">
-                                    <i class="fas fa-exclamation-triangle text-red-400 mt-1 mr-3"></i>
+                                    <i class="fas fa-exclamation-triangle text-red-400 mt-1 mr-3 flex-shrink-0"></i>
                                     <div>
-                                        <h4 class="font-semibold text-red-200">Processing Failed</h4>
+                                        <h4 class="font-semibold text-red-200">{{ __('Processing Failed') }}</h4>
                                         <p class="text-sm text-red-300 mt-1">{{ $audioFile->error_message }}</p>
                                     </div>
                                 </div>
                             </div>
                         @endif
                         
-                        <form method="POST" action="{{ route('audio.destroy', $audioFile->id) }}" onsubmit="return confirm('Are you sure you want to delete this translation?')">
+                        <form method="POST" action="{{ route('audio.destroy', $audioFile->id) }}" onsubmit="return confirm('{{ __('Are you sure you want to delete this translation?') }}')">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="w-full inline-flex items-center justify-center px-6 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all duration-200 shadow-lg hover:shadow-xl hover-lift font-medium cursor-pointer">
                                 <i class="fas fa-trash mr-2"></i>
-                                Delete Translation
+                                {{ __('Delete Translation') }}
                             </button>
                         </form>
                     </div>
@@ -336,14 +336,11 @@ function updateProgress(data) {
             statusIcon.className = 'fas fa-check-circle mr-2';
         }
         if (statusText) {
-            statusText.textContent = 'Completed';
+            statusText.textContent = '{{ __('Completed') }}';
         }
         
-        // Stop polling and reload page to show results
         clearInterval(pollInterval);
-        setTimeout(() => {
-            window.location.reload();
-        }, 1000);
+        setTimeout(() => window.location.reload(), 1000);
     } else if (data.is_failed) {
         if (statusBadge) {
             statusBadge.className = 'inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-red-100 text-red-800';
@@ -352,46 +349,33 @@ function updateProgress(data) {
             statusIcon.className = 'fas fa-exclamation-triangle mr-2';
         }
         if (statusText) {
-            statusText.textContent = 'Failed';
+            statusText.textContent = '{{ __('Failed') }}';
         }
         
-        // Stop polling and show error
         clearInterval(pollInterval);
         if (data.error_message) {
-            alert('Processing failed: ' + data.error_message);
+            alert('{{ __('Processing failed:') }} ' + data.error_message);
         }
-        setTimeout(() => {
-            window.location.reload();
-        }, 2000);
+        setTimeout(() => window.location.reload(), 2000);
     }
 }
 
 function pollStatus() {
     fetch(`/audio/${audioFileId}/status`)
         .then(response => response.json())
-        .then(data => {
-            console.log('Status update:', data);
-            updateProgress(data);
-        })
-        .catch(error => {
-            console.error('Error polling status:', error);
-        });
+        .then(data => updateProgress(data))
+        .catch(error => console.error('Error polling status:', error));
 }
 
 // Start polling every 2 seconds
 pollInterval = setInterval(pollStatus, 2000);
-
-// Initial poll
-pollStatus();
+pollStatus(); // Initial poll
 
 // Cleanup on page unload
 window.addEventListener('beforeunload', () => {
-    if (pollInterval) {
-        clearInterval(pollInterval);
-    }
+    if (pollInterval) clearInterval(pollInterval);
 });
 @endif
 </script>
 
 @endsection
-

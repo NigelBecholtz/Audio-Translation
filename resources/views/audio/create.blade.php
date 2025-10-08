@@ -3,54 +3,54 @@
 @section('title', 'New Audio Translation')
 
 @section('content')
-<div class="px-4 py-6 sm:px-0">
-    <div class="max-w-4xl mx-auto">
+<div class="px-4 py-6 sm:px-6">
+    <div class="max-w-6xl mx-auto">
         <!-- Header -->
-        <div style="text-align: center; margin-bottom: 48px;">
-            <h1 style="font-size: 48px; font-weight: bold; color: #ffffff; margin-bottom: 16px;">New Audio Translation</h1>
-            <p style="font-size: 20px; color: #ffffff;">Upload your audio file and let AI translate it for you</p>
+        <div class="text-center mb-12 fade-in">
+            <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">{{ __('New Audio Translation') }}</h1>
+            <p class="text-lg md:text-xl text-gray-300">{{ __('Upload your audio file and let AI translate it for you') }}</p>
         </div>
         
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Upload Form -->
-            <div style="grid-column: span 2;">
-                <div class="card" style="border: 3px solid #4b5563;">
-                    <div style="padding: 32px;">
+            <div class="lg:col-span-2">
+                <div class="card border-2 border-gray-600">
+                    <div class="p-6 md:p-8">
                         <form id="uploadForm" action="{{ route('audio.store') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
                             @csrf
                             
                             <!-- Drag & Drop Upload Area -->
                             <div>
-                                <label style="display: block; font-size: 24px; font-weight: bold; color: #ffffff; margin-bottom: 24px;">
-                                    <i class="fas fa-upload" style="margin-right: 12px; color: #60a5fa;"></i>
-                                    Upload Audio File
+                                <label class="block text-2xl font-bold text-white mb-6">
+                                    <i class="fas fa-upload mr-3 text-blue-400"></i>
+                                    {{ __('Upload Audio File') }}
                                 </label>
-                                <div id="dropZone" style="position: relative; border: 4px dashed #60a5fa; border-radius: 16px; padding: 48px; text-align: center; background: linear-gradient(135deg, #1f2937 0%, #374151 100%); cursor: pointer; transition: all 0.2s;">
+                                <div id="dropZone" class="relative border-4 border-dashed border-blue-400 rounded-2xl p-12 text-center bg-gradient-to-br from-gray-800 to-gray-700 cursor-pointer transition-all hover:border-blue-300 hover:bg-gradient-to-br hover:from-gray-700 hover:to-gray-600">
                                     <input type="file" 
                                            id="audio" 
                                            name="audio" 
                                            accept=".mp3,.wav,.m4a,.mp4"
                                            required
-                                           style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;">
+                                           class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                                     
                                     <div id="dropZoneContent">
-                                        <div style="width: 96px; height: 96px; background: linear-gradient(135deg, #374151 0%, #4b5563 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; border: 4px solid #60a5fa;">
-                                            <i class="fas fa-microphone" style="font-size: 36px; color: #60a5fa;"></i>
+                                        <div class="w-24 h-24 bg-gradient-to-br from-gray-700 to-gray-600 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-blue-400">
+                                            <i class="fas fa-microphone text-4xl text-blue-400"></i>
                                         </div>
-                                        <p style="font-size: 24px; font-weight: bold; color: #ffffff; margin-bottom: 12px;">
-                                            Drag your audio file here
+                                        <p class="text-2xl font-bold text-white mb-3">
+                                            {{ __('Drag your audio file here') }}
                                         </p>
-                                        <p style="font-size: 18px; color: #d1d5db; margin-bottom: 24px;">
-                                            or click to select a file
+                                        <p class="text-lg text-gray-300 mb-6">
+                                            {{ __('or click to select a file') }}
                                         </p>
-                                        <div style="display: inline-flex; align-items: center; padding: 16px 32px; background: #60a5fa; color: white; border-radius: 12px; font-size: 18px; font-weight: bold; box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);">
-                                            <i class="fas fa-folder-open" style="margin-right: 12px;"></i>
-                                            Select File
+                                        <div class="inline-flex items-center px-8 py-4 bg-blue-500 text-white rounded-xl text-lg font-bold shadow-lg hover:bg-blue-600 transition">
+                                            <i class="fas fa-folder-open mr-3"></i>
+                                            {{ __('Select File') }}
                                         </div>
                                     </div>
                                     
                                     <div id="fileInfo" class="hidden">
-                                        <div class="flex items-center justify-center space-x-4">
+                                        <div class="flex items-center justify-center gap-4">
                                             <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center border-4 border-green-200">
                                                 <i class="fas fa-check text-green-600 text-2xl"></i>
                                             </div>
@@ -62,23 +62,23 @@
                                     </div>
                                 </div>
                                 
-                                <div style="margin-top: 24px; display: flex; align-items: center; justify-content: center; gap: 32px; flex-wrap: wrap;">
-                                    <div style="display: flex; align-items: center; background: #374151; padding: 8px 16px; border-radius: 8px; border: 2px solid #60a5fa;">
-                                        <i class="fas fa-file-audio" style="margin-right: 8px; color: #60a5fa;"></i>
-                                        <span style="font-size: 14px; font-weight: 600; color: #ffffff;">MP3, WAV, M4A</span>
+                                <div class="mt-6 flex items-center justify-center gap-8 flex-wrap">
+                                    <div class="flex items-center bg-gray-700 px-4 py-2 rounded-lg border-2 border-blue-400">
+                                        <i class="fas fa-file-audio mr-2 text-blue-400"></i>
+                                        <span class="text-sm font-semibold text-white">MP3, WAV, M4A</span>
                                     </div>
-                                    <div style="display: flex; align-items: center; background: #374151; padding: 8px 16px; border-radius: 8px; border: 2px solid #10b981;">
-                                        <i class="fas fa-weight" style="margin-right: 8px; color: #10b981;"></i>
-                                        <span style="font-size: 14px; font-weight: 600; color: #ffffff;">Max {{ config('audio.max_upload_size', 100) }}MB</span>
+                                    <div class="flex items-center bg-gray-700 px-4 py-2 rounded-lg border-2 border-green-500">
+                                        <i class="fas fa-weight mr-2 text-green-500"></i>
+                                        <span class="text-sm font-semibold text-white">Max {{ config('audio.max_upload_size', 100) }}MB</span>
                                     </div>
-                                    <div style="display: flex; align-items: center; background: #374151; padding: 8px 16px; border-radius: 8px; border: 2px solid #8b5cf6;">
-                                        <i class="fas fa-clock" style="margin-right: 8px; color: #8b5cf6;"></i>
-                                        <span style="font-size: 14px; font-weight: 600; color: #ffffff;">Max 5 min</span>
+                                    <div class="flex items-center bg-gray-700 px-4 py-2 rounded-lg border-2 border-purple-500">
+                                        <i class="fas fa-clock mr-2 text-purple-500"></i>
+                                        <span class="text-sm font-semibold text-white">Max 5 min</span>
                                     </div>
                                 </div>
                                 
                                 @error('audio')
-                                    <p class="mt-2 text-sm text-red-600 flex items-center">
+                                    <p class="mt-2 text-sm text-red-400 flex items-center font-semibold">
                                         <i class="fas fa-exclamation-circle mr-1"></i>
                                         {{ $message }}
                                     </p>
@@ -89,16 +89,15 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <!-- Source Language -->
                                 <div>
-                                <label for="source_language" class="block text-xl font-bold text-white mb-4">
-                                    <i class="fas fa-language mr-3 text-blue-400" aria-hidden="true"></i>
-                                    Source Language
-                                </label>
-                                <select id="source_language" 
-                                        name="source_language" 
-                                        required
-                                        aria-label="Selecteer brontaal"
-                                        class="w-full pl-6 pr-10 py-4 text-lg border-3 border-blue-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all bg-white shadow-lg">
-                                    <option value="">Selecteer brontaal</option>
+                                    <label for="source_language" class="block text-xl font-bold text-white mb-4">
+                                        <i class="fas fa-language mr-2 text-blue-400"></i>
+                                        {{ __('Source Language') }}
+                                    </label>
+                                    <select id="source_language" 
+                                            name="source_language" 
+                                            required
+                                            class="w-full px-6 py-4 text-lg border-2 border-blue-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-400 focus:border-blue-500 transition-all bg-white shadow-lg">
+                                        <option value="">{{ __('Select source language') }}</option>
                                         
                                         <!-- Major Languages -->
                                         <optgroup label="🌍 Major Languages">
@@ -179,7 +178,7 @@
                                         </optgroup>
                                     </select>
                                     @error('source_language')
-                                        <p class="mt-2 text-sm text-red-600 flex items-center font-bold">
+                                        <p class="mt-2 text-sm text-red-400 flex items-center font-semibold">
                                             <i class="fas fa-exclamation-circle mr-2"></i>
                                             {{ $message }}
                                         </p>
@@ -188,16 +187,15 @@
 
                                 <!-- Target Language -->
                                 <div>
-                                <label for="target_language" class="block text-xl font-bold text-white mb-4">
-                                    <i class="fas fa-flag mr-3 text-green-400" aria-hidden="true"></i>
-                                    Target Language
-                                </label>
-                                <select id="target_language" 
-                                        name="target_language" 
-                                        required
-                                        aria-label="Selecteer doeltaal"
-                                        class="w-full pl-6 pr-10 py-4 text-lg border-3 border-green-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-300 focus:border-green-500 transition-all bg-white shadow-lg">
-                                    <option value="">Selecteer doeltaal</option>
+                                    <label for="target_language" class="block text-xl font-bold text-white mb-4">
+                                        <i class="fas fa-flag mr-2 text-green-400"></i>
+                                        {{ __('Target Language') }}
+                                    </label>
+                                    <select id="target_language" 
+                                            name="target_language" 
+                                            required
+                                            class="w-full px-6 py-4 text-lg border-2 border-green-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-400 focus:border-green-500 transition-all bg-white shadow-lg">
+                                        <option value="">{{ __('Select target language') }}</option>
                                         
                                         <!-- Major Languages -->
                                         <optgroup label="🌍 Major Languages">
@@ -278,7 +276,7 @@
                                         </optgroup>
                                     </select>
                                     @error('target_language')
-                                        <p class="mt-2 text-sm text-red-600 flex items-center font-bold">
+                                        <p class="mt-2 text-sm text-red-400 flex items-center font-semibold">
                                             <i class="fas fa-exclamation-circle mr-2"></i>
                                             {{ $message }}
                                         </p>
@@ -289,59 +287,58 @@
                             <!-- Voice Selection -->
                             <div>
                                 <label for="voice" class="block text-xl font-bold text-white mb-4">
-                                    <i class="fas fa-microphone mr-3 text-purple-400" aria-hidden="true"></i>
-                                    Voice Selection
+                                    <i class="fas fa-microphone mr-2 text-purple-400"></i>
+                                    {{ __('Voice Selection') }}
                                 </label>
                                 <select id="voice" 
                                         name="voice" 
                                         required
-                                        aria-label="Selecteer stem voor vertaling"
-                                        class="w-full pl-6 pr-10 py-4 text-lg border-3 border-purple-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-purple-300 focus:border-purple-500 transition-all bg-white shadow-lg">
-                                    <option value="">Selecteer stem voor vertaling</option>
+                                        class="w-full px-6 py-4 text-lg border-2 border-purple-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-500 transition-all bg-white shadow-lg">
+                                    <option value="">{{ __('Select voice for translation') }}</option>
                                     
                                     <!-- Gemini 2.5 Pro TTS Voices -->
-                <optgroup label="🎯 Gemini 2.5 Pro TTS Voices">
-                    <!-- Female Voices -->
-                    <option value="achernar">👩 Achernar - Clear and expressive female voice</option>
-                    <option value="aoede">👩 Aoede - Warm and engaging female voice</option>
-                    <option value="autonoe">👩 Autonoe - Soft and gentle female voice</option>
-                    <option value="callirrhoe">👩 Callirrhoe - Bright and energetic female voice</option>
-                    <option value="despina">👩 Despina - Smooth and professional female voice</option>
-                    <option value="erinome">👩 Erinome - Wise and calm female voice</option>
-                    <option value="gacrux">👩 Gacrux - Vibrant and lively female voice</option>
-                    <option value="kore">👩 Kore - Balanced and versatile female voice</option>
-                    <option value="laomedeia">👩 Laomedeia - Warm and engaging female voice</option>
-                    <option value="leda">👩 Leda - Clear and expressive female voice</option>
-                    <option value="pulcherrima">👩 Pulcherrima - Bright and energetic female voice</option>
-                    <option value="sulafat">👩 Sulafat - Soft and gentle female voice</option>
-                    <option value="vindemiatrix">👩 Vindemiatrix - Smooth and professional female voice</option>
-                    <option value="zephyr">👩 Zephyr - Vibrant and lively female voice</option>
-                    
-                    <!-- Male Voices -->
-                    <option value="achird">👨 Achird - Deep and authoritative male voice</option>
-                    <option value="algenib">👨 Algenib - Strong and confident male voice</option>
-                    <option value="algieba">👨 Algieba - Warm and engaging male voice</option>
-                    <option value="alnilam">👨 Alnilam - Clear and expressive male voice</option>
-                    <option value="charon">👨 Charon - Deep and authoritative male voice</option>
-                    <option value="enceladus">👨 Enceladus - Strong and confident male voice</option>
-                    <option value="fenrir">👨 Fenrir - Powerful and commanding male voice</option>
-                    <option value="lapetus">👨 Lapetus - Warm and engaging male voice</option>
-                    <option value="orus">👨 Orus - Clear and expressive male voice</option>
-                    <option value="puck">👨 Puck - Energetic and lively male voice</option>
-                    <option value="rasalgethi">👨 Rasalgethi - Deep and authoritative male voice</option>
-                    <option value="sadachbia">👨 Sadachbia - Strong and confident male voice</option>
-                    <option value="sadaltager">👨 Sadaltager - Warm and engaging male voice</option>
-                    <option value="schedar">👨 Schedar - Clear and expressive male voice</option>
-                    <option value="umbriel">👨 Umbriel - Deep and authoritative male voice</option>
-                    <option value="zubenelgenubi">👨 Zubenelgenubi - Strong and confident male voice</option>
-                </optgroup>
+                                    <optgroup label="🎯 Gemini 2.5 Pro TTS Voices">
+                                        <!-- Female Voices -->
+                                        <option value="achernar">👩 Achernar - Clear and expressive female voice</option>
+                                        <option value="aoede">👩 Aoede - Warm and engaging female voice</option>
+                                        <option value="autonoe">👩 Autonoe - Soft and gentle female voice</option>
+                                        <option value="callirrhoe">👩 Callirrhoe - Bright and energetic female voice</option>
+                                        <option value="despina">👩 Despina - Smooth and professional female voice</option>
+                                        <option value="erinome">👩 Erinome - Wise and calm female voice</option>
+                                        <option value="gacrux">👩 Gacrux - Vibrant and lively female voice</option>
+                                        <option value="kore">👩 Kore - Balanced and versatile female voice</option>
+                                        <option value="laomedeia">👩 Laomedeia - Warm and engaging female voice</option>
+                                        <option value="leda">👩 Leda - Clear and expressive female voice</option>
+                                        <option value="pulcherrima">👩 Pulcherrima - Bright and energetic female voice</option>
+                                        <option value="sulafat">👩 Sulafat - Soft and gentle female voice</option>
+                                        <option value="vindemiatrix">👩 Vindemiatrix - Smooth and professional female voice</option>
+                                        <option value="zephyr">👩 Zephyr - Vibrant and lively female voice</option>
+                                        
+                                        <!-- Male Voices -->
+                                        <option value="achird">👨 Achird - Deep and authoritative male voice</option>
+                                        <option value="algenib">👨 Algenib - Strong and confident male voice</option>
+                                        <option value="algieba">👨 Algieba - Warm and engaging male voice</option>
+                                        <option value="alnilam">👨 Alnilam - Clear and expressive male voice</option>
+                                        <option value="charon">👨 Charon - Deep and authoritative male voice</option>
+                                        <option value="enceladus">👨 Enceladus - Strong and confident male voice</option>
+                                        <option value="fenrir">👨 Fenrir - Powerful and commanding male voice</option>
+                                        <option value="lapetus">👨 Lapetus - Warm and engaging male voice</option>
+                                        <option value="orus">👨 Orus - Clear and expressive male voice</option>
+                                        <option value="puck">👨 Puck - Energetic and lively male voice</option>
+                                        <option value="rasalgethi">👨 Rasalgethi - Deep and authoritative male voice</option>
+                                        <option value="sadachbia">👨 Sadachbia - Strong and confident male voice</option>
+                                        <option value="sadaltager">👨 Sadaltager - Warm and engaging male voice</option>
+                                        <option value="schedar">👨 Schedar - Clear and expressive male voice</option>
+                                        <option value="umbriel">👨 Umbriel - Deep and authoritative male voice</option>
+                                        <option value="zubenelgenubi">👨 Zubenelgenubi - Strong and confident male voice</option>
+                                    </optgroup>
                                 </select>
-                                <p class="mt-2 text-sm text-white">
+                                <p class="mt-2 text-sm text-gray-300">
                                     <i class="fas fa-info-circle mr-1"></i>
-                                    Choose the voice that will speak your translated text. Gemini 2.5 Pro TTS offers better accent support and more natural pronunciation.
+                                    {{ __('Choose the voice that will speak your translated text') }}. Gemini 2.5 Pro TTS offers better accent support and more natural pronunciation.
                                 </p>
                                 @error('voice')
-                                    <p class="mt-2 text-sm text-red-600 flex items-center font-bold">
+                                    <p class="mt-2 text-sm text-red-400 flex items-center font-semibold">
                                         <i class="fas fa-exclamation-circle mr-2"></i>
                                         {{ $message }}
                                     </p>
@@ -367,20 +364,20 @@
                             <!-- Style Instruction (Optional) -->
                             <div>
                                 <label for="style_instruction" class="block text-xl font-bold text-white mb-4">
-                                    <i class="fas fa-palette mr-3 text-green-400"></i>
-                                    Style Instruction (Optional)
+                                    <i class="fas fa-palette mr-2 text-pink-400"></i>
+                                    {{ __('Style Instruction (Optional)') }}
                                 </label>
                                 <textarea id="style_instruction" 
                                         name="style_instruction" 
                                         rows="3"
                                         placeholder="e.g., 'Speak with enthusiasm and energy', 'Use a calm and soothing tone', 'Sound professional and authoritative' (up to 5000 characters)"
-                                        class="w-full pl-6 pr-6 py-4 text-lg border-3 border-green-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-300 focus:border-green-500 transition-all bg-white shadow-lg resize-none">{{ old('style_instruction') }}</textarea>
-                                <p class="mt-2 text-sm text-white">
+                                        class="w-full px-6 py-4 text-lg border-2 border-pink-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-pink-400 focus:border-pink-500 transition-all bg-white shadow-lg resize-none">{{ old('style_instruction') }}</textarea>
+                                <p class="mt-2 text-sm text-gray-300">
                                     <i class="fas fa-info-circle mr-1"></i>
-                                    Provide style instructions to customize how the voice should speak (tone, emotion, pace, etc.). Only works with Gemini 2.5 Pro TTS voices.
+                                    {{ __('Provide style instructions to customize how the voice should speak') }} (tone, emotion, pace, etc.). Only works with Gemini 2.5 Pro TTS voices.
                                 </p>
                                 @error('style_instruction')
-                                    <p class="mt-2 text-sm text-red-600 flex items-center font-bold">
+                                    <p class="mt-2 text-sm text-red-400 flex items-center font-semibold">
                                         <i class="fas fa-exclamation-circle mr-2"></i>
                                         {{ $message }}
                                     </p>
@@ -388,14 +385,14 @@
                             </div>
 
                             <!-- Submit Button -->
-                            <div style="display: flex; justify-content: flex-end; gap: 24px;">
-                                <a href="{{ route('audio.index') }}" class="btn-secondary" style="font-size: 18px; padding: 16px 32px;">
-                                    <i class="fas fa-arrow-left"></i>
-                                    Cancel
+                            <div class="flex justify-end gap-6">
+                                <a href="{{ route('audio.index') }}" class="btn-secondary text-lg px-8 py-4">
+                                    <i class="fas fa-arrow-left mr-2"></i>
+                                    {{ __('Cancel') }}
                                 </a>
-                                <button type="submit" id="submitButton" class="btn-primary" style="font-size: 20px; padding: 16px 48px;">
-                                    <i class="fas fa-magic"></i>
-                                    Upload & Translate
+                                <button type="submit" id="submitButton" class="btn-primary text-xl px-12 py-4">
+                                    <i class="fas fa-magic mr-2"></i>
+                                    {{ __('Upload & Translate') }}
                                 </button>
                             </div>
                         </form>
@@ -405,50 +402,50 @@
 
             <!-- Info Sidebar -->
             <div class="lg:col-span-1">
-                <div class="bg-gray-800 shadow-2xl rounded-2xl border-2 border-gray-600 p-6 sticky top-8">
+                <div class="card border-2 border-gray-600 sticky top-24">
                     <h3 class="text-xl font-bold text-white mb-6 flex items-center">
                         <i class="fas fa-info-circle mr-2 text-indigo-400"></i>
-                        How does it work?
+                        {{ __('How does it work?') }}
                     </h3>
                     
                     <div class="space-y-6">
-                        <div class="flex items-start space-x-3">
+                        <div class="flex items-start gap-3">
                             <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
                                 <span class="text-sm font-bold text-indigo-600">1</span>
                             </div>
                             <div>
-                                <h4 class="font-semibold text-white">Upload Audio</h4>
-                                <p class="text-sm text-white">Upload your MP3, WAV or M4A file (max 5 minutes)</p>
+                                <h4 class="font-semibold text-white">{{ __('Upload Audio') }}</h4>
+                                <p class="text-sm text-gray-300">{{ __('Upload your MP3, WAV or M4A file') }} (max 5 minutes)</p>
                             </div>
                         </div>
                         
-                        <div class="flex items-start space-x-3">
+                        <div class="flex items-start gap-3">
                             <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
                                 <span class="text-sm font-bold text-indigo-600">2</span>
                             </div>
                             <div>
-                                <h4 class="font-semibold text-white">Select Languages</h4>
-                                <p class="text-sm text-white">Choose the source and target language for translation</p>
+                                <h4 class="font-semibold text-white">{{ __('Select Languages') }}</h4>
+                                <p class="text-sm text-gray-300">{{ __('Choose the source and target language for translation') }}</p>
                             </div>
                         </div>
                         
-                        <div class="flex items-start space-x-3">
+                        <div class="flex items-start gap-3">
                             <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
                                 <span class="text-sm font-bold text-indigo-600">3</span>
                             </div>
                             <div>
-                                <h4 class="font-semibold text-white">AI Processing</h4>
-                                <p class="text-sm text-white">Whisper transcribes and translates automatically</p>
+                                <h4 class="font-semibold text-white">{{ __('AI Processing') }}</h4>
+                                <p class="text-sm text-gray-300">{{ __('Whisper transcribes and translates automatically') }}</p>
                             </div>
                         </div>
                         
-                        <div class="flex items-start space-x-3">
+                        <div class="flex items-start gap-3">
                             <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
                                 <span class="text-sm font-bold text-indigo-600">4</span>
                             </div>
                             <div>
-                                <h4 class="font-semibold text-white">Download Result</h4>
-                                <p class="text-sm text-white">Download your translated audio file</p>
+                                <h4 class="font-semibold text-white">{{ __('Download Result') }}</h4>
+                                <p class="text-sm text-gray-300">{{ __('Download your translated audio file') }}</p>
                             </div>
                         </div>
                     </div>
@@ -456,10 +453,10 @@
                     <div class="mt-8 p-4 bg-gradient-to-r from-gray-700 to-gray-600 rounded-xl">
                         <h4 class="font-semibold text-white mb-2">
                             <i class="fas fa-lightbulb mr-2 text-yellow-400"></i>
-                            Pro Tip
+                            {{ __('Pro Tip') }}
                         </h4>
-                        <p class="text-sm text-white">
-                            For best results, use clear audio without background noise.
+                        <p class="text-sm text-gray-300">
+                            {{ __('For best results, use clear audio without background noise.') }}
                         </p>
                     </div>
                 </div>
@@ -470,8 +467,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('JavaScript loaded successfully!');
-    
     const dropZone = document.getElementById('dropZone');
     const dropZoneContent = document.getElementById('dropZoneContent');
     const fileInfo = document.getElementById('fileInfo');
@@ -481,26 +476,25 @@ document.addEventListener('DOMContentLoaded', function() {
     const uploadForm = document.getElementById('uploadForm');
     const submitButton = document.getElementById('submitButton');
     const uploadProgress = document.getElementById('uploadProgress');
-    const progressBar = document.getElementById('progressBar');
-    const progressText = document.getElementById('progressText');
 
     // Drag and drop functionality
     dropZone.addEventListener('dragover', function(e) {
         e.preventDefault();
-        dropZone.classList.add('border-indigo-400', 'bg-indigo-50');
+        dropZone.classList.add('border-indigo-400', 'bg-indigo-900/20');
     });
 
     dropZone.addEventListener('dragleave', function(e) {
         e.preventDefault();
-        dropZone.classList.remove('border-indigo-400', 'bg-indigo-50');
+        dropZone.classList.remove('border-indigo-400', 'bg-indigo-900/20');
     });
 
     dropZone.addEventListener('drop', function(e) {
         e.preventDefault();
-        dropZone.classList.remove('border-indigo-400', 'bg-indigo-50');
+        dropZone.classList.remove('border-indigo-400', 'bg-indigo-900/20');
         
         const files = e.dataTransfer.files;
         if (files.length > 0) {
+            audioInput.files = files;
             handleFile(files[0]);
         }
     });
@@ -512,43 +506,32 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Simple form submission - just show progress
+    // Form submission
     uploadForm.addEventListener('submit', function(e) {
-        console.log('Form submit event triggered!');
-        
-        // Show progress immediately
         uploadProgress.classList.remove('hidden');
         submitButton.disabled = true;
-        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
-        
-        // Let the form submit naturally
-        console.log('Form submitting to:', uploadForm.action);
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Uploading...';
     });
 
     function handleFile(file) {
-        // Get allowed types from backend config
         const allowedTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/mp4', 'audio/m4a', 'audio/x-m4a', 'audio/mp4a-latm', 'audio/x-mp4', 'audio/ogg', 'audio/flac', 'audio/x-flac'];
         const allowedExtensions = ['.mp3', '.wav', '.m4a', '.mp4', '.ogg', '.flac'];
         const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
         
-        // Check if either MIME type OR file extension is allowed
         const isValidMimeType = allowedTypes.includes(file.type);
         const isValidExtension = allowedExtensions.includes(fileExtension);
         
         if (!isValidMimeType && !isValidExtension) {
-            console.log('File type:', file.type, 'Extension:', fileExtension);
             alert('Only audio files are allowed (MP3, WAV, M4A, MP4, OGG, FLAC).');
             return;
         }
 
-        // Validate file size (from backend config - 100MB upload, will compress if >25MB)
         const maxSize = {{ config('audio.max_upload_size', 100) }} * 1024 * 1024;
         if (file.size > maxSize) {
-            alert('File is too large. Maximum {{ config("audio.max_upload_size", 100) }}MB allowed. Files over 25MB will be automatically compressed.');
+            alert('File is too large. Maximum {{ config("audio.max_upload_size", 100) }}MB allowed.');
             return;
         }
 
-        // Show file info
         fileName.textContent = file.name;
         fileSize.textContent = formatFileSize(file.size);
         
@@ -566,4 +549,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endsection
-

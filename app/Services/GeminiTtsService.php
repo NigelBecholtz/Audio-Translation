@@ -7,18 +7,24 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use App\Services\GoogleOAuthService;
+use App\Services\SimpleTtsService;
+use App\Services\RateLimiter;
 
 class GeminiTtsService
 {
     private $oauthService;
     private $baseUrl;
     private $timeout;
+    private $fallbackService;
+    private $rateLimiter;
 
     public function __construct()
     {
         $this->oauthService = new GoogleOAuthService();
         $this->baseUrl = config('gemini.base_url');
         $this->timeout = config('gemini.timeout', 120);
+        $this->fallbackService = new SimpleTtsService();
+        $this->rateLimiter = new RateLimiter();
     }
 
     /**
@@ -61,11 +67,21 @@ class GeminiTtsService
             }
 
         } catch (\Exception $e) {
-            Log::error('Gemini TTS generation failed', [
+            Log::error('Gemini TTS generation failed, trying fallback', [
                 'language' => $language,
                 'error' => $e->getMessage()
             ]);
-            throw $e;
+            
+            // Try OpenAI TTS fallback
+            try {
+                return $this->fallbackService->generateAudio($text, $language, $voice, $styleInstruction);
+            } catch (\Exception $fallbackError) {
+                Log::error('Both Gemini and OpenAI TTS failed', [
+                    'gemini_error' => $e->getMessage(),
+                    'openai_error' => $fallbackError->getMessage()
+                ]);
+                throw new \Exception('Audio generation failed: ' . $e->getMessage() . ' (Fallback also failed)');
+            }
         }
     }
 
@@ -81,6 +97,28 @@ class GeminiTtsService
             $styleInstruction = substr($styleInstruction, 0, $maxChunkSize);
         }
 
+        // Rate limiting: Max 60 requests per minute for Gemini TTS
+        $rateLimitKey = 'gemini_tts_' . auth()->id();
+        $maxAttempts = config('gemini.rate_limit.max_attempts', 60);
+        $decayMinutes = config('gemini.rate_limit.decay_minutes', 1);
+        
+        try {
+            return $this->rateLimiter->attempt($rateLimitKey, $maxAttempts, $decayMinutes, function() use ($text, $language, $voice, $styleInstruction) {
+                return $this->executeTtsRequest($text, $language, $voice, $styleInstruction);
+            });
+        } catch (\Exception $e) {
+            Log::warning('Gemini TTS rate limit hit, using fallback', [
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
+            
+            // Use fallback if rate limited
+            return $this->fallbackService->generateAudio($text, $language, $voice, $styleInstruction);
+        }
+    }
+    
+    private function executeTtsRequest(string $text, string $language, string $voice, ?string $styleInstruction): string
+    {
         $accessToken = $this->oauthService->getAccessToken();
         
         // Capitalize first letter of voice name (Gemini expects proper case)

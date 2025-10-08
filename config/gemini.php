@@ -89,4 +89,18 @@ return [
     */
 
     'timeout' => env('GEMINI_TIMEOUT', 120), // Increased to 2 minutes for better reliability
+
+    /*
+    |--------------------------------------------------------------------------
+    | Rate Limiting
+    |--------------------------------------------------------------------------
+    |
+    | Configure rate limiting for Gemini TTS API calls to prevent quota issues
+    |
+    */
+
+    'rate_limit' => [
+        'max_attempts' => env('GEMINI_RATE_LIMIT_ATTEMPTS', 60), // Max requests per time window
+        'decay_minutes' => env('GEMINI_RATE_LIMIT_DECAY', 1), // Time window in minutes
+    ],
 ];

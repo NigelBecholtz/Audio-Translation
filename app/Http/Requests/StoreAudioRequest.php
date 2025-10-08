@@ -12,8 +12,7 @@ class StoreAudioRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // Temporarily always return true for debugging
-        return true;
+        return auth()->check() && auth()->user()->canMakeTranslation();
     }
 
     /**
@@ -35,7 +34,7 @@ class StoreAudioRequest extends FormRequest
                 function ($attribute, $value, $fail) {
                     // Extra MIME validation with finfo
                     if (!$value->isValid()) {
-                        $fail('Het bestand is beschadigd of ongeldig.');
+                        $fail('The file is corrupted or invalid.');
                         return;
                     }
                     
@@ -61,7 +60,7 @@ class StoreAudioRequest extends FormRequest
                     ];
                     
                     if (!in_array($mimeType, $allowedMimes)) {
-                        $fail("Dit bestandstype ($mimeType) wordt niet ondersteund. Upload een geldig audiobestand.");
+                        $fail("This file type ($mimeType) is not supported. Please upload a valid audio file.");
                     }
                 },
             ],
@@ -100,22 +99,22 @@ class StoreAudioRequest extends FormRequest
         $maxUploadSize = config('audio.max_upload_size', 100);
         
         return [
-            'audio.required' => 'Upload een audiobestand om te vertalen.',
-            'audio.file' => 'Het geüploade bestand is ongeldig.',
-            'audio.mimes' => 'Alleen MP3, WAV, M4A, MP4, OGG en FLAC bestanden zijn toegestaan.',
-            'audio.max' => "Het audiobestand mag maximaal {$maxUploadSize}MB zijn.",
+            'audio.required' => 'Please upload an audio file to translate.',
+            'audio.file' => 'The uploaded file is invalid.',
+            'audio.mimes' => 'Only MP3, WAV, M4A, MP4, OGG and FLAC files are allowed.',
+            'audio.max' => "The audio file must not exceed {$maxUploadSize}MB.",
             
-            'source_language.required' => 'Selecteer de brontaal van je audio.',
-            'source_language.in' => 'De geselecteerde brontaal is ongeldig.',
+            'source_language.required' => 'Please select the source language of your audio.',
+            'source_language.in' => 'The selected source language is invalid.',
             
-            'target_language.required' => 'Selecteer de doeltaal voor de vertaling.',
-            'target_language.in' => 'De geselecteerde doeltaal is ongeldig.',
-            'target_language.different' => 'De doeltaal moet verschillen van de brontaal.',
+            'target_language.required' => 'Please select the target language for translation.',
+            'target_language.in' => 'The selected target language is invalid.',
+            'target_language.different' => 'The target language must be different from the source language.',
             
-            'voice.required' => 'Selecteer een stem voor de vertaalde audio.',
-            'voice.regex' => 'De geselecteerde stem is ongeldig.',
+            'voice.required' => 'Please select a voice for the translated audio.',
+            'voice.regex' => 'The selected voice is invalid.',
             
-            'style_instruction.max' => 'De stijlinstructie mag maximaal :max karakters bevatten.',
+            'style_instruction.max' => 'The style instruction must not exceed :max characters.',
         ];
     }
 
@@ -127,11 +126,11 @@ class StoreAudioRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'audio' => 'audiobestand',
-            'source_language' => 'brontaal',
-            'target_language' => 'doeltaal',
-            'voice' => 'stem',
-            'style_instruction' => 'stijlinstructie',
+            'audio' => 'audio file',
+            'source_language' => 'source language',
+            'target_language' => 'target language',
+            'voice' => 'voice',
+            'style_instruction' => 'style instruction',
         ];
     }
 
@@ -145,7 +144,7 @@ class StoreAudioRequest extends FormRequest
     protected function failedAuthorization()
     {
         throw new \Illuminate\Auth\Access\AuthorizationException(
-            'Je hebt geen vertalingen meer over. Koop credits om door te gaan!'
+            __('You have no more translations available. Purchase credits to continue!')
         );
     }
 }
