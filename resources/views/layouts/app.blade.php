@@ -70,6 +70,16 @@
             border: 2px solid #374151;
         }
         
+        /* Better color contrast for accessibility */
+        .text-gray-300 { color: #e5e7eb !important; }
+        .text-gray-400 { color: #d1d5db !important; }
+        
+        /* Focus styles for keyboard navigation */
+        a:focus, button:focus, input:focus, select:focus, textarea:focus {
+            outline: 2px solid #60a5fa;
+            outline-offset: 2px;
+        }
+        
         .status-completed { background: #dcfce7; color: #166534; border: 2px solid #bbf7d0; }
         .status-processing { background: #fef3c7; color: #92400e; border: 2px solid #fde68a; }
         .status-failed { background: #fee2e2; color: #991b1b; border: 2px solid #fecaca; }

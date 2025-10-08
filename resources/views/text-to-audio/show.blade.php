@@ -96,6 +96,20 @@
                         <p class="text-white leading-relaxed text-lg">{{ $textToAudioFile->text_content }}</p>
                     </div>
                 </div>
+
+                <!-- Audio Preview -->
+                @if($textToAudioFile->audio_path && $textToAudioFile->isCompleted())
+                    <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                            <i class="fas fa-volume-up mr-2 text-green-400"></i>
+                            Generated Audio Preview
+                        </h3>
+                        <audio controls class="w-full rounded-lg" preload="metadata">
+                            <source src="{{ asset('storage/' . $textToAudioFile->audio_path) }}" type="audio/mpeg">
+                            Your browser does not support the audio element.
+                        </audio>
+                    </div>
+                @endif
             </div>
 
             <!-- Sidebar -->

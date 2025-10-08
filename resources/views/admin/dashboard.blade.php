@@ -7,18 +7,18 @@
     <div class="max-w-7xl mx-auto">
         <!-- Header -->
         <div class="mb-8">
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-                    <p class="text-gray-600">Overview of all payments and users</p>
+                    <h1 class="text-3xl font-bold text-white">Admin Dashboard</h1>
+                    <p class="text-gray-300">Overzicht van alle betalingen en gebruikers</p>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <span class="text-sm text-gray-600">
-                        Logged in as: <strong>{{ auth()->user()->name }}</strong>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
+                    <span class="text-sm text-gray-300">
+                        Ingelogd als: <strong class="text-white">{{ auth()->user()->name }}</strong>
                     </span>
-                    <form method="POST" action="{{ route('admin.logout') }}" class="inline">
+                    <form method="POST" action="{{ route('admin.logout') }}" class="w-full sm:w-auto">
                         @csrf
-                        <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                        <button type="submit" class="w-full sm:w-auto bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
                             <i class="fas fa-sign-out-alt mr-2"></i>
                             Admin Logout
                         </button>
@@ -27,8 +27,8 @@
             </div>
         </div>
 
-        <!-- Stats Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Stats Grid - Responsive -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
             <!-- Revenue Card -->
             <div class="bg-white shadow-lg rounded-xl p-6 border-l-4 border-green-500">
                 <div class="flex items-center">
@@ -85,8 +85,8 @@
             </div>
         </div>
 
-        <!-- Charts and Tables -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Charts and Tables - Responsive -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8 mb-8">
             <!-- Monthly Revenue Chart -->
             <div class="bg-white shadow-lg rounded-xl p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Monthly Revenue</h3>
@@ -141,8 +141,8 @@
             </div>
         </div>
 
-        <!-- Recent Activity -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Recent Activity - Responsive -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
             <!-- Recent Payments -->
             <div class="bg-white shadow-lg rounded-xl p-6">
                 <div class="flex items-center justify-between mb-4">
@@ -198,10 +198,10 @@
             </div>
         </div>
 
-        <!-- Quick Actions -->
-        <div class="mt-8 bg-white shadow-lg rounded-xl p-6">
+        <!-- Quick Actions - Responsive -->
+        <div class="mt-8 bg-white shadow-lg rounded-xl p-4 sm:p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                 <a href="{{ route('admin.payments') }}" class="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
                     <i class="fas fa-credit-card text-blue-600 text-xl mr-3"></i>
                     <div>

@@ -89,15 +89,16 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <!-- Source Language -->
                                 <div>
-                                    <label for="source_language" class="block text-xl font-bold text-white mb-4">
-                                        <i class="fas fa-language mr-3 text-blue-400"></i>
-                                        Source Language
-                                    </label>
-                                    <select id="source_language" 
-                                            name="source_language" 
-                                            required
-                                            class="w-full pl-6 pr-10 py-4 text-lg border-3 border-blue-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all bg-white shadow-lg">
-                                        <option value="">Select source language</option>
+                                <label for="source_language" class="block text-xl font-bold text-white mb-4">
+                                    <i class="fas fa-language mr-3 text-blue-400" aria-hidden="true"></i>
+                                    Source Language
+                                </label>
+                                <select id="source_language" 
+                                        name="source_language" 
+                                        required
+                                        aria-label="Selecteer brontaal"
+                                        class="w-full pl-6 pr-10 py-4 text-lg border-3 border-blue-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all bg-white shadow-lg">
+                                    <option value="">Selecteer brontaal</option>
                                         
                                         <!-- Major Languages -->
                                         <optgroup label="🌍 Major Languages">
@@ -187,15 +188,16 @@
 
                                 <!-- Target Language -->
                                 <div>
-                                    <label for="target_language" class="block text-xl font-bold text-white mb-4">
-                                        <i class="fas fa-flag mr-3 text-green-400"></i>
-                                        Target Language
-                                    </label>
-                                    <select id="target_language" 
-                                            name="target_language" 
-                                            required
-                                            class="w-full pl-6 pr-10 py-4 text-lg border-3 border-green-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-300 focus:border-green-500 transition-all bg-white shadow-lg">
-                                        <option value="">Select target language</option>
+                                <label for="target_language" class="block text-xl font-bold text-white mb-4">
+                                    <i class="fas fa-flag mr-3 text-green-400" aria-hidden="true"></i>
+                                    Target Language
+                                </label>
+                                <select id="target_language" 
+                                        name="target_language" 
+                                        required
+                                        aria-label="Selecteer doeltaal"
+                                        class="w-full pl-6 pr-10 py-4 text-lg border-3 border-green-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-300 focus:border-green-500 transition-all bg-white shadow-lg">
+                                    <option value="">Selecteer doeltaal</option>
                                         
                                         <!-- Major Languages -->
                                         <optgroup label="🌍 Major Languages">
@@ -287,14 +289,15 @@
                             <!-- Voice Selection -->
                             <div>
                                 <label for="voice" class="block text-xl font-bold text-white mb-4">
-                                    <i class="fas fa-microphone mr-3 text-purple-400"></i>
+                                    <i class="fas fa-microphone mr-3 text-purple-400" aria-hidden="true"></i>
                                     Voice Selection
                                 </label>
                                 <select id="voice" 
                                         name="voice" 
                                         required
+                                        aria-label="Selecteer stem voor vertaling"
                                         class="w-full pl-6 pr-10 py-4 text-lg border-3 border-purple-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-purple-300 focus:border-purple-500 transition-all bg-white shadow-lg">
-                                    <option value="">Select voice for translation</option>
+                                    <option value="">Selecteer stem voor vertaling</option>
                                     
                                     <!-- Gemini 2.5 Pro TTS Voices -->
                 <optgroup label="🎯 Gemini 2.5 Pro TTS Voices">

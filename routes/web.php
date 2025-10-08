@@ -9,6 +9,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminLoginController;
 use App\Http\Controllers\WebhookController;
+use App\Http\Controllers\ExportController;
 use Illuminate\Support\Facades\Log;
 
 Route::get('/', function () {
@@ -55,6 +56,11 @@ Route::middleware(['auth', 'throttle:60,1'])->group(function () {
     Route::post('/checkout', [PaymentController::class, 'createCheckoutSession'])->name('payment.checkout');
     Route::get('/payment/success', [PaymentController::class, 'success'])->name('payment.success');
     Route::get('/payment/cancel', [PaymentController::class, 'cancel'])->name('payment.cancel');
+    
+    // Export Routes
+    Route::get('/export/audio-translations', [ExportController::class, 'exportAudioTranslations'])->name('export.audio');
+    Route::get('/export/text-to-audio', [ExportController::class, 'exportTextToAudio'])->name('export.text-to-audio');
+    Route::get('/export/credit-history', [ExportController::class, 'exportCreditHistory'])->name('export.credits');
     
     // Admin Routes (Protected by admin middleware)
     Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {

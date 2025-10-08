@@ -166,6 +166,20 @@
                     </div>
                 </div>
 
+                <!-- Audio Preview (Original) -->
+                @if($audioFile->file_path && $audioFile->status !== 'failed')
+                    <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                            <i class="fas fa-headphones mr-2 text-blue-400"></i>
+                            Original Audio Preview
+                        </h3>
+                        <audio controls class="w-full rounded-lg" preload="metadata">
+                            <source src="{{ asset('storage/' . $audioFile->file_path) }}" type="audio/mpeg">
+                            Your browser does not support the audio element.
+                        </audio>
+                    </div>
+                @endif
+
                 <!-- Transcription -->
                 @if($audioFile->transcription)
                     <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
@@ -189,6 +203,20 @@
                         <div class="bg-gradient-to-r from-green-900/30 to-blue-900/30 p-6 rounded-xl border border-gray-600/30">
                             <p class="text-white leading-relaxed text-lg">{{ $audioFile->translated_text }}</p>
                         </div>
+                    </div>
+                @endif
+
+                <!-- Translated Audio Preview -->
+                @if($audioFile->translated_audio_path && $audioFile->isCompleted())
+                    <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                            <i class="fas fa-volume-up mr-2 text-green-400"></i>
+                            Translated Audio Preview
+                        </h3>
+                        <audio controls class="w-full rounded-lg" preload="metadata">
+                            <source src="{{ asset('storage/' . $audioFile->translated_audio_path) }}" type="audio/mpeg">
+                            Your browser does not support the audio element.
+                        </audio>
                     </div>
                 @endif
             </div>
