@@ -8,18 +8,10 @@
     <div style="text-align: center; margin-bottom: 48px;">
         <h1 style="font-size: 48px; font-weight: bold; color: #f9fafb; margin-bottom: 16px;">Audio Translations</h1>
         <p style="font-size: 20px; color: #d1d5db; margin-bottom: 32px;">Transform your audio to any desired language with AI</p>
-        <div style="display: flex; gap: 16px; justify-content: center; align-items: center; flex-wrap: wrap;">
-            <a href="{{ route('audio.create') }}" class="btn-primary" style="font-size: 20px; padding: 20px 40px;">
-                <i class="fas fa-plus"></i>
-                Start New Translation
-            </a>
-            @if($audioFiles->count() > 0)
-                <a href="{{ route('export.audio') }}" class="btn-secondary" style="font-size: 16px; padding: 12px 24px;">
-                    <i class="fas fa-download"></i>
-                    Exporteer naar CSV
-                </a>
-            @endif
-        </div>
+        <a href="{{ route('audio.create') }}" class="btn-primary" style="font-size: 20px; padding: 20px 40px;">
+            <i class="fas fa-plus"></i>
+            Start New Translation
+        </a>
     </div>
 
     @if($audioFiles->count() > 0)

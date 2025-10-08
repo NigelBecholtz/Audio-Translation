@@ -16,12 +16,6 @@
                     <i class="fas fa-plus mr-2"></i>
                     New Text to Audio
                 </a>
-                @if($textToAudioFiles->count() > 0)
-                    <a href="{{ route('export.text-to-audio') }}" class="flex items-center px-4 py-2 bg-gray-600 text-white rounded-xl hover:bg-gray-500 transition-colors">
-                        <i class="fas fa-download mr-2"></i>
-                        Export CSV
-                    </a>
-                @endif
                 <a href="{{ route('audio.index') }}" class="flex items-center px-4 py-2 bg-gray-600 text-white rounded-xl hover:bg-gray-500 transition-colors">
                     <i class="fas fa-microphone mr-2"></i>
                     Audio Translation
