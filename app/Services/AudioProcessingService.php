@@ -87,11 +87,27 @@ class AudioProcessingService
                 ]);
             }
 
-            // Compress audio if needed (>25MB)
+            // Process audio/video file with FFmpeg if available
             $processedPath = $audioFile->file_path;
             
             if ($this->ffmpegService->isInstalled()) {
-                $originalSize = $this->ffmpegService->getFileSizeMB($audioFile->file_path);
+                // Step 1: Extract audio from video files (MP4, etc)
+                if ($this->ffmpegService->isVideoFile($audioFile->file_path)) {
+                    $audioFile->update([
+                        'processing_progress' => 15,
+                        'processing_message' => 'Extracting audio from video...'
+                    ]);
+
+                    Log::info('Video file detected, extracting audio', [
+                        'file' => $audioFile->original_filename
+                    ]);
+                    
+                    $processedPath = $this->ffmpegService->extractAudioFromVideo($audioFile->file_path);
+                    $audioFile->update(['file_path' => $processedPath]);
+                }
+                
+                // Step 2: Compress audio if needed (>25MB)
+                $originalSize = $this->ffmpegService->getFileSizeMB($processedPath);
                 
                 if ($originalSize > 25) {
                     $audioFile->update([
@@ -103,7 +119,7 @@ class AudioProcessingService
                         'original_size' => $originalSize . 'MB'
                     ]);
                     
-                    $processedPath = $this->ffmpegService->compressIfNeeded($audioFile->file_path, 25);
+                    $processedPath = $this->ffmpegService->compressIfNeeded($processedPath, 25);
                     
                     // Update database with compressed file path
                     $audioFile->update(['file_path' => $processedPath]);

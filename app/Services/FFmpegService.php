@@ -137,6 +137,79 @@ class FFmpegService
     }
 
     /**
+     * Check if file is a video format and needs audio extraction
+     * 
+     * @param string $path Storage path
+     * @return bool
+     */
+    public function isVideoFile(string $path): bool
+    {
+        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        return in_array($extension, ['mp4', 'avi', 'mov', 'mkv', 'flv', 'wmv', 'webm']);
+    }
+
+    /**
+     * Extract audio from video file
+     * 
+     * @param string $inputPath Storage path to video file
+     * @return string Path to extracted audio file
+     */
+    public function extractAudioFromVideo(string $inputPath): string
+    {
+        $disk = Storage::disk('public');
+        $fullInputPath = $disk->path($inputPath);
+        
+        // Generate output filename
+        $pathInfo = pathinfo($inputPath);
+        $outputFilename = $pathInfo['filename'] . '_audio.mp3';
+        $outputPath = $pathInfo['dirname'] . '/' . $outputFilename;
+        $fullOutputPath = $disk->path($outputPath);
+
+        Log::info('Extracting audio from video', [
+            'input' => $inputPath,
+            'output' => $outputPath
+        ]);
+
+        // FFmpeg command to extract audio only
+        $process = new Process([
+            'ffmpeg',
+            '-i', $fullInputPath,
+            '-vn',                          // No video
+            '-acodec', 'libmp3lame',        // MP3 codec
+            '-b:a', '128k',                 // 128kbps bitrate
+            '-y',                           // Overwrite output file
+            $fullOutputPath
+        ]);
+
+        $process->setTimeout(300); // 5 minutes max
+        
+        try {
+            $process->mustRun();
+            
+            Log::info('Audio extraction successful', [
+                'input' => $inputPath,
+                'output' => $outputPath,
+                'input_size' => $this->getFileSizeMB($inputPath) . 'MB',
+                'output_size' => $this->getFileSizeMB($outputPath) . 'MB'
+            ]);
+            
+            // Delete original video file to save space
+            $disk->delete($inputPath);
+            
+            return $outputPath;
+            
+        } catch (ProcessFailedException $e) {
+            Log::error('Audio extraction failed', [
+                'input' => $inputPath,
+                'error' => $e->getMessage(),
+                'output' => $process->getErrorOutput()
+            ]);
+            
+            throw new \Exception('Audio extraction failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Get audio duration in seconds
      */
     public function getDuration(string $path): ?float
