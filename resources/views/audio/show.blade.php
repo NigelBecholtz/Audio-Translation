@@ -166,7 +166,7 @@
                     </div>
                 </div>
 
-                <!-- Audio Preview (Original) -->
+                <!-- Audio Preview (Original) - Temporarily disabled for debugging
                 @if($audioFile->file_path && $audioFile->status !== 'failed')
                     <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
                         <h3 class="text-xl font-bold text-white mb-4 flex items-center">
@@ -179,6 +179,7 @@
                         </audio>
                     </div>
                 @endif
+                -->
 
                 <!-- Transcription -->
                 @if($audioFile->transcription)
@@ -206,7 +207,7 @@
                     </div>
                 @endif
 
-                <!-- Translated Audio Preview -->
+                <!-- Translated Audio Preview - Temporarily disabled for debugging
                 @if($audioFile->translated_audio_path && $audioFile->isCompleted())
                     <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
                         <h3 class="text-xl font-bold text-white mb-4 flex items-center">
@@ -219,6 +220,7 @@
                         </audio>
                     </div>
                 @endif
+                -->
             </div>
 
             <!-- Sidebar -->

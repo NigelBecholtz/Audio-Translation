@@ -97,7 +97,7 @@
                     </div>
                 </div>
 
-                <!-- Audio Preview -->
+                <!-- Audio Preview - Temporarily disabled for debugging
                 @if($textToAudioFile->audio_path && $textToAudioFile->isCompleted())
                     <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
                         <h3 class="text-xl font-bold text-white mb-4 flex items-center">
@@ -110,6 +110,7 @@
                         </audio>
                     </div>
                 @endif
+                -->
             </div>
 
             <!-- Sidebar -->
