@@ -70,6 +70,10 @@ Route::middleware(['auth', 'throttle:60,1'])->group(function () {
     Route::get('/payment/success', [PaymentController::class, 'success'])->name('payment.success');
     Route::get('/payment/cancel', [PaymentController::class, 'cancel'])->name('payment.cancel');
     
+    // Style Preset Routes
+    Route::resource('style-presets', \App\Http\Controllers\StylePresetController::class);
+    Route::get('/api/style-presets', [\App\Http\Controllers\StylePresetController::class, 'getPresets'])->name('style-presets.api');
+    
     // Admin Routes (Protected by admin middleware)
     Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');

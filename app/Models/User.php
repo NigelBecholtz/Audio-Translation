@@ -78,6 +78,11 @@ class User extends Authenticatable
         return $this->hasMany(TextToAudio::class);
     }
 
+    public function stylePresets()
+    {
+        return $this->hasMany(StyleInstructionPreset::class);
+    }
+
     // Subscription methods
     public function canMakeTranslation(): bool
     {
