@@ -191,5 +191,36 @@
     </div>
 </div>
 
-{{-- No auto-refresh needed - processing is synchronous --}}
+<script>
+// Real-time progress tracking
+@if($textToAudioFile->isProcessing())
+let pollInterval;
+const textToAudioId = {{ $textToAudioFile->id }};
+
+function updateStatus(data) {
+    if (data.is_completed || data.is_failed) {
+        clearInterval(pollInterval);
+        // Reload page to show completed state
+        setTimeout(() => window.location.reload(), 500);
+    }
+}
+
+function pollStatus() {
+    fetch(`/text-to-audio/${textToAudioId}/status`)
+        .then(response => response.json())
+        .then(data => updateStatus(data))
+        .catch(error => console.error('Error polling status:', error));
+}
+
+// Start polling every 2 seconds
+pollInterval = setInterval(pollStatus, 2000);
+pollStatus(); // Initial poll
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    if (pollInterval) clearInterval(pollInterval);
+});
+@endif
+</script>
+
 @endsection

@@ -194,7 +194,12 @@ class AudioProcessingService
             }
 
             $languageNames = [
-                'en' => 'English', 'es' => 'Spanish', 'fr' => 'French',
+                // English variants
+                'en-US' => 'American English', 'en-GB' => 'British English',
+                'en-AU' => 'Australian English', 'en-CA' => 'Canadian English',
+                'en-IN' => 'Indian English', 'en' => 'English',
+                // Other languages
+                'es' => 'Spanish', 'fr' => 'French',
                 'de' => 'German', 'it' => 'Italian', 'pt' => 'Portuguese',
                 'ru' => 'Russian', 'ja' => 'Japanese', 'ko' => 'Korean',
                 'zh' => 'Chinese', 'ar' => 'Arabic', 'hi' => 'Hindi',

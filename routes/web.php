@@ -52,6 +52,7 @@ Route::middleware(['auth', 'throttle:60,1'])->group(function () {
     
     Route::resource('text-to-audio', TextToAudioController::class)->except(['store'])->middleware('throttle:20,1');
     Route::get('text-to-audio/{id}/download', [TextToAudioController::class, 'download'])->name('text-to-audio.download');
+    Route::get('text-to-audio/{id}/status', [TextToAudioController::class, 'status'])->name('text-to-audio.status');
     
     // Payment Routes
     Route::get('/credits', [PaymentController::class, 'showCredits'])->name('payment.credits');

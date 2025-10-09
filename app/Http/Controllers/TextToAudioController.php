@@ -101,4 +101,21 @@ class TextToAudioController extends Controller
             return back()->with('error', __('Delete failed: ') . $e->getMessage());
         }
     }
+
+    /**
+     * Get processing status for AJAX polling
+     */
+    public function status($id)
+    {
+        // Use user's textToAudioFiles relationship for automatic authorization
+        $textToAudioFile = auth()->user()->textToAudioFiles()->findOrFail($id);
+        
+        return response()->json([
+            'status' => $textToAudioFile->status,
+            'error_message' => $textToAudioFile->error_message,
+            'is_completed' => $textToAudioFile->status === 'completed',
+            'is_failed' => $textToAudioFile->status === 'failed',
+            'is_processing' => $textToAudioFile->status === 'processing',
+        ]);
+    }
 }

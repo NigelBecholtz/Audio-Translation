@@ -30,7 +30,12 @@ return [
     */
 
     'languages' => [
-        'en' => 'English',
+        'en-US' => 'English (US)',
+        'en-GB' => 'English (UK)',
+        'en-AU' => 'English (Australia)',
+        'en-CA' => 'English (Canada)',
+        'en-IN' => 'English (India)',
+        'en' => 'English (General)',
         'es' => 'Spanish',
         'fr' => 'French',
         'de' => 'German',
@@ -54,7 +59,7 @@ return [
         'ca' => 'Catalan'
     ],
 
-    'language_codes' => 'en,es,fr,de,it,pt,ru,ja,ko,zh,ar,hi,nl,sv,da,no,fi,pl,cs,sk,hu,ro,bg,hr,sl,el,tr,uk,lv,lt,et,ca,eu,th,vi,id,ms,tl,bn,ta,te,ml,kn,gu,pa,ur,si,my,km,lo,mn,af,sw,am,sq,hy,az,ka,he,fa,ps,ne',
+    'language_codes' => 'en-US,en-GB,en-AU,en-CA,en-IN,en,es,fr,de,it,pt,ru,ja,ko,zh,ar,hi,nl,sv,da,no,fi,pl,cs,sk,hu,ro,bg,hr,sl,el,tr,uk,lv,lt,et,ca,eu,th,vi,id,ms,tl,bn,ta,te,ml,kn,gu,pa,ur,si,my,km,lo,mn,af,sw,am,sq,hy,az,ka,he,fa,ps,ne',
 
     /*
     |--------------------------------------------------------------------------

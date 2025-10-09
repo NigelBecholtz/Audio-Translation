@@ -243,7 +243,15 @@ class GeminiTtsService
     private function getLanguageCode(string $language): string
     {
         $languageMap = [
-            'en' => 'en-US', 'es' => 'es-ES', 'fr' => 'fr-FR', 'de' => 'de-DE',
+            // English variants
+            'en-US' => 'en-US',
+            'en-GB' => 'en-GB',
+            'en-AU' => 'en-AU',
+            'en-CA' => 'en-CA',
+            'en-IN' => 'en-IN',
+            'en' => 'en-US', // Default to US English
+            // Other languages
+            'es' => 'es-ES', 'fr' => 'fr-FR', 'de' => 'de-DE',
             'it' => 'it-IT', 'pt' => 'pt-PT', 'ru' => 'ru-RU', 'ja' => 'ja-JP',
             'ko' => 'ko-KR', 'zh' => 'zh-CN', 'ar' => 'ar-SA', 'hi' => 'hi-IN',
             'nl' => 'nl-NL', 'sv' => 'sv-SE', 'da' => 'da-DK', 'no' => 'nb-NO',
