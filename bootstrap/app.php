@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'audio.limits' => \App\Http\Middleware\SetAudioProcessingLimits::class,
+            'webhook.throttle' => \App\Http\Middleware\ThrottleWebhooks::class,
         ]);
         
         // Exclude Stripe webhook from CSRF verification

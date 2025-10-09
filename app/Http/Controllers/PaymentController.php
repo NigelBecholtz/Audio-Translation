@@ -91,29 +91,34 @@ class PaymentController extends Controller
             }
             
             if ($session->payment_status === 'paid') {
-                $user = Auth::user();
                 $credits = $session->metadata->credits;
                 
-                // Update payment status
-                $payment->update([
-                    'status' => 'completed',
-                    'stripe_payment_intent_id' => $session->payment_intent,
-                    'completed_at' => now(),
-                ]);
-                
-                // Add credits to user account
-                $user->increment('credits', $credits);
-                $newBalance = $user->fresh()->credits;
-                
-                // Create credit transaction record
-                CreditTransaction::create([
-                    'user_id' => $user->id,
-                    'admin_id' => null, // System transaction
-                    'amount' => $credits,
-                    'type' => 'purchase',
-                    'description' => "Credits purchased via Stripe (€{$payment->amount})",
-                    'balance_after' => $newBalance,
-                ]);
+                // Use database transaction with row-level locking to prevent race conditions
+                \DB::transaction(function() use ($payment, $session, $credits) {
+                    // Lock the user row to prevent concurrent credit modifications
+                    $user = \App\Models\User::lockForUpdate()->find(Auth::id());
+                    
+                    // Update payment status
+                    $payment->update([
+                        'status' => 'completed',
+                        'stripe_payment_intent_id' => $session->payment_intent,
+                        'completed_at' => now(),
+                    ]);
+                    
+                    // Add credits to user account
+                    $user->increment('credits', $credits);
+                    $newBalance = $user->fresh()->credits;
+                    
+                    // Create credit transaction record
+                    CreditTransaction::create([
+                        'user_id' => $user->id,
+                        'admin_id' => null, // System transaction
+                        'amount' => $credits,
+                        'type' => 'purchase',
+                        'description' => "Credits purchased via Stripe (€{$payment->amount})",
+                        'balance_after' => $newBalance,
+                    ]);
+                });
                 
                 return redirect()->route('audio.index')->with('success', 
                     "Payment successful! You have received {$credits} credits."

@@ -16,7 +16,10 @@ Route::get('/', function () {
 });
 
 // Stripe Webhook (must be outside auth middleware and CSRF protection)
-Route::post('/webhook/stripe', [WebhookController::class, 'handleStripe'])->name('webhook.stripe');
+// Rate limited to prevent DoS attacks
+Route::post('/webhook/stripe', [WebhookController::class, 'handleStripe'])
+    ->middleware('webhook.throttle')
+    ->name('webhook.stripe');
 
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');

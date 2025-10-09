@@ -71,9 +71,10 @@ class RateLimiter
      * Get available time until rate limit resets
      * 
      * @param string $key
+     * @param int $decayMinutes Default decay time if TTL cannot be determined
      * @return int Seconds until reset, 0 if not rate limited
      */
-    public function availableIn(string $key): int
+    public function availableIn(string $key, int $decayMinutes = 1): int
     {
         $cacheKey = $this->cacheKeyPrefix . $key;
         
@@ -81,10 +82,31 @@ class RateLimiter
             return 0;
         }
         
-        // Get TTL from cache (in seconds)
-        $ttl = Cache::getStore()->getRedis()->ttl($cacheKey);
-        
-        return $ttl > 0 ? $ttl : 0;
+        // Try to get TTL from cache store if Redis is available
+        try {
+            $store = Cache::getStore();
+            
+            // Check if Redis driver is being used
+            if (method_exists($store, 'getRedis')) {
+                $ttl = $store->getRedis()->ttl($cacheKey);
+                return $ttl > 0 ? $ttl : 0;
+            }
+            
+            // For non-Redis drivers (database, file, etc), estimate TTL
+            // Return the decay time in seconds as approximation
+            Log::debug('RateLimiter: Non-Redis cache driver detected, using estimated TTL', [
+                'driver' => config('cache.default')
+            ]);
+            return $decayMinutes * 60;
+            
+        } catch (\Exception $e) {
+            Log::warning('RateLimiter: Failed to get TTL from cache', [
+                'error' => $e->getMessage(),
+                'driver' => config('cache.default')
+            ]);
+            // Return estimated time
+            return $decayMinutes * 60;
+        }
     }
     
     /**
@@ -114,7 +136,7 @@ class RateLimiter
     public function attempt(string $key, int $maxAttempts, int $decayMinutes, callable $callback)
     {
         if ($this->tooManyAttempts($key, $maxAttempts, $decayMinutes)) {
-            $availableIn = $this->availableIn($key);
+            $availableIn = $this->availableIn($key, $decayMinutes);
             throw new \Exception(
                 "Rate limit exceeded for '{$key}'. Try again in {$availableIn} seconds. " .
                 "Remaining: {$this->remaining($key, $maxAttempts)}/{$maxAttempts}"

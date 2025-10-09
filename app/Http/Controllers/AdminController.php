@@ -111,22 +111,29 @@ class AdminController extends Controller
         $amount = $request->amount;
         $description = $request->description ?? "Credits added by admin";
 
-        // Add credits to user
-        $user->increment('credits', $amount);
-        $newBalance = $user->fresh()->credits;
+        // Use database transaction with row-level locking to prevent race conditions
+        DB::transaction(function() use ($user, $amount, $description) {
+            // Lock the user row to prevent concurrent credit modifications
+            $lockedUser = User::lockForUpdate()->find($user->id);
+            
+            // Add credits to user
+            $lockedUser->increment('credits', $amount);
+            $newBalance = $lockedUser->fresh()->credits;
 
-        // Create transaction record
-        CreditTransaction::create([
-            'user_id' => $user->id,
-            'admin_id' => auth()->id(),
-            'amount' => $amount,
-            'type' => 'admin_add',
-            'description' => $description,
-            'balance_after' => $newBalance,
-        ]);
+            // Create transaction record
+            CreditTransaction::create([
+                'user_id' => $lockedUser->id,
+                'admin_id' => auth()->id(),
+                'amount' => $amount,
+                'type' => 'admin_add',
+                'description' => $description,
+                'balance_after' => $newBalance,
+            ]);
+        });
 
+        $user->refresh();
         return back()->with('success', 
-            "{$amount} credits added to {$user->name}. New balance: {$newBalance} credits."
+            "{$amount} credits added to {$user->name}. New balance: {$user->credits} credits."
         );
     }
 
@@ -140,30 +147,39 @@ class AdminController extends Controller
         $amount = $request->amount;
         $description = $request->description ?? "Credits removed by admin";
 
-        // Check if user has enough credits
-        if ($user->credits < $amount) {
-            return back()->with('error', 
-                "User does not have enough credits. Current balance: {$user->credits} credits."
+        try {
+            // Use database transaction with row-level locking to prevent race conditions
+            DB::transaction(function() use ($user, $amount, $description) {
+                // Lock the user row to prevent concurrent credit modifications
+                $lockedUser = User::lockForUpdate()->find($user->id);
+                
+                // Check if user has enough credits after lock
+                if ($lockedUser->credits < $amount) {
+                    throw new \Exception("User does not have enough credits. Current balance: {$lockedUser->credits} credits.");
+                }
+
+                // Remove credits from user
+                $lockedUser->decrement('credits', $amount);
+                $newBalance = $lockedUser->fresh()->credits;
+
+                // Create transaction record
+                CreditTransaction::create([
+                    'user_id' => $lockedUser->id,
+                    'admin_id' => auth()->id(),
+                    'amount' => -$amount, // Negative amount for removal
+                    'type' => 'admin_remove',
+                    'description' => $description,
+                    'balance_after' => $newBalance,
+                ]);
+            });
+            
+            $user->refresh();
+            return back()->with('success', 
+                "{$amount} credits removed from {$user->name}. New balance: {$user->credits} credits."
             );
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
         }
-
-        // Remove credits from user
-        $user->decrement('credits', $amount);
-        $newBalance = $user->fresh()->credits;
-
-        // Create transaction record
-        CreditTransaction::create([
-            'user_id' => $user->id,
-            'admin_id' => auth()->id(),
-            'amount' => -$amount, // Negative amount for removal
-            'type' => 'admin_remove',
-            'description' => $description,
-            'balance_after' => $newBalance,
-        ]);
-
-        return back()->with('success', 
-            "{$amount} credits removed from {$user->name}. New balance: {$newBalance} credits."
-        );
     }
 
     public function creditHistory(User $user)

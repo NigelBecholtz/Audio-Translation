@@ -103,35 +103,39 @@ class WebhookController extends Controller
             return;
         }
 
-        // Update payment status
-        $payment->update([
-            'status' => CreditConstants::PAYMENT_STATUS_COMPLETED,
-            'stripe_payment_intent_id' => $session->payment_intent,
-            'completed_at' => now(),
-        ]);
+        // Use database transaction with row-level locking to prevent race conditions
+        \DB::transaction(function() use ($payment, $session) {
+            // Lock the user row to prevent concurrent credit modifications
+            $user = User::lockForUpdate()->find($payment->user_id);
+            $credits = $payment->credits_purchased;
+            
+            // Update payment status
+            $payment->update([
+                'status' => CreditConstants::PAYMENT_STATUS_COMPLETED,
+                'stripe_payment_intent_id' => $session->payment_intent,
+                'completed_at' => now(),
+            ]);
 
-        // Add credits to user
-        $user = $payment->user;
-        $credits = $payment->credits_purchased;
+            // Add credits to user account
+            $user->increment('credits', $credits);
+            $newBalance = $user->fresh()->credits;
 
-        $user->increment('credits', $credits);
-        $newBalance = $user->fresh()->credits;
+            // Create credit transaction
+            CreditTransaction::create([
+                'user_id' => $user->id,
+                'admin_id' => null,
+                'amount' => $credits,
+                'type' => CreditConstants::TRANSACTION_TYPE_PURCHASE,
+                'description' => "Credits purchased via Stripe (€{$payment->amount})",
+                'balance_after' => $newBalance,
+            ]);
 
-        // Create credit transaction
-        CreditTransaction::create([
-            'user_id' => $user->id,
-            'admin_id' => null,
-            'amount' => $credits,
-            'type' => CreditConstants::TRANSACTION_TYPE_PURCHASE,
-            'description' => "Credits purchased via Stripe (€{$payment->amount})",
-            'balance_after' => $newBalance,
-        ]);
-
-        Log::info('Credits added via webhook', [
-            'user_id' => $user->id,
-            'credits' => $credits,
-            'payment_id' => $payment->id
-        ]);
+            Log::info('Credits added via webhook', [
+                'user_id' => $user->id,
+                'credits' => $credits,
+                'payment_id' => $payment->id
+            ]);
+        });
     }
 
     /**
@@ -183,40 +187,44 @@ class WebhookController extends Controller
             return;
         }
 
-        // Update payment status
-        $payment->update([
-            'status' => CreditConstants::PAYMENT_STATUS_REFUNDED,
-        ]);
-
-        // Remove credits from user
-        $user = $payment->user;
-        $credits = $payment->credits_purchased;
-
-        if ($user->credits >= $credits) {
-            $user->decrement('credits', $credits);
-            $newBalance = $user->fresh()->credits;
-
-            // Create transaction record
-            CreditTransaction::create([
-                'user_id' => $user->id,
-                'admin_id' => null,
-                'amount' => -$credits,
-                'type' => CreditConstants::TRANSACTION_TYPE_REFUND,
-                'description' => "Refund for payment (€{$payment->amount})",
-                'balance_after' => $newBalance,
+        // Use database transaction with row-level locking to prevent race conditions
+        \DB::transaction(function() use ($payment) {
+            // Lock the user row to prevent concurrent credit modifications
+            $user = User::lockForUpdate()->find($payment->user_id);
+            $credits = $payment->credits_purchased;
+            
+            // Update payment status
+            $payment->update([
+                'status' => CreditConstants::PAYMENT_STATUS_REFUNDED,
             ]);
 
-            Log::info('Credits removed due to refund', [
-                'user_id' => $user->id,
-                'credits' => $credits,
-                'payment_id' => $payment->id
-            ]);
-        } else {
-            Log::warning('User has insufficient credits for refund', [
-                'user_id' => $user->id,
-                'user_credits' => $user->credits,
-                'refund_amount' => $credits
-            ]);
-        }
+            // Remove credits from user
+            if ($user->credits >= $credits) {
+                $user->decrement('credits', $credits);
+                $newBalance = $user->fresh()->credits;
+
+                // Create transaction record
+                CreditTransaction::create([
+                    'user_id' => $user->id,
+                    'admin_id' => null,
+                    'amount' => -$credits,
+                    'type' => CreditConstants::TRANSACTION_TYPE_REFUND,
+                    'description' => "Refund for payment (€{$payment->amount})",
+                    'balance_after' => $newBalance,
+                ]);
+
+                Log::info('Credits removed due to refund', [
+                    'user_id' => $user->id,
+                    'credits' => $credits,
+                    'payment_id' => $payment->id
+                ]);
+            } else {
+                Log::warning('User has insufficient credits for refund', [
+                    'user_id' => $user->id,
+                    'user_credits' => $user->credits,
+                    'refund_amount' => $credits
+                ]);
+            }
+        });
     }
 }
