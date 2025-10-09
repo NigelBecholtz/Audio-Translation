@@ -45,14 +45,23 @@
                     
                     <!-- Live Polling Indicator -->
                     @if($textToAudioFile->isProcessing())
-                    <div id="pollingIndicator" class="mb-4 p-3 bg-blue-500/20 border-2 border-blue-500 rounded-lg">
-                        <div class="flex items-center gap-2">
-                            <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                            <p class="text-sm text-blue-300 font-semibold">
-                                <i class="fas fa-sync-alt fa-spin mr-1"></i>
-                                Checking status every 3 seconds... <span id="lastCheck" class="text-blue-200"></span>
-                            </p>
+                    <div id="pollingIndicator" class="mb-6 p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-2 border-blue-400/50 rounded-xl backdrop-blur-sm">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <div class="relative">
+                                    <div class="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                                    <div class="absolute inset-0 w-3 h-3 bg-blue-500 rounded-full animate-ping opacity-75"></div>
+                                </div>
+                                <p class="text-sm text-white font-bold">
+                                    <i class="fas fa-sync-alt fa-spin mr-2 text-blue-400"></i>
+                                    Live Status Updates Active
+                                </p>
+                            </div>
+                            <span id="lastCheck" class="text-xs text-blue-200 font-mono bg-blue-900/30 px-2 py-1 rounded"></span>
                         </div>
+                        <p class="text-xs text-blue-300 mt-2 ml-6">
+                            Automatically checking every 3 seconds - page will refresh when complete
+                        </p>
                     </div>
                     @endif
 
@@ -188,18 +197,6 @@
                     </div>
                 </div>
 
-                <!-- Processing Notice -->
-                @if(!$textToAudioFile->isCompleted() && !$textToAudioFile->isFailed())
-                    <div class="bg-blue-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-blue-600/30 p-6 fade-in">
-                        <h3 class="text-lg font-bold text-white mb-2 flex items-center">
-                            <i class="fas fa-sync-alt mr-2 text-blue-400"></i>
-                            Auto Refresh
-                        </h3>
-                        <p class="text-sm text-white">
-                            This page will automatically refresh every 5 seconds to show the latest status.
-                        </p>
-                    </div>
-                @endif
             </div>
         </div>
     </div>
