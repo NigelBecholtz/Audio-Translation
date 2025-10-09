@@ -67,10 +67,27 @@
                                             class="w-full px-6 py-4 text-lg border-2 border-blue-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-400 focus:border-blue-500 transition-all bg-white shadow-lg">
                                         <option value="">Select language</option>
                                         
-                                        <!-- English Variants -->
-                                        <optgroup label="🇬🇧 English">
-                                            <option value="en-us" {{ old('language') == 'en-us' ? 'selected' : '' }}>🇺🇸 English (US)</option>
+                                        <!-- Priority Languages -->
+                                        <optgroup label="⭐ Most Used Languages">
                                             <option value="en-gb" {{ old('language') == 'en-gb' ? 'selected' : '' }}>🇬🇧 English (UK)</option>
+                                            <option value="es" {{ old('language') == 'es' ? 'selected' : '' }}>🇪🇸 Spanish</option>
+                                            <option value="de" {{ old('language') == 'de' ? 'selected' : '' }}>🇩🇪 German</option>
+                                            <option value="fr" {{ old('language') == 'fr' ? 'selected' : '' }}>🇫🇷 French</option>
+                                            <option value="it" {{ old('language') == 'it' ? 'selected' : '' }}>🇮🇹 Italian</option>
+                                            <option value="nl" {{ old('language') == 'nl' ? 'selected' : '' }}>🇳🇱 Dutch</option>
+                                            <option value="ro" {{ old('language') == 'ro' ? 'selected' : '' }}>🇷🇴 Romanian</option>
+                                            <option value="el" {{ old('language') == 'el' ? 'selected' : '' }}>🇬🇷 Greek</option>
+                                            <option value="sq" {{ old('language') == 'sq' ? 'selected' : '' }}>🇦🇱 Albanian</option>
+                                            <option value="sk" {{ old('language') == 'sk' ? 'selected' : '' }}>🇸🇰 Slovak</option>
+                                            <option value="lv" {{ old('language') == 'lv' ? 'selected' : '' }}>🇱🇻 Latvian</option>
+                                            <option value="bg" {{ old('language') == 'bg' ? 'selected' : '' }}>🇧🇬 Bulgarian</option>
+                                            <option value="fi" {{ old('language') == 'fi' ? 'selected' : '' }}>🇫🇮 Finnish</option>
+                                            <option value="ca" {{ old('language') == 'ca' ? 'selected' : '' }}>🇪🇸 Catalan</option>
+                                        </optgroup>
+                                        
+                                        <!-- Other English Variants -->
+                                        <optgroup label="🇺🇸 Other English">
+                                            <option value="en-us" {{ old('language') == 'en-us' ? 'selected' : '' }}>🇺🇸 English (US)</option>
                                             <option value="en-au" {{ old('language') == 'en-au' ? 'selected' : '' }}>🇦🇺 English (Australia)</option>
                                             <option value="en-ca" {{ old('language') == 'en-ca' ? 'selected' : '' }}>🇨🇦 English (Canada)</option>
                                             <option value="en-in" {{ old('language') == 'en-in' ? 'selected' : '' }}>🇮🇳 English (India)</option>
@@ -78,11 +95,7 @@
                                         </optgroup>
                                         
                                         <!-- Major Languages -->
-                                        <optgroup label="🌍 Major Languages">
-                                            <option value="es" {{ old('language') == 'es' ? 'selected' : '' }}>🇪🇸 Spanish</option>
-                                            <option value="fr" {{ old('language') == 'fr' ? 'selected' : '' }}>🇫🇷 French</option>
-                                            <option value="de" {{ old('language') == 'de' ? 'selected' : '' }}>🇩🇪 German</option>
-                                            <option value="it" {{ old('language') == 'it' ? 'selected' : '' }}>🇮🇹 Italian</option>
+                                        <optgroup label="🌍 Other Major Languages">
                                             <option value="pt" {{ old('language') == 'pt' ? 'selected' : '' }}>🇵🇹 Portuguese</option>
                                             <option value="ru" {{ old('language') == 'ru' ? 'selected' : '' }}>🇷🇺 Russian</option>
                                             <option value="ja" {{ old('language') == 'ja' ? 'selected' : '' }}>🇯🇵 Japanese</option>

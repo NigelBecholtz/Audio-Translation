@@ -115,10 +115,27 @@
                                             class="w-full px-6 py-4 text-lg border-2 border-blue-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-400 focus:border-blue-500 transition-all bg-white shadow-lg">
                                         <option value="">{{ __('Select source language') }}</option>
                                         
-                                        <!-- English Variants -->
-                                        <optgroup label="🇬🇧 English">
-                                            <option value="en-us">🇺🇸 English (US)</option>
+                                        <!-- Priority Languages -->
+                                        <optgroup label="⭐ Most Used Languages">
                                             <option value="en-gb">🇬🇧 English (UK)</option>
+                                            <option value="es">🇪🇸 Spanish</option>
+                                            <option value="de">🇩🇪 German</option>
+                                            <option value="fr">🇫🇷 French</option>
+                                            <option value="it">🇮🇹 Italian</option>
+                                            <option value="nl">🇳🇱 Dutch</option>
+                                            <option value="ro">🇷🇴 Romanian</option>
+                                            <option value="el">🇬🇷 Greek</option>
+                                            <option value="sq">🇦🇱 Albanian</option>
+                                            <option value="sk">🇸🇰 Slovak</option>
+                                            <option value="lv">🇱🇻 Latvian</option>
+                                            <option value="bg">🇧🇬 Bulgarian</option>
+                                            <option value="fi">🇫🇮 Finnish</option>
+                                            <option value="ca">🇪🇸 Catalan</option>
+                                        </optgroup>
+                                        
+                                        <!-- Other English Variants -->
+                                        <optgroup label="🇺🇸 Other English">
+                                            <option value="en-us">🇺🇸 English (US)</option>
                                             <option value="en-au">🇦🇺 English (Australia)</option>
                                             <option value="en-ca">🇨🇦 English (Canada)</option>
                                             <option value="en-in">🇮🇳 English (India)</option>
@@ -126,11 +143,7 @@
                                         </optgroup>
                                         
                                         <!-- Major Languages -->
-                                        <optgroup label="🌍 Major Languages">
-                                            <option value="es">🇪🇸 Spanish</option>
-                                            <option value="fr">🇫🇷 French</option>
-                                            <option value="de">🇩🇪 German</option>
-                                            <option value="it">🇮🇹 Italian</option>
+                                        <optgroup label="🌍 Other Major Languages">
                                             <option value="pt">🇵🇹 Portuguese</option>
                                             <option value="ru">🇷🇺 Russian</option>
                                             <option value="ja">🇯🇵 Japanese</option>
@@ -222,10 +235,27 @@
                                             class="w-full px-6 py-4 text-lg border-2 border-green-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-400 focus:border-green-500 transition-all bg-white shadow-lg">
                                         <option value="">{{ __('Select target language') }}</option>
                                         
-                                        <!-- English Variants -->
-                                        <optgroup label="🇬🇧 English">
-                                            <option value="en-us">🇺🇸 English (US)</option>
+                                        <!-- Priority Languages -->
+                                        <optgroup label="⭐ Most Used Languages">
                                             <option value="en-gb">🇬🇧 English (UK)</option>
+                                            <option value="es">🇪🇸 Spanish</option>
+                                            <option value="de">🇩🇪 German</option>
+                                            <option value="fr">🇫🇷 French</option>
+                                            <option value="it">🇮🇹 Italian</option>
+                                            <option value="nl">🇳🇱 Dutch</option>
+                                            <option value="ro">🇷🇴 Romanian</option>
+                                            <option value="el">🇬🇷 Greek</option>
+                                            <option value="sq">🇦🇱 Albanian</option>
+                                            <option value="sk">🇸🇰 Slovak</option>
+                                            <option value="lv">🇱🇻 Latvian</option>
+                                            <option value="bg">🇧🇬 Bulgarian</option>
+                                            <option value="fi">🇫🇮 Finnish</option>
+                                            <option value="ca">🇪🇸 Catalan</option>
+                                        </optgroup>
+                                        
+                                        <!-- Other English Variants -->
+                                        <optgroup label="🇺🇸 Other English">
+                                            <option value="en-us">🇺🇸 English (US)</option>
                                             <option value="en-au">🇦🇺 English (Australia)</option>
                                             <option value="en-ca">🇨🇦 English (Canada)</option>
                                             <option value="en-in">🇮🇳 English (India)</option>
@@ -233,11 +263,7 @@
                                         </optgroup>
                                         
                                         <!-- Major Languages -->
-                                        <optgroup label="🌍 Major Languages">
-                                            <option value="es">🇪🇸 Spanish</option>
-                                            <option value="fr">🇫🇷 French</option>
-                                            <option value="de">🇩🇪 German</option>
-                                            <option value="it">🇮🇹 Italian</option>
+                                        <optgroup label="🌍 Other Major Languages">
                                             <option value="pt">🇵🇹 Portuguese</option>
                                             <option value="ru">🇷🇺 Russian</option>
                                             <option value="ja">🇯🇵 Japanese</option>
