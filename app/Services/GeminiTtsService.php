@@ -242,13 +242,16 @@ class GeminiTtsService
 
     private function getLanguageCode(string $language): string
     {
+        // Normalize to lowercase for matching
+        $languageLower = strtolower($language);
+        
         $languageMap = [
-            // English variants
-            'en-US' => 'en-US',
-            'en-GB' => 'en-GB',
-            'en-AU' => 'en-AU',
-            'en-CA' => 'en-CA',
-            'en-IN' => 'en-IN',
+            // English variants (lowercase keys for matching)
+            'en-us' => 'en-US',
+            'en-gb' => 'en-GB',
+            'en-au' => 'en-AU',
+            'en-ca' => 'en-CA',
+            'en-in' => 'en-IN',
             'en' => 'en-US', // Default to US English
             // Other languages
             'es' => 'es-ES', 'fr' => 'fr-FR', 'de' => 'de-DE',
@@ -261,7 +264,7 @@ class GeminiTtsService
             'lv' => 'lv-LV', 'lt' => 'lt-LT', 'et' => 'et-EE', 'ca' => 'ca-ES',
         ];
 
-        return $languageMap[$language] ?? 'en-US';
+        return $languageMap[$languageLower] ?? 'en-US';
     }
 
     public function isConfigured(): bool
