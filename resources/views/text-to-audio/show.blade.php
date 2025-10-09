@@ -45,22 +45,22 @@
                     
                     <!-- Live Polling Indicator -->
                     @if($textToAudioFile->isProcessing())
-                    <div id="pollingIndicator" class="mb-6 p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-2 border-blue-400/50 rounded-xl backdrop-blur-sm">
+                    <div id="pollingIndicator" class="mb-6 p-5 bg-gradient-to-r from-blue-600 to-purple-600 border-2 border-blue-300 rounded-xl shadow-lg">
                         <div class="flex items-center justify-between gap-3">
                             <div class="flex items-center gap-3">
                                 <div class="relative">
-                                    <div class="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
-                                    <div class="absolute inset-0 w-3 h-3 bg-blue-500 rounded-full animate-ping opacity-75"></div>
+                                    <div class="w-4 h-4 bg-white rounded-full animate-pulse shadow-lg"></div>
+                                    <div class="absolute inset-0 w-4 h-4 bg-white rounded-full animate-ping opacity-75"></div>
                                 </div>
-                                <p class="text-sm text-white font-bold">
-                                    <i class="fas fa-sync-alt fa-spin mr-2 text-blue-400"></i>
+                                <p class="text-base text-white font-bold drop-shadow-md">
+                                    <i class="fas fa-sync-alt fa-spin mr-2"></i>
                                     Live Status Updates Active
                                 </p>
                             </div>
-                            <span id="lastCheck" class="text-xs text-blue-200 font-mono bg-blue-900/30 px-2 py-1 rounded"></span>
+                            <span id="lastCheck" class="text-sm text-white font-mono bg-black/50 px-3 py-1.5 rounded-lg font-bold shadow-md"></span>
                         </div>
-                        <p class="text-xs text-blue-300 mt-2 ml-6">
-                            Automatically checking every 3 seconds - page will refresh when complete
+                        <p class="text-sm text-white mt-3 ml-7 font-semibold drop-shadow">
+                            Checking every 3 seconds - page refreshes automatically when complete
                         </p>
                     </div>
                     @endif
