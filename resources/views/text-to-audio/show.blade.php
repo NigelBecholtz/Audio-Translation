@@ -50,7 +50,7 @@
                             <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                             <p class="text-sm text-blue-300 font-semibold">
                                 <i class="fas fa-sync-alt fa-spin mr-1"></i>
-                                Checking status every 2 seconds... <span id="lastCheck" class="text-blue-200"></span>
+                                Checking status every 3 seconds... <span id="lastCheck" class="text-blue-200"></span>
                             </p>
                         </div>
                     </div>
@@ -286,9 +286,9 @@ function pollStatus() {
         });
 }
 
-// Start polling every 2 seconds
+// Start polling every 3 seconds (reduced frequency for multiple concurrent users)
 console.log('🔄 Starting status polling for text-to-audio #' + textToAudioId);
-pollInterval = setInterval(pollStatus, 2000);
+pollInterval = setInterval(pollStatus, 3000);
 pollStatus(); // Initial poll
 
 // Cleanup on page unload

@@ -367,8 +367,8 @@ function pollStatus() {
         .catch(error => console.error('Error polling status:', error));
 }
 
-// Start polling every 2 seconds
-pollInterval = setInterval(pollStatus, 2000);
+// Start polling every 3 seconds (reduced frequency for multiple concurrent users)
+pollInterval = setInterval(pollStatus, 3000);
 pollStatus(); // Initial poll
 
 // Cleanup on page unload
