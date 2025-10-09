@@ -43,12 +43,11 @@ Route::middleware(['auth', 'throttle:60,1'])->group(function () {
     
     Route::resource('audio', AudioController::class)->except(['store']);
     Route::get('audio/{id}/download', [AudioController::class, 'download'])->name('audio.download');
-    
-    // Status endpoint needs higher rate limit for polling (120/min = every 0.5 seconds)
-    Route::get('audio/{id}/status', [AudioController::class, 'status'])
-        ->middleware('throttle:120,1')
-        ->name('audio.status')
-        ->withoutMiddleware('throttle:60,1');
+});
+
+// Status endpoints WITHOUT rate limiting for real-time polling
+Route::middleware(['auth'])->group(function () {
+    Route::get('audio/{id}/status', [AudioController::class, 'status'])->name('audio.status');
     
     // Text to Audio Routes with stricter rate limiting and processing limits
     Route::middleware(['throttle:20,1', 'audio.limits'])->group(function () {
@@ -57,13 +56,14 @@ Route::middleware(['auth', 'throttle:60,1'])->group(function () {
     
     Route::resource('text-to-audio', TextToAudioController::class)->except(['store'])->middleware('throttle:20,1');
     Route::get('text-to-audio/{id}/download', [TextToAudioController::class, 'download'])->name('text-to-audio.download');
-    
-    // Status endpoint needs higher rate limit for polling (120/min = every 0.5 seconds)
-    Route::get('text-to-audio/{id}/status', [TextToAudioController::class, 'status'])
-        ->middleware('throttle:120,1')
-        ->name('text-to-audio.status')
-        ->withoutMiddleware('throttle:20,1');
-    
+});
+
+// Text-to-audio status endpoint WITHOUT rate limiting for real-time polling
+Route::middleware(['auth'])->group(function () {
+    Route::get('text-to-audio/{id}/status', [TextToAudioController::class, 'status'])->name('text-to-audio.status');
+});
+
+Route::middleware(['auth', 'throttle:60,1'])->group(function () {
     // Payment Routes
     Route::get('/credits', [PaymentController::class, 'showCredits'])->name('payment.credits');
     Route::post('/checkout', [PaymentController::class, 'createCheckoutSession'])->name('payment.checkout');
