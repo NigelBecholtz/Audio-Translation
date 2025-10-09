@@ -53,8 +53,14 @@ return [
             'ca' => 'Catalan'
         ],
         'voice_mapping' => [
-            // Gebruik 'Aoede' - universele voice die alle talen ondersteunt
+            // English variants - all use Aoede (Gemini handles accent via languageCode)
+            'en-us' => 'Aoede',
+            'en-gb' => 'Aoede',
+            'en-au' => 'Aoede',
+            'en-ca' => 'Aoede',
+            'en-in' => 'Aoede',
             'en' => 'Aoede',
+            // Other languages - universele voice
             'es' => 'Aoede',
             'fr' => 'Aoede',
             'de' => 'Aoede',

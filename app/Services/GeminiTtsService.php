@@ -67,21 +67,14 @@ class GeminiTtsService
             }
 
         } catch (\Exception $e) {
-            Log::error('Gemini TTS generation failed, trying fallback', [
+            Log::error('Gemini TTS generation failed', [
                 'language' => $language,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             
-            // Try OpenAI TTS fallback
-            try {
-                return $this->fallbackService->generateAudio($text, $language, $voice, $styleInstruction);
-            } catch (\Exception $fallbackError) {
-                Log::error('Both Gemini and OpenAI TTS failed', [
-                    'gemini_error' => $e->getMessage(),
-                    'openai_error' => $fallbackError->getMessage()
-                ]);
-                throw new \Exception('Audio generation failed: ' . $e->getMessage() . ' (Fallback also failed)');
-            }
+            // Re-throw without fallback - force Gemini TTS only
+            throw new \Exception('Gemini TTS failed: ' . $e->getMessage());
         }
     }
 
@@ -107,13 +100,13 @@ class GeminiTtsService
                 return $this->executeTtsRequest($text, $language, $voice, $styleInstruction);
             });
         } catch (\Exception $e) {
-            Log::warning('Gemini TTS rate limit hit, using fallback', [
+            Log::error('Gemini TTS rate limit exceeded', [
                 'user_id' => auth()->id(),
                 'error' => $e->getMessage()
             ]);
             
-            // Use fallback if rate limited
-            return $this->fallbackService->generateAudio($text, $language, $voice, $styleInstruction);
+            // Re-throw without fallback - force Gemini TTS only
+            throw new \Exception('Gemini TTS rate limit exceeded: ' . $e->getMessage());
         }
     }
     
@@ -237,7 +230,17 @@ class GeminiTtsService
     private function getVoiceForLanguage(string $language): string
     {
         $voiceMapping = config('gemini.tts.voice_mapping', []);
-        return $voiceMapping[$language] ?? config('gemini.tts.default_voice', 'Kore');
+        
+        // Try exact match first (case-insensitive)
+        $languageLower = strtolower($language);
+        foreach ($voiceMapping as $key => $voice) {
+            if (strtolower($key) === $languageLower) {
+                return $voice;
+            }
+        }
+        
+        // Fallback to default voice
+        return config('gemini.tts.default_voice', 'Kore');
     }
 
     private function getLanguageCode(string $language): string
