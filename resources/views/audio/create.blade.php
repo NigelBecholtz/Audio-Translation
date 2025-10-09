@@ -41,15 +41,15 @@
                                     </div>
                                 </div>
                                 
-                                <div id="dropZone" class="relative border-4 border-dashed border-blue-400 rounded-2xl p-12 text-center bg-gradient-to-br from-gray-800 to-gray-700 cursor-pointer transition-all hover:border-blue-300 hover:bg-gradient-to-br hover:from-gray-700 hover:to-gray-600">
+                                <div id="dropZone" class="relative border-4 border-dashed border-blue-400 rounded-2xl p-12 text-center bg-gradient-to-br from-gray-800 to-gray-700 cursor-pointer transition-all hover:border-blue-300 hover:bg-gradient-to-br hover:from-gray-700 hover:to-gray-600" onclick="document.getElementById('audio').click()">
                                     <input type="file" 
                                            id="audio" 
                                            name="audio" 
                                            accept=".mp3,.wav,.m4a,.mp4"
                                            required
-                                           class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                                           class="hidden">
                                     
-                                    <div id="dropZoneContent" class="pointer-events-none">
+                                    <div id="dropZoneContent">
                                         <div class="w-24 h-24 bg-gradient-to-br from-gray-700 to-gray-600 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-blue-400">
                                             <i class="fas fa-microphone text-4xl text-blue-400"></i>
                                         </div>
@@ -65,7 +65,7 @@
                                         </div>
                                     </div>
                                     
-                                    <div id="fileInfo" class="hidden pointer-events-none">
+                                    <div id="fileInfo" class="hidden">
                                         <div class="flex items-center justify-center gap-4">
                                             <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center border-4 border-green-200">
                                                 <i class="fas fa-check text-green-600 text-2xl"></i>
