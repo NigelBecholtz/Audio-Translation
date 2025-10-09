@@ -46,7 +46,13 @@
                     </div>
                     
                     <div class="flex gap-2">
-                        @if(!$preset->is_default)
+                        @if($preset->is_default && !auth()->user()->isAdmin())
+                            <button disabled 
+                                    class="flex-1 inline-flex items-center justify-center px-4 py-2 bg-gray-600 text-gray-400 rounded-lg cursor-not-allowed font-medium">
+                                <i class="fas fa-lock mr-2"></i>
+                                Admin Only
+                            </button>
+                        @else
                             <a href="{{ route('style-presets.edit', $preset->id) }}" 
                                class="flex-1 inline-flex items-center justify-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium">
                                 <i class="fas fa-edit mr-2"></i>
@@ -54,7 +60,7 @@
                             </a>
                             
                             <form method="POST" action="{{ route('style-presets.destroy', $preset->id) }}" 
-                                  onsubmit="return confirm('Delete this preset?')" class="flex-1">
+                                  onsubmit="return confirm('Delete this preset?{{ $preset->is_default ? ' This is a system preset!' : '' }}')" class="flex-1">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" 
@@ -63,12 +69,6 @@
                                     Delete
                                 </button>
                             </form>
-                        @else
-                            <button disabled 
-                                    class="flex-1 inline-flex items-center justify-center px-4 py-2 bg-gray-600 text-gray-400 rounded-lg cursor-not-allowed font-medium">
-                                <i class="fas fa-lock mr-2"></i>
-                                System Preset
-                            </button>
                         @endif
                     </div>
                     

@@ -11,8 +11,22 @@
                 <i class="fas fa-arrow-left mr-2"></i>
                 Back to Presets
             </a>
-            <h1 class="text-4xl font-bold text-white mb-2">Edit Style Preset</h1>
-            <p class="text-lg text-gray-300">Update your style instruction</p>
+            <h1 class="text-4xl font-bold text-white mb-2">
+                Edit Style Preset
+                @if($preset->is_default)
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 ml-3">
+                        <i class="fas fa-star mr-1"></i>
+                        System Preset
+                    </span>
+                @endif
+            </h1>
+            <p class="text-lg text-gray-300">
+                @if($preset->is_default)
+                    You are editing a system preset (visible to all users)
+                @else
+                    Update your style instruction
+                @endif
+            </p>
         </div>
 
         <!-- Form -->

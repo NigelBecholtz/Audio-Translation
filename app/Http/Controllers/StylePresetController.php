@@ -61,12 +61,17 @@ class StylePresetController extends Controller
      */
     public function edit($id)
     {
-        $preset = auth()->user()->stylePresets()->findOrFail($id);
+        $preset = StyleInstructionPreset::findOrFail($id);
         
-        // Cannot edit default presets
-        if ($preset->is_default) {
+        // Only user's own presets or admins can edit
+        if ($preset->user_id !== auth()->id() && !auth()->user()->isAdmin()) {
+            abort(403, 'You do not have permission to edit this preset.');
+        }
+        
+        // Non-admin users cannot edit system presets
+        if ($preset->is_default && !auth()->user()->isAdmin()) {
             return redirect()->route('style-presets.index')
-                ->with('error', 'Default presets cannot be edited.');
+                ->with('error', 'Only administrators can edit system presets.');
         }
         
         return view('style-presets.edit', compact('preset'));
@@ -77,12 +82,17 @@ class StylePresetController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $preset = auth()->user()->stylePresets()->findOrFail($id);
+        $preset = StyleInstructionPreset::findOrFail($id);
         
-        // Cannot edit default presets
-        if ($preset->is_default) {
+        // Only user's own presets or admins can update
+        if ($preset->user_id !== auth()->id() && !auth()->user()->isAdmin()) {
+            abort(403, 'You do not have permission to update this preset.');
+        }
+        
+        // Non-admin users cannot edit system presets
+        if ($preset->is_default && !auth()->user()->isAdmin()) {
             return redirect()->route('style-presets.index')
-                ->with('error', 'Default presets cannot be edited.');
+                ->with('error', 'Only administrators can edit system presets.');
         }
 
         $validated = $request->validate([
@@ -101,12 +111,17 @@ class StylePresetController extends Controller
      */
     public function destroy($id)
     {
-        $preset = auth()->user()->stylePresets()->findOrFail($id);
+        $preset = StyleInstructionPreset::findOrFail($id);
         
-        // Cannot delete default presets
-        if ($preset->is_default) {
+        // Only user's own presets or admins can delete
+        if ($preset->user_id !== auth()->id() && !auth()->user()->isAdmin()) {
+            abort(403, 'You do not have permission to delete this preset.');
+        }
+        
+        // Non-admin users cannot delete system presets
+        if ($preset->is_default && !auth()->user()->isAdmin()) {
             return redirect()->route('style-presets.index')
-                ->with('error', 'Default presets cannot be deleted.');
+                ->with('error', 'Only administrators can delete system presets.');
         }
 
         $preset->delete();
