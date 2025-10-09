@@ -24,23 +24,37 @@
                 <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="text-xl font-bold text-white">Status</h3>
-                        @if($textToAudioFile->isCompleted())
-                            <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                                <i class="fas fa-check-circle mr-2"></i>
-                                Completed
+                        <span id="statusBadge" class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium 
+                            @if($textToAudioFile->isCompleted()) bg-green-100 text-green-800
+                            @elseif($textToAudioFile->isFailed()) bg-red-100 text-red-800
+                            @else bg-yellow-100 text-yellow-800 pulse-animation
+                            @endif">
+                            <i id="statusIcon" class="mr-2 
+                                @if($textToAudioFile->isCompleted()) fas fa-check-circle
+                                @elseif($textToAudioFile->isFailed()) fas fa-exclamation-triangle
+                                @else fas fa-spinner fa-spin
+                                @endif"></i>
+                            <span id="statusText">
+                                @if($textToAudioFile->isCompleted()) Completed
+                                @elseif($textToAudioFile->isFailed()) Failed
+                                @else Processing...
+                                @endif
                             </span>
-                        @elseif($textToAudioFile->isFailed())
-                            <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                                <i class="fas fa-exclamation-triangle mr-2"></i>
-                                Failed
-                            </span>
-                        @else
-                            <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 pulse-animation">
-                                <i class="fas fa-spinner fa-spin mr-2"></i>
-                                Processing...
-                            </span>
-                        @endif
+                        </span>
                     </div>
+                    
+                    <!-- Live Polling Indicator -->
+                    @if($textToAudioFile->isProcessing())
+                    <div id="pollingIndicator" class="mb-4 p-3 bg-blue-500/20 border-2 border-blue-500 rounded-lg">
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                            <p class="text-sm text-blue-300 font-semibold">
+                                <i class="fas fa-sync-alt fa-spin mr-1"></i>
+                                Checking status every 2 seconds... <span id="lastCheck" class="text-blue-200"></span>
+                            </p>
+                        </div>
+                    </div>
+                    @endif
 
                     <!-- Progress Steps -->
                     <div class="space-y-4">
@@ -195,30 +209,94 @@
 // Real-time progress tracking
 @if($textToAudioFile->isProcessing())
 let pollInterval;
+let pollCount = 0;
 const textToAudioId = {{ $textToAudioFile->id }};
 
 function updateStatus(data) {
-    if (data.is_completed || data.is_failed) {
+    console.log('Status update:', data);
+    
+    // Update last check time
+    const lastCheckEl = document.getElementById('lastCheck');
+    if (lastCheckEl) {
+        const now = new Date();
+        lastCheckEl.textContent = `(${now.toLocaleTimeString()})`;
+    }
+    
+    // Update status badge
+    const statusBadge = document.getElementById('statusBadge');
+    const statusIcon = document.getElementById('statusIcon');
+    const statusText = document.getElementById('statusText');
+    
+    if (data.is_completed) {
+        console.log('✅ Conversion completed!');
+        
+        if (statusBadge) {
+            statusBadge.className = 'inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800';
+        }
+        if (statusIcon) {
+            statusIcon.className = 'fas fa-check-circle mr-2';
+        }
+        if (statusText) {
+            statusText.textContent = 'Completed';
+        }
+        
+        // Hide polling indicator
+        const pollingIndicator = document.getElementById('pollingIndicator');
+        if (pollingIndicator) {
+            pollingIndicator.style.display = 'none';
+        }
+        
         clearInterval(pollInterval);
-        // Reload page to show completed state
-        setTimeout(() => window.location.reload(), 500);
+        setTimeout(() => window.location.reload(), 1000);
+    } else if (data.is_failed) {
+        console.log('❌ Conversion failed:', data.error_message);
+        
+        if (statusBadge) {
+            statusBadge.className = 'inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-red-100 text-red-800';
+        }
+        if (statusIcon) {
+            statusIcon.className = 'fas fa-exclamation-triangle mr-2';
+        }
+        if (statusText) {
+            statusText.textContent = 'Failed';
+        }
+        
+        clearInterval(pollInterval);
+        setTimeout(() => window.location.reload(), 2000);
+    } else {
+        console.log('⏳ Still processing... (check #' + (++pollCount) + ')');
     }
 }
 
 function pollStatus() {
     fetch(`/text-to-audio/${textToAudioId}/status`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status);
+            }
+            return response.json();
+        })
         .then(data => updateStatus(data))
-        .catch(error => console.error('Error polling status:', error));
+        .catch(error => {
+            console.error('Error polling status:', error);
+            const lastCheckEl = document.getElementById('lastCheck');
+            if (lastCheckEl) {
+                lastCheckEl.textContent = '(error - retrying...)';
+            }
+        });
 }
 
 // Start polling every 2 seconds
+console.log('🔄 Starting status polling for text-to-audio #' + textToAudioId);
 pollInterval = setInterval(pollStatus, 2000);
 pollStatus(); // Initial poll
 
 // Cleanup on page unload
 window.addEventListener('beforeunload', () => {
-    if (pollInterval) clearInterval(pollInterval);
+    if (pollInterval) {
+        console.log('🛑 Stopping polling');
+        clearInterval(pollInterval);
+    }
 });
 @endif
 </script>
