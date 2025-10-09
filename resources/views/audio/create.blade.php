@@ -115,9 +115,18 @@
                                             class="w-full px-6 py-4 text-lg border-2 border-blue-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-400 focus:border-blue-500 transition-all bg-white shadow-lg">
                                         <option value="">{{ __('Select source language') }}</option>
                                         
+                                        <!-- English Variants -->
+                                        <optgroup label="🇬🇧 English">
+                                            <option value="en-US">🇺🇸 English (US)</option>
+                                            <option value="en-GB">🇬🇧 English (UK)</option>
+                                            <option value="en-AU">🇦🇺 English (Australia)</option>
+                                            <option value="en-CA">🇨🇦 English (Canada)</option>
+                                            <option value="en-IN">🇮🇳 English (India)</option>
+                                            <option value="en">🌐 English (General)</option>
+                                        </optgroup>
+                                        
                                         <!-- Major Languages -->
                                         <optgroup label="🌍 Major Languages">
-                                            <option value="en">🇺🇸 English</option>
                                             <option value="es">🇪🇸 Spanish</option>
                                             <option value="fr">🇫🇷 French</option>
                                             <option value="de">🇩🇪 German</option>
@@ -213,9 +222,18 @@
                                             class="w-full px-6 py-4 text-lg border-2 border-green-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-400 focus:border-green-500 transition-all bg-white shadow-lg">
                                         <option value="">{{ __('Select target language') }}</option>
                                         
+                                        <!-- English Variants -->
+                                        <optgroup label="🇬🇧 English">
+                                            <option value="en-US">🇺🇸 English (US)</option>
+                                            <option value="en-GB">🇬🇧 English (UK)</option>
+                                            <option value="en-AU">🇦🇺 English (Australia)</option>
+                                            <option value="en-CA">🇨🇦 English (Canada)</option>
+                                            <option value="en-IN">🇮🇳 English (India)</option>
+                                            <option value="en">🌐 English (General)</option>
+                                        </optgroup>
+                                        
                                         <!-- Major Languages -->
                                         <optgroup label="🌍 Major Languages">
-                                            <option value="en">🇺🇸 English</option>
                                             <option value="es">🇪🇸 Spanish</option>
                                             <option value="fr">🇫🇷 French</option>
                                             <option value="de">🇩🇪 German</option>
