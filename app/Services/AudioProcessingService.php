@@ -194,10 +194,10 @@ class AudioProcessingService
             }
 
             $languageNames = [
-                // English variants
-                'en-US' => 'American English', 'en-GB' => 'British English',
-                'en-AU' => 'Australian English', 'en-CA' => 'Canadian English',
-                'en-IN' => 'Indian English', 'en' => 'English',
+                // English variants (lowercase keys for case-insensitive matching)
+                'en-us' => 'American English', 'en-gb' => 'British English',
+                'en-au' => 'Australian English', 'en-ca' => 'Canadian English',
+                'en-in' => 'Indian English', 'en' => 'English',
                 // Other languages
                 'es' => 'Spanish', 'fr' => 'French',
                 'de' => 'German', 'it' => 'Italian', 'pt' => 'Portuguese',
@@ -222,8 +222,9 @@ class AudioProcessingService
                 'ps' => 'Pashto', 'ne' => 'Nepali'
             ];
 
-            $sourceLangName = $languageNames[$sourceLanguage] ?? $sourceLanguage;
-            $targetLangName = $languageNames[$targetLanguage] ?? $targetLanguage;
+            // Normalize language codes for case-insensitive lookup
+            $sourceLangName = $languageNames[$sourceLanguage] ?? $languageNames[strtolower($sourceLanguage)] ?? $sourceLanguage;
+            $targetLangName = $languageNames[$targetLanguage] ?? $languageNames[strtolower($targetLanguage)] ?? $targetLanguage;
 
             $response = \OpenAI\Laravel\Facades\OpenAI::chat()->create([
                 'model' => 'gpt-3.5-turbo',

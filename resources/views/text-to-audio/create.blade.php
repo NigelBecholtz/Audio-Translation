@@ -69,11 +69,11 @@
                                         
                                         <!-- English Variants -->
                                         <optgroup label="🇬🇧 English">
-                                            <option value="en-US" {{ old('language') == 'en-US' ? 'selected' : '' }}>🇺🇸 English (US)</option>
-                                            <option value="en-GB" {{ old('language') == 'en-GB' ? 'selected' : '' }}>🇬🇧 English (UK)</option>
-                                            <option value="en-AU" {{ old('language') == 'en-AU' ? 'selected' : '' }}>🇦🇺 English (Australia)</option>
-                                            <option value="en-CA" {{ old('language') == 'en-CA' ? 'selected' : '' }}>🇨🇦 English (Canada)</option>
-                                            <option value="en-IN" {{ old('language') == 'en-IN' ? 'selected' : '' }}>🇮🇳 English (India)</option>
+                                            <option value="en-us" {{ old('language') == 'en-us' ? 'selected' : '' }}>🇺🇸 English (US)</option>
+                                            <option value="en-gb" {{ old('language') == 'en-gb' ? 'selected' : '' }}>🇬🇧 English (UK)</option>
+                                            <option value="en-au" {{ old('language') == 'en-au' ? 'selected' : '' }}>🇦🇺 English (Australia)</option>
+                                            <option value="en-ca" {{ old('language') == 'en-ca' ? 'selected' : '' }}>🇨🇦 English (Canada)</option>
+                                            <option value="en-in" {{ old('language') == 'en-in' ? 'selected' : '' }}>🇮🇳 English (India)</option>
                                             <option value="en" {{ old('language') == 'en' ? 'selected' : '' }}>🌐 English (General)</option>
                                         </optgroup>
                                         

@@ -117,11 +117,11 @@
                                         
                                         <!-- English Variants -->
                                         <optgroup label="🇬🇧 English">
-                                            <option value="en-US">🇺🇸 English (US)</option>
-                                            <option value="en-GB">🇬🇧 English (UK)</option>
-                                            <option value="en-AU">🇦🇺 English (Australia)</option>
-                                            <option value="en-CA">🇨🇦 English (Canada)</option>
-                                            <option value="en-IN">🇮🇳 English (India)</option>
+                                            <option value="en-us">🇺🇸 English (US)</option>
+                                            <option value="en-gb">🇬🇧 English (UK)</option>
+                                            <option value="en-au">🇦🇺 English (Australia)</option>
+                                            <option value="en-ca">🇨🇦 English (Canada)</option>
+                                            <option value="en-in">🇮🇳 English (India)</option>
                                             <option value="en">🌐 English (General)</option>
                                         </optgroup>
                                         
@@ -224,11 +224,11 @@
                                         
                                         <!-- English Variants -->
                                         <optgroup label="🇬🇧 English">
-                                            <option value="en-US">🇺🇸 English (US)</option>
-                                            <option value="en-GB">🇬🇧 English (UK)</option>
-                                            <option value="en-AU">🇦🇺 English (Australia)</option>
-                                            <option value="en-CA">🇨🇦 English (Canada)</option>
-                                            <option value="en-IN">🇮🇳 English (India)</option>
+                                            <option value="en-us">🇺🇸 English (US)</option>
+                                            <option value="en-gb">🇬🇧 English (UK)</option>
+                                            <option value="en-au">🇦🇺 English (Australia)</option>
+                                            <option value="en-ca">🇨🇦 English (Canada)</option>
+                                            <option value="en-in">🇮🇳 English (India)</option>
                                             <option value="en">🌐 English (General)</option>
                                         </optgroup>
                                         
