@@ -53,25 +53,25 @@ class CsvTranslationController extends Controller
             $file = $request->file('csv_file');
             $originalName = $file->getClientOriginalName();
             
-            // Ensure temp directory exists
-            $tempDir = storage_path('app/temp');
-            if (!file_exists($tempDir)) {
-                mkdir($tempDir, 0755, true);
-            }
-            
-            // Store uploaded file temporarily
-            $tempPath = $file->storeAs('temp', 'upload_' . time() . '.csv', 'local');
-            $fullPath = storage_path('app/' . $tempPath);
+            // Use Laravel's public disk temp directory instead
+            $tempFilename = 'csv_upload_' . time() . '_' . uniqid() . '.csv';
+            $tempPath = $file->storeAs('temp', $tempFilename, 'public');
+            $fullPath = storage_path('app/public/' . $tempPath);
             
             // Verify file was uploaded successfully
             if (!file_exists($fullPath)) {
-                throw new \Exception('Failed to upload file to temporary directory. Check storage permissions.');
+                Log::error('CSV upload failed', [
+                    'expected_path' => $fullPath,
+                    'temp_path' => $tempPath,
+                    'storage_path' => storage_path('app/public'),
+                ]);
+                throw new \Exception('Failed to upload file. Please contact administrator.');
             }
 
             // Validate CSV structure
             $validation = $this->csvParser->validate($fullPath);
             if (!$validation['valid']) {
-                Storage::disk('local')->delete($tempPath);
+                Storage::disk('public')->delete($tempPath);
                 return back()->with('error', 'Invalid CSV: ' . $validation['message']);
             }
 
@@ -132,19 +132,20 @@ class CsvTranslationController extends Controller
                 }
             }
 
-            // Export to new CSV
-            $outputFilename = 'translated_' . time() . '.csv';
-            $outputPath = storage_path('app/temp/' . $outputFilename);
+            // Export to new CSV (use public disk temp directory)
+            $outputFilename = 'translated_' . time() . '_' . uniqid() . '.csv';
+            $outputPath = storage_path('app/public/temp/' . $outputFilename);
             
-            // Ensure temp directory exists
-            if (!file_exists(storage_path('app/temp'))) {
-                mkdir(storage_path('app/temp'), 0755, true);
+            // Ensure temp directory exists in public storage
+            $tempDir = storage_path('app/public/temp');
+            if (!file_exists($tempDir)) {
+                mkdir($tempDir, 0755, true);
             }
 
             $this->csvParser->exportToCsv($headers, $data, $outputPath);
 
             // Cleanup original upload
-            Storage::disk('local')->delete($tempPath);
+            Storage::disk('public')->delete($tempPath);
 
             Log::info('CSV translation completed', [
                 'file' => $originalName,
@@ -163,7 +164,7 @@ class CsvTranslationController extends Controller
 
             // Cleanup temp files
             if (isset($tempPath)) {
-                Storage::disk('local')->delete($tempPath);
+                Storage::disk('public')->delete($tempPath);
             }
             if (isset($outputPath) && file_exists($outputPath)) {
                 unlink($outputPath);
