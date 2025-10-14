@@ -251,7 +251,7 @@ class AdminController extends Controller
             // Dispatch job for async processing
             TranslateCsvJob::dispatch($inputPath, $outputPath, auth()->id());
 
-            if ($request->expectsJson()) {
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'CSV file uploaded successfully! Translation is processing in the background.',
@@ -268,7 +268,7 @@ class AdminController extends Controller
                 'error' => $e->getMessage()
             ]);
             
-            if ($request->expectsJson()) {
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Upload failed: ' . $e->getMessage()

@@ -268,16 +268,28 @@ document.addEventListener('DOMContentLoaded', function() {
             method: 'POST',
             body: formData,
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             }
         })
         .then(response => {
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+            
             if (response.ok) {
                 return response.json();
             }
-            throw new Error('Upload failed');
+            
+            // If not JSON, get text to see what we got
+            return response.text().then(text => {
+                console.error('Non-JSON response:', text);
+                throw new Error('Server returned non-JSON response');
+            });
         })
         .then(data => {
+            console.log('Success data:', data);
+            
             // Hide progress
             uploadProgress.classList.add('hidden');
             
