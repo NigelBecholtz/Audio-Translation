@@ -58,7 +58,7 @@
                 </ul>
             </div>
 
-            <form action="{{ route('admin.csv-translations.upload') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+            <form id="csvUploadForm" action="{{ route('admin.csv-translations.upload') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
                 @csrf
                 
                 <div>
@@ -81,10 +81,11 @@
                 <div>
                     <button 
                         type="submit" 
-                        class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                        id="uploadBtn"
+                        class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <i class="fas fa-language mr-2"></i>
-                        Upload & Translate
+                        <span id="uploadBtnText">Upload & Translate</span>
                     </button>
                     <p class="mt-2 text-sm text-gray-500">
                         <i class="fas fa-info-circle mr-1"></i>
@@ -92,6 +93,30 @@
                     </p>
                 </div>
             </form>
+
+            <!-- Upload Progress -->
+            <div id="uploadProgress" class="hidden mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div class="flex items-center">
+                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-3"></div>
+                    <span class="text-blue-800 font-medium">Uploading file...</span>
+                </div>
+            </div>
+
+            <!-- Success Message -->
+            <div id="successMessage" class="hidden mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div class="flex items-center">
+                    <i class="fas fa-check-circle text-green-600 mr-3"></i>
+                    <span class="text-green-800 font-medium">File uploaded successfully! Processing in background...</span>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="hidden mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div class="flex items-center">
+                    <i class="fas fa-exclamation-circle text-red-600 mr-3"></i>
+                    <span class="text-red-800 font-medium" id="errorText">Upload failed. Please try again.</span>
+                </div>
+            </div>
         </div>
 
         <!-- Previous Translations -->
@@ -212,5 +237,81 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('csvUploadForm');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const uploadBtnText = document.getElementById('uploadBtnText');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const successMessage = document.getElementById('successMessage');
+    const errorMessage = document.getElementById('errorMessage');
+    const errorText = document.getElementById('errorText');
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Show progress
+        uploadProgress.classList.remove('hidden');
+        successMessage.classList.add('hidden');
+        errorMessage.classList.add('hidden');
+        
+        // Disable button
+        uploadBtn.disabled = true;
+        uploadBtnText.textContent = 'Uploading...';
+        
+        // Create FormData
+        const formData = new FormData(form);
+        
+        // Submit via fetch
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+            throw new Error('Upload failed');
+        })
+        .then(data => {
+            // Hide progress
+            uploadProgress.classList.add('hidden');
+            
+            // Show success
+            successMessage.classList.remove('hidden');
+            
+            // Reset form
+            form.reset();
+            
+            // Re-enable button
+            uploadBtn.disabled = false;
+            uploadBtnText.textContent = 'Upload & Translate';
+            
+            // Reload page after 2 seconds to show new file
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        })
+        .catch(error => {
+            console.error('Upload error:', error);
+            
+            // Hide progress
+            uploadProgress.classList.add('hidden');
+            
+            // Show error
+            errorText.textContent = error.message || 'Upload failed. Please try again.';
+            errorMessage.classList.remove('hidden');
+            
+            // Re-enable button
+            uploadBtn.disabled = false;
+            uploadBtnText.textContent = 'Upload & Translate';
+        });
+    });
+});
+</script>
 @endsection
 
