@@ -3,22 +3,37 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Log;
+use App\Services\ExcelParserService;
 
 class CsvParserService
 {
+    private ExcelParserService $excelParser;
+
+    public function __construct(ExcelParserService $excelParser)
+    {
+        $this->excelParser = $excelParser;
+    }
+
     /**
-     * Parse CSV file to associative array
+     * Parse CSV or XLSX file to associative array
      *
-     * @param string $filePath Path to CSV file
+     * @param string $filePath Path to CSV or XLSX file
      * @return array Array of rows with column headers as keys
      * @throws \Exception
      */
     public function parse(string $filePath): array
     {
         if (!file_exists($filePath)) {
-            throw new \Exception('CSV file not found: ' . $filePath);
+            throw new \Exception('File not found: ' . $filePath);
         }
 
+        $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        
+        if ($extension === 'xlsx') {
+            return $this->excelParser->parse($filePath);
+        }
+        
+        // Default to CSV parsing
         $handle = fopen($filePath, 'r');
         if ($handle === false) {
             throw new \Exception('Could not open CSV file');
@@ -38,7 +53,7 @@ class CsvParserService
                     
                     // Validate required columns
                     if (!in_array('key', $headers) || !in_array('en', $headers)) {
-                        throw new \Exception('CSV must contain "key" and "en" columns');
+                        throw new \Exception('File must contain "key" and "en" columns');
                     }
                     
                     continue;
@@ -80,7 +95,7 @@ class CsvParserService
     }
 
     /**
-     * Export array data to CSV file
+     * Export array data to CSV or XLSX file
      *
      * @param array $headers Column headers
      * @param array $data Array of row data
@@ -90,6 +105,14 @@ class CsvParserService
      */
     public function exportToCsv(array $headers, array $data, string $filePath): void
     {
+        $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        
+        if ($extension === 'xlsx') {
+            $this->excelParser->exportToXlsx($headers, $data, $filePath);
+            return;
+        }
+        
+        // Default to CSV export
         $handle = fopen($filePath, 'w');
         if ($handle === false) {
             throw new \Exception('Could not create CSV file');
@@ -137,7 +160,7 @@ class CsvParserService
     }
 
     /**
-     * Validate CSV structure
+     * Validate CSV or XLSX structure
      *
      * @param string $filePath
      * @return array Validation result with 'valid' boolean and 'message' string
@@ -167,12 +190,17 @@ class CsvParserService
 
             // Check if we have data
             if (empty($data)) {
-                return ['valid' => false, 'message' => 'CSV file is empty (no data rows)'];
+                $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+                $fileType = $extension === 'xlsx' ? 'XLSX' : 'CSV';
+                return ['valid' => false, 'message' => $fileType . ' file is empty (no data rows)'];
             }
 
+            $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+            $fileType = $extension === 'xlsx' ? 'XLSX' : 'CSV';
+            
             return [
                 'valid' => true,
-                'message' => 'Valid CSV file',
+                'message' => 'Valid ' . $fileType . ' file',
                 'rows' => count($data),
                 'languages' => array_values($targetLanguages)
             ];

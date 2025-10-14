@@ -40,12 +40,12 @@ class CsvTranslationController extends Controller
             'csv_file' => [
                 'required',
                 'file',
-                'mimes:csv,txt',
+                'mimes:csv,txt,xlsx',
                 'max:10240', // 10MB max
             ]
         ], [
-            'csv_file.required' => 'Please upload a CSV file',
-            'csv_file.mimes' => 'File must be a CSV file',
+            'csv_file.required' => 'Please upload a CSV or XLSX file',
+            'csv_file.mimes' => 'File must be a CSV or XLSX file',
             'csv_file.max' => 'File size must not exceed 10MB',
         ]);
 
@@ -54,7 +54,8 @@ class CsvTranslationController extends Controller
             $originalName = $file->getClientOriginalName();
             
             // Use Laravel's public disk temp directory instead
-            $tempFilename = 'csv_upload_' . time() . '_' . uniqid() . '.csv';
+            $extension = $file->getClientOriginalExtension();
+            $tempFilename = 'file_upload_' . time() . '_' . uniqid() . '.' . $extension;
             $tempPath = $file->storeAs('temp', $tempFilename, 'public');
             $fullPath = storage_path('app/public/' . $tempPath);
             
@@ -68,20 +69,20 @@ class CsvTranslationController extends Controller
                 throw new \Exception('Failed to upload file. Please contact administrator.');
             }
 
-            // Validate CSV structure
+            // Validate file structure
             $validation = $this->csvParser->validate($fullPath);
             if (!$validation['valid']) {
                 Storage::disk('public')->delete($tempPath);
-                return back()->with('error', 'Invalid CSV: ' . $validation['message']);
+                return back()->with('error', 'Invalid file: ' . $validation['message']);
             }
 
-            Log::info('CSV translation started', [
+            Log::info('File translation started', [
                 'file' => $originalName,
                 'rows' => $validation['rows'],
                 'languages' => $validation['languages']
             ]);
 
-            // Parse CSV
+            // Parse file
             $parsed = $this->csvParser->parse($fullPath);
             $headers = $parsed['headers'];
             $data = $parsed['data'];
@@ -132,8 +133,9 @@ class CsvTranslationController extends Controller
                 }
             }
 
-            // Export to new CSV (use public disk temp directory)
-            $outputFilename = 'translated_' . time() . '_' . uniqid() . '.csv';
+            // Export to new file (use public disk temp directory)
+            $outputExtension = $extension === 'xlsx' ? 'xlsx' : 'csv';
+            $outputFilename = 'translated_' . time() . '_' . uniqid() . '.' . $outputExtension;
             $outputPath = storage_path('app/public/temp/' . $outputFilename);
             
             // Ensure temp directory exists in public storage
@@ -147,7 +149,7 @@ class CsvTranslationController extends Controller
             // Cleanup original upload
             Storage::disk('public')->delete($tempPath);
 
-            Log::info('CSV translation completed', [
+            Log::info('File translation completed', [
                 'file' => $originalName,
                 'translations_needed' => $translationsNeeded,
                 'translations_completed' => $translationsCompleted
@@ -157,7 +159,7 @@ class CsvTranslationController extends Controller
             return response()->download($outputPath, 'translated_' . $originalName)->deleteFileAfterSend(true);
 
         } catch (\Exception $e) {
-            Log::error('CSV translation failed', [
+            Log::error('File translation failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);

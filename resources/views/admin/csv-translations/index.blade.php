@@ -15,8 +15,8 @@
                 <a href="{{ route('admin.dashboard') }}" class="text-blue-600 hover:text-blue-800 mb-4 inline-block">
                     ← Back to Dashboard
                 </a>
-                <h1 class="text-3xl font-bold text-gray-900">CSV Translation</h1>
-                <p class="mt-2 text-gray-600">Upload a CSV file to translate from English to multiple languages</p>
+                <h1 class="text-3xl font-bold text-gray-900">File Translation</h1>
+                <p class="mt-2 text-gray-600">Upload a CSV or XLSX file to translate from English to multiple languages</p>
             </div>
 
             <!-- Success/Error Messages -->
@@ -51,24 +51,25 @@
                         <!-- File Input -->
                         <div>
                             <label for="csv_file" class="block text-sm font-medium text-gray-700 mb-2">
-                                Select CSV File
+                                Select CSV or XLSX File
                             </label>
                             <input 
                                 type="file" 
                                 name="csv_file" 
                                 id="csv_file" 
-                                accept=".csv"
+                                accept=".csv,.xlsx"
                                 required
                                 class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none focus:border-blue-500"
                             >
-                            <p class="mt-1 text-sm text-gray-500">Maximum file size: 10MB</p>
+                            <p class="mt-1 text-sm text-gray-500">Maximum file size: 10MB. Supports CSV and XLSX files.</p>
                         </div>
 
                         <!-- Info Box -->
                         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                            <h3 class="text-sm font-semibold text-blue-900 mb-2">CSV Format Requirements:</h3>
+                            <h3 class="text-sm font-semibold text-blue-900 mb-2">File Format Requirements:</h3>
                             <ul class="text-sm text-blue-800 space-y-1">
-                                <li>• Delimiter: <strong>semicolon (;)</strong></li>
+                                <li>• <strong>CSV:</strong> Delimiter: <strong>semicolon (;)</strong></li>
+                                <li>• <strong>XLSX:</strong> Standard Excel format</li>
                                 <li>• First column: <strong>key</strong> (unique identifier)</li>
                                 <li>• Second column: <strong>en</strong> (English source text)</li>
                                 <li>• Other columns: target languages (es_AR, fr, de, it, nl, ro, gr, sk, lv, bg, fi, al, ca)</li>
@@ -80,13 +81,14 @@
                         <!-- Example Structure -->
                         <details class="bg-gray-50 border border-gray-200 rounded-lg p-4">
                             <summary class="text-sm font-semibold text-gray-900 cursor-pointer">
-                                View Example CSV Structure
+                                View Example File Structure
                             </summary>
                             <div class="mt-3">
                                 <pre class="text-xs bg-white p-3 rounded border border-gray-300 overflow-x-auto"><code>key;en;es_AR;fr;de;it;nl
 welcome;Welcome;;;;
 hello;Hello world;;;;
 goodbye;Goodbye;;;;;</code></pre>
+                                <p class="text-xs text-gray-600 mt-2">Same structure applies to both CSV and XLSX files</p>
                             </div>
                         </details>
 
@@ -97,7 +99,7 @@ goodbye;Goodbye;;;;;</code></pre>
                                 id="submitBtn"
                                 class="w-full flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                <span id="btnText">Translate CSV</span>
+                                <span id="btnText">Translate File</span>
                                 <svg id="spinner" class="hidden animate-spin ml-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -178,6 +180,16 @@ goodbye;Goodbye;;;;;</code></pre>
                 const maxSize = 10 * 1024 * 1024; // 10MB
                 if (file.size > maxSize) {
                     alert('File size exceeds 10MB limit');
+                    e.target.value = '';
+                }
+                
+                // Check file type
+                const allowedTypes = ['text/csv', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+                const fileType = file.type;
+                const fileName = file.name.toLowerCase();
+                
+                if (!allowedTypes.includes(fileType) && !fileName.endsWith('.csv') && !fileName.endsWith('.xlsx')) {
+                    alert('Please select a CSV or XLSX file');
                     e.target.value = '';
                 }
             }

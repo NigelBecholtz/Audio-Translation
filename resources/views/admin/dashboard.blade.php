@@ -223,13 +223,13 @@
                         <p class="text-sm text-gray-600">View all audio files</p>
                     </div>
                 </a>
-                <a href="{{ route('admin.csv-translations.index') }}" class="flex items-center p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
-                    <i class="fas fa-language text-orange-600 text-xl mr-3"></i>
-                    <div>
-                        <p class="font-medium text-gray-900">CSV Translations</p>
-                        <p class="text-sm text-gray-600">Translate CSV files</p>
-                    </div>
-                </a>
+        <a href="{{ route('admin.csv-translations.index') }}" class="flex items-center p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
+            <i class="fas fa-language text-orange-600 text-xl mr-3"></i>
+            <div>
+                <p class="font-medium text-gray-900">File Translations</p>
+                <p class="text-sm text-gray-600">Translate CSV & XLSX files</p>
+            </div>
+        </a>
             </div>
         </div>
     </div>
