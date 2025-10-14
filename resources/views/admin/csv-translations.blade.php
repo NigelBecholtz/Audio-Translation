@@ -312,6 +312,9 @@ document.addEventListener('DOMContentLoaded', function() {
             uploadBtn.disabled = false;
             uploadBtnText.textContent = 'Upload & Translate';
             
+            // Start checking status
+            checkTranslationStatus(data.filename);
+            
             // Auto-hide success message after 8 seconds
             setTimeout(() => {
                 successMessage.classList.add('hidden');
@@ -333,6 +336,53 @@ document.addEventListener('DOMContentLoaded', function() {
             uploadBtnText.textContent = 'Upload & Translate';
         });
     });
+
+    // Function to check translation status
+    function checkTranslationStatus(filename) {
+        const statusInterval = setInterval(() => {
+            fetch('{{ route("admin.csv-translations.status") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ filename: filename })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Status check:', data);
+                
+                if (data.status === 'completed') {
+                    clearInterval(statusInterval);
+                    // Update success message
+                    const successText = successMessage.querySelector('span');
+                    successText.textContent = 'Translation completed! File is ready for download.';
+                    
+                    // Show refresh button
+                    const refreshBtn = document.getElementById('refreshListBtn');
+                    refreshBtn.style.display = 'inline-block';
+                    
+                    console.log('Translation completed!');
+                } else if (data.status === 'failed') {
+                    clearInterval(statusInterval);
+                    // Show error
+                    errorText.textContent = 'Translation failed: ' + (data.error || 'Unknown error');
+                    errorMessage.classList.remove('hidden');
+                    successMessage.classList.add('hidden');
+                }
+                // If status is 'processing', continue checking
+            })
+            .catch(error => {
+                console.error('Status check error:', error);
+                // Continue checking even if there's an error
+            });
+        }, 3000); // Check every 3 seconds
+        
+        // Stop checking after 5 minutes
+        setTimeout(() => {
+            clearInterval(statusInterval);
+        }, 300000);
+    }
 });
 </script>
 @endsection
