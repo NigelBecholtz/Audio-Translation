@@ -85,8 +85,8 @@ class OpenAITranslationService
                 'texts_count' => count($nonEmptyTexts)
             ]);
 
-            // Process in batches to avoid token limits
-            $batchSize = 20; // Process 20 texts at a time
+            // Process in smaller batches to avoid timeouts
+            $batchSize = 5; // Process 5 texts at a time (faster response)
             $allTranslations = [];
             $chunks = array_chunk($nonEmptyTexts, $batchSize);
             
@@ -109,15 +109,15 @@ class OpenAITranslationService
                     'messages' => [
                         [
                             'role' => 'system',
-                            'content' => "You are a professional translator. Translate the following numbered list of texts from {$sourceLangName} to {$targetLangName}. Maintain the original tone, style, and formatting. Return ONLY the translated texts in the same numbered format, without any explanations or notes."
+                            'content' => "You are a professional translator. Translate the following numbered list from {$sourceLangName} to {$targetLangName}. Return ONLY the translated texts in numbered format."
                         ],
                         [
                             'role' => 'user',
                             'content' => $combinedText
                         ]
                     ],
-                    'temperature' => 0.3,
-                    'max_tokens' => 4000,
+                    'temperature' => 0.1,
+                    'max_tokens' => 2000,
                 ]);
 
                 $translatedContent = $response->choices[0]->message->content ?? '';
