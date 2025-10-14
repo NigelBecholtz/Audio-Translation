@@ -13,10 +13,21 @@ class GoogleTranslationService
     
     // Language code mapping voor Google Translate API (TTS compatible)
     private array $languageMapping = [
+        'en' => 'en',    // English
         'es' => 'es',    // Spanish
+        'sq' => 'sq',    // Albanian (AL)
+        'bg' => 'bg',    // Bulgarian
+        'sk' => 'sk',    // Slovak
+        'lv' => 'lv',    // Latvian
+        'fi' => 'fi',    // Finnish
+        'el' => 'el',    // Greek (GR)
+        'nl' => 'nl',    // Dutch
         'fr' => 'fr',    // French
-        'de' => 'de',    // German
         'it' => 'it',    // Italian
+        'ro' => 'ro',    // Romanian
+        'ca' => 'ca',    // Catalan
+        // Additional languages
+        'de' => 'de',    // German
         'pt' => 'pt',    // Portuguese
         'ru' => 'ru',    // Russian
         'ja' => 'ja',    // Japanese
@@ -24,25 +35,18 @@ class GoogleTranslationService
         'zh' => 'zh',    // Chinese
         'ar' => 'ar',    // Arabic
         'hi' => 'hi',    // Hindi
-        'nl' => 'nl',    // Dutch
         'pl' => 'pl',    // Polish
         'tr' => 'tr',    // Turkish
         'sv' => 'sv',    // Swedish
         'da' => 'da',    // Danish
         'no' => 'no',    // Norwegian
-        'fi' => 'fi',    // Finnish
         'cs' => 'cs',    // Czech
         'hu' => 'hu',    // Hungarian
-        'ro' => 'ro',    // Romanian
-        'bg' => 'bg',    // Bulgarian
         'hr' => 'hr',    // Croatian
         'sl' => 'sl',    // Slovenian
-        'el' => 'el',    // Greek
         'uk' => 'uk',    // Ukrainian
-        'lv' => 'lv',    // Latvian
         'lt' => 'lt',    // Lithuanian
         'et' => 'et',    // Estonian
-        'ca' => 'ca',    // Catalan
     ];
 
     public function __construct(GoogleOAuthService $oauthService)

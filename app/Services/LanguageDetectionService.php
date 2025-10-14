@@ -110,6 +110,31 @@ class LanguageDetectionService
     }
 
     /**
+     * Get preset language configuration
+     * Order: EN | ES | AL | BG | SK | LV | FI | GR | NL | FR | IT | RO | CA
+     *
+     * @return array Array of language codes in specific order
+     */
+    public function getPresetLanguages(): array
+    {
+        return [
+            'en',  // English
+            'es',  // Spanish
+            'sq',  // Albanian (AL)
+            'bg',  // Bulgarian
+            'sk',  // Slovak
+            'lv',  // Latvian
+            'fi',  // Finnish
+            'el',  // Greek (GR)
+            'nl',  // Dutch
+            'fr',  // French
+            'it',  // Italian
+            'ro',  // Romanian
+            'ca'   // Catalan
+        ];
+    }
+
+    /**
      * Check if detected language is already in the popular languages list
      *
      * @param string $detectedLanguage

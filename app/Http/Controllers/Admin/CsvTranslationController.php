@@ -333,16 +333,19 @@ class CsvTranslationController extends Controller
                 'text_count' => count($sourceTexts)
             ]);
             
-            // Get popular languages for translation
-            $popularLanguages = $this->languageDetection->getPopularLanguages();
+            // Get preset languages for translation (in specific order)
+            $presetLanguages = $this->languageDetection->getPresetLanguages();
             
             // Remove detected language from target languages if it's in the list
-            $targetLanguages = array_filter($popularLanguages, function($lang) use ($detectedLanguage) {
+            $targetLanguages = array_filter($presetLanguages, function($lang) use ($detectedLanguage) {
                 return $lang !== $detectedLanguage;
             });
             
-            // Limit to first 20 languages to avoid too many API calls
-            $targetLanguages = array_slice($targetLanguages, 0, 20);
+            Log::info('Using preset language configuration', [
+                'preset_languages' => $presetLanguages,
+                'target_languages' => array_values($targetLanguages),
+                'detected_language' => $detectedLanguage
+            ]);
             
             $translations = [];
             $translationsCompleted = 0;
