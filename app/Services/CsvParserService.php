@@ -51,8 +51,9 @@ class CsvParserService
                 if ($headers === null) {
                     $headers = array_map('trim', $row);
                     
-                    // Validate required columns
-                    if (!in_array('key', $headers) || !in_array('en', $headers)) {
+                    // Validate required columns (case-insensitive)
+                    $lowerHeaders = array_map('strtolower', $headers);
+                    if (!in_array('key', $lowerHeaders) || !in_array('en', $lowerHeaders)) {
                         throw new \Exception('File must contain "key" and "en" columns');
                     }
                     
@@ -173,12 +174,13 @@ class CsvParserService
             $headers = $parsed['headers'];
             $data = $parsed['data'];
 
-            // Check required columns
-            if (!in_array('key', $headers)) {
+            // Check required columns (case-insensitive)
+            $lowerHeaders = array_map('strtolower', $headers);
+            if (!in_array('key', $lowerHeaders)) {
                 return ['valid' => false, 'message' => 'Missing required column: key'];
             }
 
-            if (!in_array('en', $headers)) {
+            if (!in_array('en', $lowerHeaders)) {
                 return ['valid' => false, 'message' => 'Missing required column: en (English source)'];
             }
 

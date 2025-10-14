@@ -26,6 +26,21 @@ class GoogleTranslationService
         'lv' => 'lv',
         'bg' => 'bg',
         'fi' => 'fi',
+        'pt' => 'pt',    // Portuguese
+        'ru' => 'ru',    // Russian
+        'pl' => 'pl',    // Polish
+        'cs' => 'cs',    // Czech
+        'hu' => 'hu',    // Hungarian
+        'sv' => 'sv',    // Swedish
+        'da' => 'da',    // Danish
+        'no' => 'no',    // Norwegian
+        'ja' => 'ja',    // Japanese
+        'ko' => 'ko',    // Korean
+        'zh' => 'zh',    // Chinese
+        'ar' => 'ar',    // Arabic
+        'hi' => 'hi',    // Hindi
+        'tr' => 'tr',    // Turkish
+        'uk' => 'uk',    // Ukrainian
     ];
 
     public function __construct(GoogleOAuthService $oauthService)
