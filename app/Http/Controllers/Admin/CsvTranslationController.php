@@ -314,7 +314,18 @@ class CsvTranslationController extends Controller
             // Detect source language from first few texts
             $sampleText = implode(' ', array_slice($sourceTexts, 0, 3));
             Log::info('Detecting language', ['sample_text' => $sampleText]);
-            $detectedLanguage = $this->languageDetection->detectLanguage($sampleText);
+            
+            try {
+                $detectedLanguage = $this->languageDetection->detectLanguage($sampleText);
+                Log::info('Language detection successful', ['detected_language' => $detectedLanguage]);
+            } catch (\Exception $e) {
+                Log::error('Language detection failed', [
+                    'error' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ]);
+                $detectedLanguage = 'en'; // Fallback to English
+            }
             
             Log::info('Smart fallback processing', [
                 'file' => $originalName,
@@ -337,8 +348,14 @@ class CsvTranslationController extends Controller
             $translationsCompleted = 0;
             
             // Translate to each target language
+            Log::info('Starting translation process', [
+                'target_languages' => $targetLanguages,
+                'source_texts_count' => count($sourceTexts)
+            ]);
+            
             foreach ($targetLanguages as $targetLang) {
                 try {
+                    Log::info("Starting translation for {$targetLang}");
                     $translatedTexts = $this->translationService->translateBatch($sourceTexts, $targetLang);
                     $translations[$targetLang] = $translatedTexts;
                     $translationsCompleted += count($translatedTexts);
@@ -349,7 +366,11 @@ class CsvTranslationController extends Controller
                     ]);
                     
                 } catch (\Exception $e) {
-                    Log::warning("Smart fallback failed for {$targetLang}: " . $e->getMessage());
+                    Log::error("Smart fallback failed for {$targetLang}", [
+                        'error' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine()
+                    ]);
                     // Continue with other languages
                 }
             }
@@ -369,7 +390,21 @@ class CsvTranslationController extends Controller
             }
             
             // Create XLSX with separate sheets for each language
-            $this->multiSheetService->createMultiSheetXlsx($sourceTexts, $translations, $detectedLanguage, $outputPath);
+            try {
+                Log::info('Creating multi-sheet XLSX', [
+                    'output_path' => $outputPath,
+                    'translations_count' => count($translations)
+                ]);
+                $this->multiSheetService->createMultiSheetXlsx($sourceTexts, $translations, $detectedLanguage, $outputPath);
+                Log::info('Multi-sheet XLSX created successfully');
+            } catch (\Exception $e) {
+                Log::error('Failed to create multi-sheet XLSX', [
+                    'error' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ]);
+                throw $e; // Re-throw to be caught by outer catch
+            }
             
             Log::info('Smart fallback completed', [
                 'file' => $originalName,
@@ -383,6 +418,8 @@ class CsvTranslationController extends Controller
         } catch (\Exception $e) {
             Log::error('Smart fallback failed', [
                 'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
             ]);
             
