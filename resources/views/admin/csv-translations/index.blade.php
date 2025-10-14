@@ -75,9 +75,10 @@
                                 </p>
                             </div>
                             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-4">
+                                <!-- Most Popular TTS Languages -->
                                 <label class="flex items-center">
-                                    <input type="checkbox" name="languages[]" value="es_AR" class="mr-2">
-                                    <span class="text-sm">Spanish (es_AR)</span>
+                                    <input type="checkbox" name="languages[]" value="es" class="mr-2">
+                                    <span class="text-sm">Spanish (es)</span>
                                 </label>
                                 <label class="flex items-center">
                                     <input type="checkbox" name="languages[]" value="fr" class="mr-2">
@@ -92,72 +93,12 @@
                                     <span class="text-sm">Italian (it)</span>
                                 </label>
                                 <label class="flex items-center">
-                                    <input type="checkbox" name="languages[]" value="nl" class="mr-2">
-                                    <span class="text-sm">Dutch (nl)</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" name="languages[]" value="ro" class="mr-2">
-                                    <span class="text-sm">Romanian (ro)</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" name="languages[]" value="gr" class="mr-2">
-                                    <span class="text-sm">Greek (gr)</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" name="languages[]" value="sk" class="mr-2">
-                                    <span class="text-sm">Slovak (sk)</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" name="languages[]" value="lv" class="mr-2">
-                                    <span class="text-sm">Latvian (lv)</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" name="languages[]" value="bg" class="mr-2">
-                                    <span class="text-sm">Bulgarian (bg)</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" name="languages[]" value="fi" class="mr-2">
-                                    <span class="text-sm">Finnish (fi)</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" name="languages[]" value="al" class="mr-2">
-                                    <span class="text-sm">Albanian (al)</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" name="languages[]" value="ca" class="mr-2">
-                                    <span class="text-sm">Catalan (ca)</span>
-                                </label>
-                                <label class="flex items-center">
                                     <input type="checkbox" name="languages[]" value="pt" class="mr-2">
                                     <span class="text-sm">Portuguese (pt)</span>
                                 </label>
                                 <label class="flex items-center">
                                     <input type="checkbox" name="languages[]" value="ru" class="mr-2">
                                     <span class="text-sm">Russian (ru)</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" name="languages[]" value="pl" class="mr-2">
-                                    <span class="text-sm">Polish (pl)</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" name="languages[]" value="cs" class="mr-2">
-                                    <span class="text-sm">Czech (cs)</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" name="languages[]" value="hu" class="mr-2">
-                                    <span class="text-sm">Hungarian (hu)</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" name="languages[]" value="sv" class="mr-2">
-                                    <span class="text-sm">Swedish (sv)</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" name="languages[]" value="da" class="mr-2">
-                                    <span class="text-sm">Danish (da)</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" name="languages[]" value="no" class="mr-2">
-                                    <span class="text-sm">Norwegian (no)</span>
                                 </label>
                                 <label class="flex items-center">
                                     <input type="checkbox" name="languages[]" value="ja" class="mr-2">
@@ -180,12 +121,80 @@
                                     <span class="text-sm">Hindi (hi)</span>
                                 </label>
                                 <label class="flex items-center">
+                                    <input type="checkbox" name="languages[]" value="nl" class="mr-2">
+                                    <span class="text-sm">Dutch (nl)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="languages[]" value="pl" class="mr-2">
+                                    <span class="text-sm">Polish (pl)</span>
+                                </label>
+                                <label class="flex items-center">
                                     <input type="checkbox" name="languages[]" value="tr" class="mr-2">
                                     <span class="text-sm">Turkish (tr)</span>
                                 </label>
                                 <label class="flex items-center">
+                                    <input type="checkbox" name="languages[]" value="sv" class="mr-2">
+                                    <span class="text-sm">Swedish (sv)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="languages[]" value="da" class="mr-2">
+                                    <span class="text-sm">Danish (da)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="languages[]" value="no" class="mr-2">
+                                    <span class="text-sm">Norwegian (no)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="languages[]" value="fi" class="mr-2">
+                                    <span class="text-sm">Finnish (fi)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="languages[]" value="cs" class="mr-2">
+                                    <span class="text-sm">Czech (cs)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="languages[]" value="hu" class="mr-2">
+                                    <span class="text-sm">Hungarian (hu)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="languages[]" value="ro" class="mr-2">
+                                    <span class="text-sm">Romanian (ro)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="languages[]" value="bg" class="mr-2">
+                                    <span class="text-sm">Bulgarian (bg)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="languages[]" value="hr" class="mr-2">
+                                    <span class="text-sm">Croatian (hr)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="languages[]" value="sl" class="mr-2">
+                                    <span class="text-sm">Slovenian (sl)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="languages[]" value="el" class="mr-2">
+                                    <span class="text-sm">Greek (el)</span>
+                                </label>
+                                <label class="flex items-center">
                                     <input type="checkbox" name="languages[]" value="uk" class="mr-2">
                                     <span class="text-sm">Ukrainian (uk)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="languages[]" value="lv" class="mr-2">
+                                    <span class="text-sm">Latvian (lv)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="languages[]" value="lt" class="mr-2">
+                                    <span class="text-sm">Lithuanian (lt)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="languages[]" value="et" class="mr-2">
+                                    <span class="text-sm">Estonian (et)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="languages[]" value="ca" class="mr-2">
+                                    <span class="text-sm">Catalan (ca)</span>
                                 </label>
                             </div>
                             <div class="mt-2 flex gap-2">
@@ -200,11 +209,11 @@
                             <ul class="text-sm text-blue-800 space-y-1">
                                 <li>• <strong>CSV:</strong> Delimiter: <strong>semicolon (;)</strong></li>
                                 <li>• <strong>XLSX:</strong> Standard Excel format</li>
-                                <li>• First column: <strong>key</strong> (unique identifier)</li>
-                                <li>• Second column: <strong>en</strong> (English source text)</li>
-                                <li>• Other columns: target languages (es_AR, fr, de, it, nl, ro, gr, sk, lv, bg, fi, al, ca)</li>
+                                <li>• First column: <strong>en</strong> (English source text) - REQUIRED</li>
+                                <li>• Other columns: target languages (es, fr, de, it, pt, ru, ja, ko, zh, ar, hi, etc.)</li>
                                 <li>• Only <strong>empty cells</strong> will be translated</li>
                                 <li>• Existing translations will be preserved</li>
+                                <li>• <strong>KEY column is optional</strong> - not required for translation</li>
                             </ul>
                         </div>
 
@@ -214,11 +223,11 @@
                                 View Example File Structure
                             </summary>
                             <div class="mt-3">
-                                <pre class="text-xs bg-white p-3 rounded border border-gray-300 overflow-x-auto"><code>key;en;es_AR;fr;de;it;nl
-welcome;Welcome;;;;
-hello;Hello world;;;;
-goodbye;Goodbye;;;;;</code></pre>
-                                <p class="text-xs text-gray-600 mt-2">Same structure applies to both CSV and XLSX files</p>
+                                <pre class="text-xs bg-white p-3 rounded border border-gray-300 overflow-x-auto"><code>en;es;fr;de;it;pt;ru
+Welcome;;;;
+Hello world;;;;
+Goodbye;;;;;</code></pre>
+                                <p class="text-xs text-gray-600 mt-2">Same structure applies to both CSV and XLSX files. KEY column is optional.</p>
                             </div>
                         </details>
 
@@ -245,10 +254,10 @@ goodbye;Goodbye;;;;;</code></pre>
 
             <!-- Supported Languages -->
             <div class="mt-8 bg-white rounded-lg shadow-md p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Supported Languages</h3>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">TTS Compatible Languages</h3>
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                     <div class="text-sm">
-                        <span class="font-medium">es_AR:</span> Spanish
+                        <span class="font-medium">es:</span> Spanish
                     </div>
                     <div class="text-sm">
                         <span class="font-medium">fr:</span> French
@@ -260,55 +269,10 @@ goodbye;Goodbye;;;;;</code></pre>
                         <span class="font-medium">it:</span> Italian
                     </div>
                     <div class="text-sm">
-                        <span class="font-medium">nl:</span> Dutch
-                    </div>
-                    <div class="text-sm">
-                        <span class="font-medium">ro:</span> Romanian
-                    </div>
-                    <div class="text-sm">
-                        <span class="font-medium">gr:</span> Greek
-                    </div>
-                    <div class="text-sm">
-                        <span class="font-medium">sk:</span> Slovak
-                    </div>
-                    <div class="text-sm">
-                        <span class="font-medium">lv:</span> Latvian
-                    </div>
-                    <div class="text-sm">
-                        <span class="font-medium">bg:</span> Bulgarian
-                    </div>
-                    <div class="text-sm">
-                        <span class="font-medium">fi:</span> Finnish
-                    </div>
-                    <div class="text-sm">
-                        <span class="font-medium">al:</span> Albanian
-                    </div>
-                    <div class="text-sm">
-                        <span class="font-medium">ca:</span> Catalan
-                    </div>
-                    <div class="text-sm">
                         <span class="font-medium">pt:</span> Portuguese
                     </div>
                     <div class="text-sm">
                         <span class="font-medium">ru:</span> Russian
-                    </div>
-                    <div class="text-sm">
-                        <span class="font-medium">pl:</span> Polish
-                    </div>
-                    <div class="text-sm">
-                        <span class="font-medium">cs:</span> Czech
-                    </div>
-                    <div class="text-sm">
-                        <span class="font-medium">hu:</span> Hungarian
-                    </div>
-                    <div class="text-sm">
-                        <span class="font-medium">sv:</span> Swedish
-                    </div>
-                    <div class="text-sm">
-                        <span class="font-medium">da:</span> Danish
-                    </div>
-                    <div class="text-sm">
-                        <span class="font-medium">no:</span> Norwegian
                     </div>
                     <div class="text-sm">
                         <span class="font-medium">ja:</span> Japanese
@@ -326,10 +290,61 @@ goodbye;Goodbye;;;;;</code></pre>
                         <span class="font-medium">hi:</span> Hindi
                     </div>
                     <div class="text-sm">
+                        <span class="font-medium">nl:</span> Dutch
+                    </div>
+                    <div class="text-sm">
+                        <span class="font-medium">pl:</span> Polish
+                    </div>
+                    <div class="text-sm">
                         <span class="font-medium">tr:</span> Turkish
                     </div>
                     <div class="text-sm">
+                        <span class="font-medium">sv:</span> Swedish
+                    </div>
+                    <div class="text-sm">
+                        <span class="font-medium">da:</span> Danish
+                    </div>
+                    <div class="text-sm">
+                        <span class="font-medium">no:</span> Norwegian
+                    </div>
+                    <div class="text-sm">
+                        <span class="font-medium">fi:</span> Finnish
+                    </div>
+                    <div class="text-sm">
+                        <span class="font-medium">cs:</span> Czech
+                    </div>
+                    <div class="text-sm">
+                        <span class="font-medium">hu:</span> Hungarian
+                    </div>
+                    <div class="text-sm">
+                        <span class="font-medium">ro:</span> Romanian
+                    </div>
+                    <div class="text-sm">
+                        <span class="font-medium">bg:</span> Bulgarian
+                    </div>
+                    <div class="text-sm">
+                        <span class="font-medium">hr:</span> Croatian
+                    </div>
+                    <div class="text-sm">
+                        <span class="font-medium">sl:</span> Slovenian
+                    </div>
+                    <div class="text-sm">
+                        <span class="font-medium">el:</span> Greek
+                    </div>
+                    <div class="text-sm">
                         <span class="font-medium">uk:</span> Ukrainian
+                    </div>
+                    <div class="text-sm">
+                        <span class="font-medium">lv:</span> Latvian
+                    </div>
+                    <div class="text-sm">
+                        <span class="font-medium">lt:</span> Lithuanian
+                    </div>
+                    <div class="text-sm">
+                        <span class="font-medium">et:</span> Estonian
+                    </div>
+                    <div class="text-sm">
+                        <span class="font-medium">ca:</span> Catalan
                     </div>
                 </div>
             </div>

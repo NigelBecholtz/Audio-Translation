@@ -53,8 +53,8 @@ class CsvParserService
                     
                     // Validate required columns (case-insensitive)
                     $lowerHeaders = array_map('strtolower', $headers);
-                    if (!in_array('key', $lowerHeaders) || !in_array('en', $lowerHeaders)) {
-                        throw new \Exception('File must contain "key" and "en" columns');
+                    if (!in_array('en', $lowerHeaders)) {
+                        throw new \Exception('File must contain "en" column');
                     }
                     
                     continue;
@@ -176,10 +176,7 @@ class CsvParserService
 
             // Check required columns (case-insensitive)
             $lowerHeaders = array_map('strtolower', $headers);
-            if (!in_array('key', $lowerHeaders)) {
-                return ['valid' => false, 'message' => 'Missing required column: key'];
-            }
-
+            
             if (!in_array('en', $lowerHeaders)) {
                 return ['valid' => false, 'message' => 'Missing required column: en (English source)'];
             }

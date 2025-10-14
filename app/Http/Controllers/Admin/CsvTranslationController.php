@@ -87,8 +87,8 @@ class CsvTranslationController extends Controller
             $headers = $parsed['headers'];
             $data = $parsed['data'];
 
-            // Get target language columns (exclude 'key' and 'en')
-            $allTargetLanguages = array_diff($headers, ['key', 'en']);
+            // Get target language columns (exclude 'en')
+            $allTargetLanguages = array_diff($headers, ['en']);
             
             // Check if specific languages were selected
             $selectedLanguages = $request->input('languages', []);

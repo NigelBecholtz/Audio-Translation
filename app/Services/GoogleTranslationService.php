@@ -11,36 +11,38 @@ class GoogleTranslationService
     private $oauthService;
     private $projectId;
     
-    // Language code mapping voor Google Translate API
+    // Language code mapping voor Google Translate API (TTS compatible)
     private array $languageMapping = [
-        'es_AR' => 'es', // Spanish (Argentina) -> Spanish
-        'gr' => 'el',    // Greek code mapping
-        'al' => 'sq',    // Albanian code mapping
-        'ca' => 'ca',    // Catalan
-        'fr' => 'fr',
-        'de' => 'de',
-        'it' => 'it',
-        'nl' => 'nl',
-        'ro' => 'ro',
-        'sk' => 'sk',
-        'lv' => 'lv',
-        'bg' => 'bg',
-        'fi' => 'fi',
+        'es' => 'es',    // Spanish
+        'fr' => 'fr',    // French
+        'de' => 'de',    // German
+        'it' => 'it',    // Italian
         'pt' => 'pt',    // Portuguese
         'ru' => 'ru',    // Russian
-        'pl' => 'pl',    // Polish
-        'cs' => 'cs',    // Czech
-        'hu' => 'hu',    // Hungarian
-        'sv' => 'sv',    // Swedish
-        'da' => 'da',    // Danish
-        'no' => 'no',    // Norwegian
         'ja' => 'ja',    // Japanese
         'ko' => 'ko',    // Korean
         'zh' => 'zh',    // Chinese
         'ar' => 'ar',    // Arabic
         'hi' => 'hi',    // Hindi
+        'nl' => 'nl',    // Dutch
+        'pl' => 'pl',    // Polish
         'tr' => 'tr',    // Turkish
+        'sv' => 'sv',    // Swedish
+        'da' => 'da',    // Danish
+        'no' => 'no',    // Norwegian
+        'fi' => 'fi',    // Finnish
+        'cs' => 'cs',    // Czech
+        'hu' => 'hu',    // Hungarian
+        'ro' => 'ro',    // Romanian
+        'bg' => 'bg',    // Bulgarian
+        'hr' => 'hr',    // Croatian
+        'sl' => 'sl',    // Slovenian
+        'el' => 'el',    // Greek
         'uk' => 'uk',    // Ukrainian
+        'lv' => 'lv',    // Latvian
+        'lt' => 'lt',    // Lithuanian
+        'et' => 'et',    // Estonian
+        'ca' => 'ca',    // Catalan
     ];
 
     public function __construct(GoogleOAuthService $oauthService)
