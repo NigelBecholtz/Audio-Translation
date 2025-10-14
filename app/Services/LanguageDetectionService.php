@@ -42,11 +42,18 @@ class LanguageDetectionService
     public function detectLanguage(string $text): string
     {
         if (empty(trim($text))) {
+            Log::info('Empty text provided, defaulting to English');
             return 'en'; // Default to English for empty text
         }
 
         try {
+            Log::info('Starting language detection', [
+                'text_length' => strlen($text),
+                'text_sample' => substr($text, 0, 100)
+            ]);
+            
             // Get OAuth2 access token
+            Log::info('Getting OAuth2 access token for language detection');
             $accessToken = $this->oauthService->getAccessToken();
             
             // Google Cloud Translation API v3 detect language endpoint

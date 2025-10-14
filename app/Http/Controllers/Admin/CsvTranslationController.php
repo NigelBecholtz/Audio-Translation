@@ -43,6 +43,11 @@ class CsvTranslationController extends Controller
      */
     public function process(Request $request)
     {
+        Log::info('CSV Translation process started', [
+            'request_data' => $request->all(),
+            'file_uploaded' => $request->hasFile('csv_file')
+        ]);
+
         // Validate upload
         $request->validate([
             'csv_file' => [
@@ -57,15 +62,29 @@ class CsvTranslationController extends Controller
             'csv_file.max' => 'File size must not exceed 10MB',
         ]);
 
+        Log::info('File validation passed');
+
         try {
             $file = $request->file('csv_file');
             $originalName = $file->getClientOriginalName();
+            
+            Log::info('File details', [
+                'original_name' => $originalName,
+                'size' => $file->getSize(),
+                'mime_type' => $file->getMimeType()
+            ]);
             
             // Use Laravel's public disk temp directory instead
             $extension = $file->getClientOriginalExtension();
             $tempFilename = 'file_upload_' . time() . '_' . uniqid() . '.' . $extension;
             $tempPath = $file->storeAs('temp', $tempFilename, 'public');
             $fullPath = storage_path('app/public/' . $tempPath);
+            
+            Log::info('File stored', [
+                'temp_path' => $tempPath,
+                'full_path' => $fullPath,
+                'file_exists' => file_exists($fullPath)
+            ]);
             
             // Verify file was uploaded successfully
             if (!file_exists($fullPath)) {
@@ -78,15 +97,25 @@ class CsvTranslationController extends Controller
             }
 
             // Validate file structure
+            Log::info('Starting file validation', ['file_path' => $fullPath]);
             $validation = $this->csvParser->validate($fullPath);
             $useSmartFallback = false;
             
+            Log::info('File validation result', [
+                'valid' => $validation['valid'],
+                'message' => $validation['message'] ?? 'No message'
+            ]);
+            
             if (!$validation['valid']) {
+                Log::info('File validation failed, checking smart fallback');
                 // Check if we can use smart fallback
                 if ($this->canUseSmartFallback($fullPath)) {
                     $useSmartFallback = true;
                     Log::info('Using smart fallback for file', ['file' => $originalName]);
                 } else {
+                    Log::error('File validation failed and smart fallback not available', [
+                        'validation_message' => $validation['message']
+                    ]);
                     Storage::disk('public')->delete($tempPath);
                     return back()->with('error', 'Invalid file: ' . $validation['message']);
                 }
@@ -246,9 +275,20 @@ class CsvTranslationController extends Controller
     private function processSmartFallback(string $filePath, string $originalName, Request $request)
     {
         try {
+            Log::info('Smart fallback process started', [
+                'file_path' => $filePath,
+                'original_name' => $originalName
+            ]);
+            
             // Parse file to get raw data
+            Log::info('Parsing file for smart fallback');
             $parsed = $this->csvParser->parse($filePath);
             $data = $parsed['data'];
+            
+            Log::info('File parsed successfully', [
+                'data_count' => count($data),
+                'headers' => $parsed['headers'] ?? 'No headers'
+            ]);
             
             // Extract all text content from the file
             $sourceTexts = [];
@@ -261,12 +301,19 @@ class CsvTranslationController extends Controller
                 }
             }
             
+            Log::info('Text extraction completed', [
+                'source_texts_count' => count($sourceTexts),
+                'sample_texts' => array_slice($sourceTexts, 0, 3)
+            ]);
+            
             if (empty($sourceTexts)) {
+                Log::error('No text content found in file');
                 return back()->with('error', 'No text content found in file');
             }
             
             // Detect source language from first few texts
             $sampleText = implode(' ', array_slice($sourceTexts, 0, 3));
+            Log::info('Detecting language', ['sample_text' => $sampleText]);
             $detectedLanguage = $this->languageDetection->detectLanguage($sampleText);
             
             Log::info('Smart fallback processing', [

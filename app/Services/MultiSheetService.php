@@ -25,6 +25,13 @@ class MultiSheetService
     public function createMultiSheetXlsx(array $sourceData, array $translations, string $sourceLanguage, string $outputPath): void
     {
         try {
+            Log::info('Creating multi-sheet XLSX', [
+                'source_language' => $sourceLanguage,
+                'target_languages' => array_keys($translations),
+                'source_data_count' => count($sourceData),
+                'output_path' => $outputPath
+            ]);
+            
             $spreadsheet = new Spreadsheet();
             
             // Remove default sheet
