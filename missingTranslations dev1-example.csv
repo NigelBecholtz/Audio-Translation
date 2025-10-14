@@ -1,0 +1,12 @@
+key;en;es_AR;fr;de;it;nl;ro;gr;sk;lv;bg;fi;al;ca
+create_support_ticket_wizard;Create a support ticket;;;;;;;;;;;;;
+ticket_initiation_text1;Provide context related to your support request:;;;;;;;;;;;;;
+ticket_initiation_text2;Describe in details your request. Copy and paste the URL from the screen you are asking assistance with.;;;;;;;;;;;;;
+ticket_initiation_text3;Document as clearly as possible by illustrating your request with screenshots and a video if possible:;;;;;;;;;;;;;
+url_screen;URL of where the reported topic is found;;;;;;;;;;;;;
+view_summary;View summary;;;;;;;;;;;;;
+import_summary;Import summary;;;;;;;;;;;;;
+overview;Overview;;;;;;;;;;;;;
+invalid;Invalid;;;;;;;;;;;;;
+import_progress;Import progress;;;;;;;;;;;;;
+download_report;Download import report;;;;;;;;;;;;;

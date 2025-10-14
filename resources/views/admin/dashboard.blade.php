@@ -201,7 +201,7 @@
         <!-- Quick Actions - Responsive -->
         <div class="mt-8 bg-white shadow-lg rounded-xl p-4 sm:p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                 <a href="{{ route('admin.payments') }}" class="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
                     <i class="fas fa-credit-card text-blue-600 text-xl mr-3"></i>
                     <div>
@@ -221,13 +221,6 @@
                     <div>
                         <p class="font-medium text-gray-900">Audio Files</p>
                         <p class="text-sm text-gray-600">View all audio files</p>
-                    </div>
-                </a>
-                <a href="{{ route('admin.csv-translations') }}" class="flex items-center p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
-                    <i class="fas fa-language text-orange-600 text-xl mr-3"></i>
-                    <div>
-                        <p class="font-medium text-gray-900">CSV Translations</p>
-                        <p class="text-sm text-gray-600">Translate CSV files</p>
                     </div>
                 </a>
             </div>
