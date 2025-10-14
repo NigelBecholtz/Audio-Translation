@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Services\OpenAITranslationService;
+use App\Services\GoogleTranslationService;
 use App\Services\CsvParserService;
+use App\Services\LanguageDetectionService;
 use App\Services\MultiSheetService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -14,15 +15,18 @@ class CsvTranslationController extends Controller
 {
     private $translationService;
     private $csvParser;
+    private $languageDetection;
     private $multiSheetService;
 
     public function __construct(
-        OpenAITranslationService $translationService,
+        GoogleTranslationService $translationService,
         CsvParserService $csvParser,
+        LanguageDetectionService $languageDetection,
         MultiSheetService $multiSheetService
     ) {
         $this->translationService = $translationService;
         $this->csvParser = $csvParser;
+        $this->languageDetection = $languageDetection;
         $this->multiSheetService = $multiSheetService;
     }
 
@@ -309,10 +313,10 @@ class CsvTranslationController extends Controller
             
             // Detect source language from first few texts
             $sampleText = implode(' ', array_slice($sourceTexts, 0, 3));
-            Log::info('Detecting language with OpenAI', ['sample_text' => $sampleText]);
+            Log::info('Detecting language', ['sample_text' => $sampleText]);
             
             try {
-                $detectedLanguage = $this->translationService->detectLanguage($sampleText);
+                $detectedLanguage = $this->languageDetection->detectLanguage($sampleText);
                 Log::info('Language detection successful', ['detected_language' => $detectedLanguage]);
             } catch (\Exception $e) {
                 Log::error('Language detection failed', [
@@ -330,7 +334,7 @@ class CsvTranslationController extends Controller
             ]);
             
             // Get preset languages for translation (in specific order)
-            $presetLanguages = $this->translationService->getPresetLanguages();
+            $presetLanguages = $this->languageDetection->getPresetLanguages();
             
             // Remove detected language from target languages if it's in the list
             $targetLanguages = array_filter($presetLanguages, function($lang) use ($detectedLanguage) {
