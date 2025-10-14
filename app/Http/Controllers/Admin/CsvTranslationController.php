@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Services\GoogleTranslationService;
 use App\Services\CsvParserService;
+use App\Services\LanguageDetectionService;
+use App\Services\MultiSheetService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -13,13 +15,19 @@ class CsvTranslationController extends Controller
 {
     private $translationService;
     private $csvParser;
+    private $languageDetection;
+    private $multiSheetService;
 
     public function __construct(
         GoogleTranslationService $translationService,
-        CsvParserService $csvParser
+        CsvParserService $csvParser,
+        LanguageDetectionService $languageDetection,
+        MultiSheetService $multiSheetService
     ) {
         $this->translationService = $translationService;
         $this->csvParser = $csvParser;
+        $this->languageDetection = $languageDetection;
+        $this->multiSheetService = $multiSheetService;
     }
 
     /**
@@ -71,9 +79,21 @@ class CsvTranslationController extends Controller
 
             // Validate file structure
             $validation = $this->csvParser->validate($fullPath);
+            $useSmartFallback = false;
+            
             if (!$validation['valid']) {
-                Storage::disk('public')->delete($tempPath);
-                return back()->with('error', 'Invalid file: ' . $validation['message']);
+                // Check if we can use smart fallback
+                if ($this->canUseSmartFallback($fullPath)) {
+                    $useSmartFallback = true;
+                    Log::info('Using smart fallback for file', ['file' => $originalName]);
+                } else {
+                    Storage::disk('public')->delete($tempPath);
+                    return back()->with('error', 'Invalid file: ' . $validation['message']);
+                }
+            }
+
+            if ($useSmartFallback) {
+                return $this->processSmartFallback($fullPath, $originalName, $request);
             }
 
             Log::info('File translation started', [
@@ -193,6 +213,134 @@ class CsvTranslationController extends Controller
             }
 
             return back()->with('error', 'Translation failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Check if file can use smart fallback
+     */
+    private function canUseSmartFallback(string $filePath): bool
+    {
+        try {
+            $parsed = $this->csvParser->parse($filePath);
+            $data = $parsed['data'];
+            
+            // Check if we have at least one row with text data
+            foreach ($data as $row) {
+                foreach ($row as $value) {
+                    if (!empty(trim($value))) {
+                        return true; // Found some text data
+                    }
+                }
+            }
+            
+            return false;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Process file with smart fallback (language detection + multi-sheet output)
+     */
+    private function processSmartFallback(string $filePath, string $originalName, Request $request)
+    {
+        try {
+            // Parse file to get raw data
+            $parsed = $this->csvParser->parse($filePath);
+            $data = $parsed['data'];
+            
+            // Extract all text content from the file
+            $sourceTexts = [];
+            foreach ($data as $row) {
+                foreach ($row as $value) {
+                    $text = trim($value);
+                    if (!empty($text)) {
+                        $sourceTexts[] = $text;
+                    }
+                }
+            }
+            
+            if (empty($sourceTexts)) {
+                return back()->with('error', 'No text content found in file');
+            }
+            
+            // Detect source language from first few texts
+            $sampleText = implode(' ', array_slice($sourceTexts, 0, 3));
+            $detectedLanguage = $this->languageDetection->detectLanguage($sampleText);
+            
+            Log::info('Smart fallback processing', [
+                'file' => $originalName,
+                'detected_language' => $detectedLanguage,
+                'text_count' => count($sourceTexts)
+            ]);
+            
+            // Get popular languages for translation
+            $popularLanguages = $this->languageDetection->getPopularLanguages();
+            
+            // Remove detected language from target languages if it's in the list
+            $targetLanguages = array_filter($popularLanguages, function($lang) use ($detectedLanguage) {
+                return $lang !== $detectedLanguage;
+            });
+            
+            // Limit to first 20 languages to avoid too many API calls
+            $targetLanguages = array_slice($targetLanguages, 0, 20);
+            
+            $translations = [];
+            $translationsCompleted = 0;
+            
+            // Translate to each target language
+            foreach ($targetLanguages as $targetLang) {
+                try {
+                    $translatedTexts = $this->translationService->translateBatch($sourceTexts, $targetLang);
+                    $translations[$targetLang] = $translatedTexts;
+                    $translationsCompleted += count($translatedTexts);
+                    
+                    Log::info("Smart fallback translated {$targetLang}", [
+                        'count' => count($translatedTexts),
+                        'language' => $targetLang
+                    ]);
+                    
+                } catch (\Exception $e) {
+                    Log::warning("Smart fallback failed for {$targetLang}: " . $e->getMessage());
+                    // Continue with other languages
+                }
+            }
+            
+            if (empty($translations)) {
+                return back()->with('error', 'Failed to translate to any target languages');
+            }
+            
+            // Create multi-sheet output
+            $outputExtension = 'zip'; // Use ZIP for multiple files
+            $outputFilename = 'smart_translations_' . time() . '_' . uniqid() . '.zip';
+            $outputPath = storage_path('app/public/temp/' . $outputFilename);
+            
+            // Ensure temp directory exists
+            $tempDir = storage_path('app/public/temp');
+            if (!file_exists($tempDir)) {
+                mkdir($tempDir, 0755, true);
+            }
+            
+            // Create ZIP with separate files for each language
+            $this->multiSheetService->createLanguageZip($sourceTexts, $translations, $detectedLanguage, $outputPath);
+            
+            Log::info('Smart fallback completed', [
+                'file' => $originalName,
+                'source_language' => $detectedLanguage,
+                'target_languages' => array_keys($translations),
+                'translations_completed' => $translationsCompleted
+            ]);
+            
+            return response()->download($outputPath, $outputFilename)->deleteFileAfterSend(true);
+            
+        } catch (\Exception $e) {
+            Log::error('Smart fallback failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return back()->with('error', 'Smart fallback failed: ' . $e->getMessage());
         }
     }
 }

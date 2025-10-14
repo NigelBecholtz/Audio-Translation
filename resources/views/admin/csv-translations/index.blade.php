@@ -217,6 +217,23 @@
                             </ul>
                         </div>
 
+                        <!-- Smart Fallback Info -->
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <h3 class="text-sm font-semibold text-green-900 mb-2">🧠 Smart Fallback Mode:</h3>
+                            <p class="text-sm text-green-800 mb-2">
+                                <strong>If your file doesn't match the standard format, we'll automatically:</strong>
+                            </p>
+                            <ul class="text-sm text-green-800 space-y-1">
+                                <li>• <strong>Detect the source language</strong> automatically</li>
+                                <li>• <strong>Translate to 20+ popular languages</strong></li>
+                                <li>• <strong>Create separate files</strong> for each language</li>
+                                <li>• <strong>Download as ZIP</strong> with individual CSV files</li>
+                            </ul>
+                            <p class="text-xs text-green-700 mt-2">
+                                Perfect for any text file - just upload and let AI do the work!
+                            </p>
+                        </div>
+
                         <!-- Example Structure -->
                         <details class="bg-gray-50 border border-gray-200 rounded-lg p-4">
                             <summary class="text-sm font-semibold text-gray-900 cursor-pointer">
