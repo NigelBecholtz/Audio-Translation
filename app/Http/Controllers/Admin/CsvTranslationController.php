@@ -53,9 +53,20 @@ class CsvTranslationController extends Controller
             $file = $request->file('csv_file');
             $originalName = $file->getClientOriginalName();
             
+            // Ensure temp directory exists
+            $tempDir = storage_path('app/temp');
+            if (!file_exists($tempDir)) {
+                mkdir($tempDir, 0755, true);
+            }
+            
             // Store uploaded file temporarily
             $tempPath = $file->storeAs('temp', 'upload_' . time() . '.csv', 'local');
             $fullPath = storage_path('app/' . $tempPath);
+            
+            // Verify file was uploaded successfully
+            if (!file_exists($fullPath)) {
+                throw new \Exception('Failed to upload file to temporary directory. Check storage permissions.');
+            }
 
             // Validate CSV structure
             $validation = $this->csvParser->validate($fullPath);
