@@ -39,4 +39,8 @@ return [
         'api_key' => env('OPENAI_API_KEY'),
     ],
 
+    'google' => [
+        'translate_api_key' => env('GOOGLE_TRANSLATE_API_KEY'),
+    ],
+
 ];
