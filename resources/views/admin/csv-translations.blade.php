@@ -104,9 +104,18 @@
 
             <!-- Success Message -->
             <div id="successMessage" class="hidden mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div class="flex items-center">
-                    <i class="fas fa-check-circle text-green-600 mr-3"></i>
-                    <span class="text-green-800 font-medium">File uploaded successfully! Processing in background...</span>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <i class="fas fa-check-circle text-green-600 mr-3"></i>
+                        <span class="text-green-800 font-medium">File uploaded successfully! Processing in background...</span>
+                    </div>
+                    <button 
+                        id="refreshListBtn"
+                        onclick="window.location.reload()"
+                        class="ml-4 px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
+                    >
+                        Refresh List
+                    </button>
                 </div>
             </div>
 
@@ -303,10 +312,11 @@ document.addEventListener('DOMContentLoaded', function() {
             uploadBtn.disabled = false;
             uploadBtnText.textContent = 'Upload & Translate';
             
-            // Reload page after 2 seconds to show new file
+            // Auto-hide success message after 8 seconds
             setTimeout(() => {
-                window.location.reload();
-            }, 2000);
+                successMessage.classList.add('hidden');
+                console.log('Success message auto-hidden');
+            }, 8000);
         })
         .catch(error => {
             console.error('Upload error:', error);
