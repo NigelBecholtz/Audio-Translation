@@ -31,14 +31,21 @@ class GoogleTranslationService
     public function __construct(GoogleOAuthService $oauthService)
     {
         $this->oauthService = $oauthService;
-        // Extract project ID from service account email
-        $email = config('gemini.service_account.client_email');
-        if ($email) {
-            // Format: xxx@project-id.iam.gserviceaccount.com
-            preg_match('/@(.+?)\.iam\.gserviceaccount\.com/', $email, $matches);
-            $this->projectId = $matches[1] ?? 'audio-translation';
-        } else {
-            $this->projectId = config('services.google_cloud.project_id', 'audio-translation');
+        
+        // Get project ID from service account JSON file
+        $serviceAccountPath = storage_path('app/google-service-account.json');
+        if (file_exists($serviceAccountPath)) {
+            $serviceAccount = json_decode(file_get_contents($serviceAccountPath), true);
+            $this->projectId = $serviceAccount['project_id'] ?? null;
+        }
+        
+        // Fallback to config if not found
+        if (empty($this->projectId)) {
+            $this->projectId = config('services.google_cloud.project_id');
+        }
+        
+        if (empty($this->projectId)) {
+            throw new \Exception('Google Cloud project ID not configured. Please set GOOGLE_CLOUD_PROJECT_ID in .env or ensure google-service-account.json contains project_id.');
         }
     }
 
