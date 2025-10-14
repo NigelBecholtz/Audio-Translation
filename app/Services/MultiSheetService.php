@@ -271,9 +271,9 @@ class MultiSheetService
             $headers[] = $language;
         }
         
-        $col = 1;
+        $col = 'A';
         foreach ($headers as $header) {
-            $sheet->setCellValueByColumnAndRow($col, 1, $header);
+            $sheet->setCellValue($col . '1', $header);
             $col++;
         }
         
@@ -296,14 +296,14 @@ class MultiSheetService
         // Add data
         $row = 2;
         foreach ($sourceData as $index => $sourceText) {
-            $col = 1;
-            $sheet->setCellValueByColumnAndRow($col, $row, $sourceText);
-            $col++;
+            $colIndex = 0;
+            $sheet->setCellValue(\PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex + 1) . $row, $sourceText);
+            $colIndex++;
             
             foreach ($translations as $language => $languageTranslations) {
                 $translatedText = $languageTranslations[$index] ?? '';
-                $sheet->setCellValueByColumnAndRow($col, $row, $translatedText);
-                $col++;
+                $sheet->setCellValue(\PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex + 1) . $row, $translatedText);
+                $colIndex++;
             }
             $row++;
         }
