@@ -219,13 +219,13 @@
 
                         <!-- Smart Fallback Info -->
                         <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                            <h3 class="text-sm font-semibold text-green-900 mb-2">🧠 Smart Fallback Mode:</h3>
+                            <h3 class="text-sm font-semibold text-green-900 mb-2">🧠 Smart Fallback Mode (Powered by OpenAI):</h3>
                             <p class="text-sm text-green-800 mb-2">
                                 <strong>If your file doesn't match the standard format, we'll automatically:</strong>
                             </p>
                             <ul class="text-sm text-green-800 space-y-1">
-                                <li>• <strong>Detect the source language</strong> automatically</li>
-                                <li>• <strong>Translate to preset languages</strong> in specific order</li>
+                                <li>• <strong>Detect the source language</strong> using GPT-4o-mini</li>
+                                <li>• <strong>Translate to preset languages</strong> with AI-powered translations</li>
                                 <li>• <strong>Create separate sheets</strong> for each language</li>
                                 <li>• <strong>Download as XLSX</strong> with multiple sheets in one file</li>
                             </ul>
@@ -233,7 +233,7 @@
                                 <strong>Preset Order:</strong> EN → ES → AL (Albanian) → BG → SK → LV → FI → GR (Greek) → NL → FR → IT → RO → CA
                             </p>
                             <p class="text-xs text-green-700 mt-1">
-                                Perfect for any text file - just upload and let AI do the work! One file with multiple sheets.
+                                ✨ Powered by OpenAI's GPT-4o-mini for high-quality translations! One file with multiple sheets.
                             </p>
                         </div>
 
