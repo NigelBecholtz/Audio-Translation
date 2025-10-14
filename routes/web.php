@@ -85,5 +85,12 @@ Route::middleware(['auth', 'throttle:60,1'])->group(function () {
         Route::post('/users/{user}/add-credits', [AdminController::class, 'addCredits'])->name('users.add-credits');
         Route::post('/users/{user}/remove-credits', [AdminController::class, 'removeCredits'])->name('users.remove-credits');
         Route::get('/users/{user}/credit-history', [AdminController::class, 'creditHistory'])->name('users.credit-history');
+        
+        // CSV Translation Routes
+        Route::get('/csv-translations', [AdminController::class, 'csvTranslations'])->name('csv-translations');
+        Route::post('/csv-translations/upload', [AdminController::class, 'uploadCsvTranslation'])->name('csv-translations.upload');
+        Route::get('/csv-translations/download/{filename}', [AdminController::class, 'downloadCsvTranslation'])->name('csv-translations.download');
+        Route::post('/csv-translations/status', [AdminController::class, 'checkCsvStatus'])->name('csv-translations.status');
+        Route::delete('/csv-translations/{filename}', [AdminController::class, 'deleteCsvTranslation'])->name('csv-translations.delete');
     });
 });

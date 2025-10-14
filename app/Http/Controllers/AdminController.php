@@ -6,8 +6,11 @@ use App\Models\Payment;
 use App\Models\User;
 use App\Models\AudioFile;
 use App\Models\CreditTransaction;
+use App\Jobs\TranslateCsvJob;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class AdminController extends Controller
 {
@@ -190,5 +193,137 @@ class AdminController extends Controller
             ->paginate(20);
 
         return view('admin.credit-history', compact('user', 'transactions'));
+    }
+
+    /**
+     * Show CSV translation page
+     */
+    public function csvTranslations()
+    {
+        // Get list of previous translations
+        $translations = Storage::disk('public')->files('csv-translations');
+        $translationFiles = [];
+        
+        foreach ($translations as $file) {
+            if (str_ends_with($file, '.csv')) {
+                $translationFiles[] = [
+                    'name' => basename($file),
+                    'path' => $file,
+                    'size' => Storage::disk('public')->size($file),
+                    'modified' => Storage::disk('public')->lastModified($file),
+                ];
+            }
+        }
+
+        // Sort by modified date, newest first
+        usort($translationFiles, fn($a, $b) => $b['modified'] - $a['modified']);
+
+        return view('admin.csv-translations', compact('translationFiles'));
+    }
+
+    /**
+     * Upload and process CSV translation
+     */
+    public function uploadCsvTranslation(Request $request)
+    {
+        $request->validate([
+            'csv_file' => 'required|file|mimes:csv,txt|max:10240', // Max 10MB
+        ]);
+
+        try {
+            $file = $request->file('csv_file');
+            $originalFilename = $file->getClientOriginalName();
+            $filename = time() . '_' . $originalFilename;
+            
+            // Store uploaded file
+            $inputPath = $file->storeAs('csv-translations/input', $filename, 'public');
+            
+            // Prepare output path
+            $outputFilename = time() . '_translated_' . $originalFilename;
+            $outputPath = 'csv-translations/' . $outputFilename;
+
+            Log::info('CSV translation upload received', [
+                'admin_id' => auth()->id(),
+                'filename' => $originalFilename,
+                'size' => $file->getSize()
+            ]);
+
+            // Dispatch job for async processing
+            TranslateCsvJob::dispatch($inputPath, $outputPath, auth()->id());
+
+            return redirect()->route('admin.csv-translations')
+                ->with('success', 'CSV file uploaded successfully! Translation is processing in the background. This may take several minutes.');
+
+        } catch (\Exception $e) {
+            Log::error('CSV upload failed', [
+                'admin_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
+            
+            return back()->with('error', 'Upload failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Download translated CSV file
+     */
+    public function downloadCsvTranslation(string $filename)
+    {
+        $path = 'csv-translations/' . $filename;
+        
+        if (!Storage::disk('public')->exists($path)) {
+            return back()->with('error', 'File not found.');
+        }
+
+        return Storage::disk('public')->download($path);
+    }
+
+    /**
+     * Check CSV translation status (AJAX endpoint)
+     */
+    public function checkCsvStatus(Request $request)
+    {
+        $filename = $request->input('filename');
+        $statusPath = 'csv-translations/' . str_replace('.csv', '_status.json', $filename);
+        
+        if (Storage::disk('public')->exists($statusPath)) {
+            $status = json_decode(Storage::disk('public')->get($statusPath), true);
+            return response()->json($status);
+        }
+
+        // Check if output file exists (for backward compatibility)
+        $outputPath = 'csv-translations/' . $filename;
+        if (Storage::disk('public')->exists($outputPath)) {
+            return response()->json([
+                'status' => 'completed',
+                'output_file' => $filename
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'processing'
+        ]);
+    }
+
+    /**
+     * Delete CSV translation file
+     */
+    public function deleteCsvTranslation(string $filename)
+    {
+        $path = 'csv-translations/' . $filename;
+        
+        if (Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
+            
+            // Also delete status file if exists
+            $statusPath = str_replace('.csv', '_status.json', $path);
+            if (Storage::disk('public')->exists($statusPath)) {
+                Storage::disk('public')->delete($statusPath);
+            }
+            
+            return back()->with('success', 'File deleted successfully.');
+        }
+
+        return back()->with('error', 'File not found.');
     }
 }
