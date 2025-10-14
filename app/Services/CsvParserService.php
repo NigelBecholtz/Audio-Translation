@@ -96,6 +96,9 @@ class CsvParserService
         }
 
         try {
+            // Write UTF-8 BOM for proper encoding
+            fwrite($handle, "\xEF\xBB\xBF");
+
             // Write headers
             fputcsv($handle, $headers, ';');
 
@@ -103,7 +106,17 @@ class CsvParserService
             foreach ($data as $row) {
                 $rowData = [];
                 foreach ($headers as $header) {
-                    $rowData[] = $row[$header] ?? '';
+                    $value = $row[$header] ?? '';
+                    
+                    // Decode HTML entities and ensure proper UTF-8 encoding
+                    $value = html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    
+                    // Ensure the string is properly UTF-8 encoded
+                    if (!mb_check_encoding($value, 'UTF-8')) {
+                        $value = mb_convert_encoding($value, 'UTF-8', 'auto');
+                    }
+                    
+                    $rowData[] = $value;
                 }
                 fputcsv($handle, $rowData, ';');
             }

@@ -137,7 +137,12 @@ class GoogleTranslationService
                 }
 
                 foreach ($data['translations'] as $translation) {
-                    $allTranslations[] = $translation['translatedText'] ?? '';
+                    $translatedText = $translation['translatedText'] ?? '';
+                    
+                    // Decode HTML entities to proper UTF-8 characters
+                    $translatedText = html_entity_decode($translatedText, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    
+                    $allTranslations[] = $translatedText;
                 }
                 
                 // Rate limiting: small delay between chunks
