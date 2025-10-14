@@ -4,7 +4,11 @@ namespace App\Services;
 
 use Exception;
 use Illuminate\Support\Facades\Log;
-use ZipArchive;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class MultiSheetService
 {
@@ -20,9 +24,41 @@ class MultiSheetService
      */
     public function createMultiSheetXlsx(array $sourceData, array $translations, string $sourceLanguage, string $outputPath): void
     {
-        // For now, create a CSV with all languages in separate columns
-        // This is a simplified approach - in production you might want to use PhpSpreadsheet
-        $this->createMultiLanguageCsv($sourceData, $translations, $sourceLanguage, $outputPath);
+        try {
+            $spreadsheet = new Spreadsheet();
+            
+            // Remove default sheet
+            $spreadsheet->removeSheetByIndex(0);
+            
+            // Create overview sheet with all languages
+            $this->createOverviewSheet($spreadsheet, $sourceData, $translations, $sourceLanguage);
+            
+            // Create individual sheets for each language
+            foreach ($translations as $language => $languageTranslations) {
+                $this->createLanguageSheet($spreadsheet, $sourceData, $languageTranslations, $sourceLanguage, $language);
+            }
+            
+            // Set first sheet as active
+            $spreadsheet->setActiveSheetIndex(0);
+            
+            // Save the file
+            $writer = new Xlsx($spreadsheet);
+            $writer->save($outputPath);
+            
+            Log::info('Multi-sheet XLSX created', [
+                'file' => basename($outputPath),
+                'source_language' => $sourceLanguage,
+                'sheets' => count($translations) + 1, // +1 for overview sheet
+                'rows' => count($sourceData)
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to create multi-sheet XLSX', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
     }
 
     /**
@@ -212,5 +248,115 @@ class MultiSheetService
         }
         
         return $content;
+    }
+
+    /**
+     * Create overview sheet with all languages
+     */
+    private function createOverviewSheet(Spreadsheet $spreadsheet, array $sourceData, array $translations, string $sourceLanguage): void
+    {
+        $sheet = $spreadsheet->createSheet();
+        $sheet->setTitle('Overview');
+        
+        // Create headers
+        $headers = [$sourceLanguage];
+        foreach (array_keys($translations) as $language) {
+            $headers[] = $language;
+        }
+        
+        $col = 1;
+        foreach ($headers as $header) {
+            $sheet->setCellValueByColumnAndRow($col, 1, $header);
+            $col++;
+        }
+        
+        // Style headers
+        $headerRange = 'A1:' . \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers)) . '1';
+        $sheet->getStyle($headerRange)->applyFromArray([
+            'font' => ['bold' => true],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => 'E3F2FD']
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => '000000']
+                ]
+            ]
+        ]);
+        
+        // Add data
+        $row = 2;
+        foreach ($sourceData as $index => $sourceText) {
+            $col = 1;
+            $sheet->setCellValueByColumnAndRow($col, $row, $sourceText);
+            $col++;
+            
+            foreach ($translations as $language => $languageTranslations) {
+                $translatedText = $languageTranslations[$index] ?? '';
+                $sheet->setCellValueByColumnAndRow($col, $row, $translatedText);
+                $col++;
+            }
+            $row++;
+        }
+        
+        // Auto-size columns
+        foreach (range('A', \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers))) as $column) {
+            $sheet->getColumnDimension($column)->setAutoSize(true);
+        }
+    }
+
+    /**
+     * Create individual sheet for a specific language
+     */
+    private function createLanguageSheet(Spreadsheet $spreadsheet, array $sourceData, array $languageTranslations, string $sourceLanguage, string $targetLanguage): void
+    {
+        $sheet = $spreadsheet->createSheet();
+        $sheet->setTitle($targetLanguage);
+        
+        // Create headers
+        $sheet->setCellValue('A1', $sourceLanguage);
+        $sheet->setCellValue('B1', $targetLanguage);
+        
+        // Style headers
+        $sheet->getStyle('A1:B1')->applyFromArray([
+            'font' => ['bold' => true],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => 'E8F5E8']
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => '000000']
+                ]
+            ]
+        ]);
+        
+        // Add data
+        $row = 2;
+        foreach ($sourceData as $index => $sourceText) {
+            $translatedText = $languageTranslations[$index] ?? '';
+            
+            $sheet->setCellValue('A' . $row, $sourceText);
+            $sheet->setCellValue('B' . $row, $translatedText);
+            $row++;
+        }
+        
+        // Auto-size columns
+        $sheet->getColumnDimension('A')->setAutoSize(true);
+        $sheet->getColumnDimension('B')->setAutoSize(true);
+        
+        // Add borders to data
+        $dataRange = 'A1:B' . (count($sourceData) + 1);
+        $sheet->getStyle($dataRange)->applyFromArray([
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => 'CCCCCC']
+                ]
+            ]
+        ]);
     }
 }

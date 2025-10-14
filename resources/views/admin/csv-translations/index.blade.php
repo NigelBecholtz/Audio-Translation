@@ -226,11 +226,11 @@
                             <ul class="text-sm text-green-800 space-y-1">
                                 <li>• <strong>Detect the source language</strong> automatically</li>
                                 <li>• <strong>Translate to 20+ popular languages</strong></li>
-                                <li>• <strong>Create separate files</strong> for each language</li>
-                                <li>• <strong>Download as ZIP</strong> with individual CSV files</li>
+                                <li>• <strong>Create separate sheets</strong> for each language</li>
+                                <li>• <strong>Download as XLSX</strong> with multiple sheets in one file</li>
                             </ul>
                             <p class="text-xs text-green-700 mt-2">
-                                Perfect for any text file - just upload and let AI do the work!
+                                Perfect for any text file - just upload and let AI do the work! One file with multiple sheets.
                             </p>
                         </div>
 

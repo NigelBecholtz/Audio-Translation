@@ -311,9 +311,8 @@ class CsvTranslationController extends Controller
                 return back()->with('error', 'Failed to translate to any target languages');
             }
             
-            // Create multi-sheet output
-            $outputExtension = 'zip'; // Use ZIP for multiple files
-            $outputFilename = 'smart_translations_' . time() . '_' . uniqid() . '.zip';
+            // Create multi-sheet XLSX output
+            $outputFilename = 'smart_translations_' . time() . '_' . uniqid() . '.xlsx';
             $outputPath = storage_path('app/public/temp/' . $outputFilename);
             
             // Ensure temp directory exists
@@ -322,8 +321,8 @@ class CsvTranslationController extends Controller
                 mkdir($tempDir, 0755, true);
             }
             
-            // Create ZIP with separate files for each language
-            $this->multiSheetService->createLanguageZip($sourceTexts, $translations, $detectedLanguage, $outputPath);
+            // Create XLSX with separate sheets for each language
+            $this->multiSheetService->createMultiSheetXlsx($sourceTexts, $translations, $detectedLanguage, $outputPath);
             
             Log::info('Smart fallback completed', [
                 'file' => $originalName,
