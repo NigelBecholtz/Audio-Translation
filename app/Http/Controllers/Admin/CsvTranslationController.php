@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\CsvTranslationJob;
+use App\Jobs\ProcessCsvTranslationJob;
 use App\Services\GoogleTranslationService;
 use App\Services\CsvParserService;
 use App\Services\LanguageDetectionService;
@@ -39,7 +41,7 @@ class CsvTranslationController extends Controller
     }
 
     /**
-     * Process uploaded CSV file and return translated version
+     * Process uploaded CSV file using queue for background processing
      */
     public function process(Request $request)
     {
@@ -54,12 +56,12 @@ class CsvTranslationController extends Controller
                 'required',
                 'file',
                 'mimes:csv,txt,xlsx',
-                'max:10240', // 10MB max
+                'max:102400', // Increased to 100MB for large files
             ]
         ], [
             'csv_file.required' => 'Please upload a CSV or XLSX file',
             'csv_file.mimes' => 'File must be a CSV or XLSX file',
-            'csv_file.max' => 'File size must not exceed 10MB',
+            'csv_file.max' => 'File size must not exceed 100MB',
         ]);
 
         Log::info('File validation passed');
@@ -74,7 +76,7 @@ class CsvTranslationController extends Controller
                 'mime_type' => $file->getMimeType()
             ]);
             
-            // Use Laravel's public disk temp directory instead
+            // Store file
             $extension = $file->getClientOriginalExtension();
             $tempFilename = 'file_upload_' . time() . '_' . uniqid() . '.' . $extension;
             $tempPath = $file->storeAs('temp', $tempFilename, 'public');
@@ -121,111 +123,31 @@ class CsvTranslationController extends Controller
                 }
             }
 
-            if ($useSmartFallback) {
-                return $this->processSmartFallback($fullPath, $originalName, $request);
-            }
-
-            Log::info('File translation started', [
-                'file' => $originalName,
-                'rows' => $validation['rows'],
-                'languages' => $validation['languages']
-            ]);
-
-            // Parse file
-            $parsed = $this->csvParser->parse($fullPath);
-            $headers = $parsed['headers'];
-            $data = $parsed['data'];
-
-            // Get target language columns (exclude 'en')
-            $allTargetLanguages = array_diff($headers, ['en']);
-            
-            // Check if specific languages were selected
+            // Get selected languages
             $selectedLanguages = $request->input('languages', []);
-            $targetLanguages = $allTargetLanguages;
-            
-            // If specific languages were selected, only translate those
-            if (!empty($selectedLanguages)) {
-                $targetLanguages = array_intersect($allTargetLanguages, $selectedLanguages);
-                
-                // Add missing selected languages as new columns if they don't exist
-                foreach ($selectedLanguages as $lang) {
-                    if (!in_array($lang, $headers)) {
-                        $headers[] = $lang;
-                        // Add empty column to all data rows
-                        foreach ($data as $index => $row) {
-                            $data[$index][$lang] = '';
-                        }
-                    }
-                }
-            }
 
-            $translationsNeeded = 0;
-            $translationsCompleted = 0;
-
-            // Process each target language
-            foreach ($targetLanguages as $targetLang) {
-                // Collect texts that need translation for this language
-                $textsToTranslate = [];
-                $rowIndices = [];
-
-                foreach ($data as $index => $row) {
-                    // Only translate if cell is empty and source text exists
-                    if (empty($row[$targetLang]) && !empty($row['en'])) {
-                        $textsToTranslate[] = $row['en'];
-                        $rowIndices[] = $index;
-                        $translationsNeeded++;
-                    }
-                }
-
-                // Batch translate all texts for this language
-                if (!empty($textsToTranslate)) {
-                    try {
-                        $translations = $this->translationService->translateBatch($textsToTranslate, $targetLang);
-                        
-                        // Update data with translations
-                        foreach ($rowIndices as $idx => $rowIndex) {
-                            if (isset($translations[$idx])) {
-                                $data[$rowIndex][$targetLang] = $translations[$idx];
-                                $translationsCompleted++;
-                            }
-                        }
-
-                        Log::info("Translated {$targetLang}", [
-                            'count' => count($textsToTranslate),
-                            'language' => $targetLang
-                        ]);
-
-                    } catch (\Exception $e) {
-                        Log::warning("Failed to translate {$targetLang}: " . $e->getMessage());
-                        // Continue with other languages even if one fails
-                    }
-                }
-            }
-
-            // Export to new file (use public disk temp directory)
-            $outputExtension = $extension === 'xlsx' ? 'xlsx' : 'csv';
-            $outputFilename = 'translated_' . time() . '_' . uniqid() . '.' . $outputExtension;
-            $outputPath = storage_path('app/public/temp/' . $outputFilename);
-            
-            // Ensure temp directory exists in public storage
-            $tempDir = storage_path('app/public/temp');
-            if (!file_exists($tempDir)) {
-                mkdir($tempDir, 0755, true);
-            }
-
-            $this->csvParser->exportToCsv($headers, $data, $outputPath);
-
-            // Cleanup original upload
-            Storage::disk('public')->delete($tempPath);
-
-            Log::info('File translation completed', [
-                'file' => $originalName,
-                'translations_needed' => $translationsNeeded,
-                'translations_completed' => $translationsCompleted
+            // Create translation job record
+            $translationJob = CsvTranslationJob::create([
+                'user_id' => auth()->id(),
+                'original_filename' => $originalName,
+                'file_path' => $tempPath,
+                'status' => 'pending',
+                'target_languages' => !empty($selectedLanguages) ? $selectedLanguages : null,
+                'use_smart_fallback' => $useSmartFallback,
             ]);
 
-            // Return file download and cleanup after download
-            return response()->download($outputPath, 'translated_' . $originalName)->deleteFileAfterSend(true);
+            // Dispatch job to queue
+            ProcessCsvTranslationJob::dispatch($translationJob);
+
+            Log::info('Translation job created and dispatched', [
+                'job_id' => $translationJob->id,
+                'file' => $originalName,
+                'use_smart_fallback' => $useSmartFallback
+            ]);
+
+            // Redirect to status page
+            return redirect()->route('admin.csv-translations.status', $translationJob->id)
+                ->with('success', 'File uploaded! Translation is processing in the background. This page will update automatically.');
 
         } catch (\Exception $e) {
             Log::error('File translation failed', [
@@ -237,12 +159,74 @@ class CsvTranslationController extends Controller
             if (isset($tempPath)) {
                 Storage::disk('public')->delete($tempPath);
             }
-            if (isset($outputPath) && file_exists($outputPath)) {
-                unlink($outputPath);
-            }
 
             return back()->with('error', 'Translation failed: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Show translation job status
+     */
+    public function status(CsvTranslationJob $job)
+    {
+        // Ensure user can only see their own jobs (or admin sees all)
+        if (!auth()->user()->is_admin && $job->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized');
+        }
+
+        return view('admin.csv-translations.status', compact('job'));
+    }
+
+    /**
+     * API endpoint for polling job status
+     */
+    public function statusApi(CsvTranslationJob $job)
+    {
+        // Ensure user can only see their own jobs (or admin sees all)
+        if (!auth()->user()->is_admin && $job->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized');
+        }
+
+        return response()->json([
+            'status' => $job->status,
+            'progress_percentage' => $job->progress_percentage,
+            'processed_items' => $job->processed_items,
+            'total_items' => $job->total_items,
+            'failed_items' => $job->failed_items,
+            'error_message' => $job->error_message,
+            'is_completed' => $job->isCompleted(),
+            'is_failed' => $job->isFailed(),
+            'download_url' => $job->isCompleted() ? route('admin.csv-translations.download', $job->id) : null,
+        ]);
+    }
+
+    /**
+     * Download translated file
+     */
+    public function download(CsvTranslationJob $job)
+    {
+        // Ensure user can only download their own jobs (or admin downloads all)
+        if (!auth()->user()->is_admin && $job->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized');
+        }
+
+        if (!$job->isCompleted()) {
+            return back()->with('error', 'Translation is not yet completed');
+        }
+
+        if (!$job->output_path) {
+            return back()->with('error', 'Output file not found');
+        }
+
+        $fullPath = storage_path('app/public/' . $job->output_path);
+
+        if (!file_exists($fullPath)) {
+            return back()->with('error', 'Output file no longer exists');
+        }
+
+        $downloadName = 'translated_' . $job->original_filename;
+
+        return response()->download($fullPath, $downloadName);
     }
 
     /**
@@ -266,167 +250,6 @@ class CsvTranslationController extends Controller
             return false;
         } catch (\Exception $e) {
             return false;
-        }
-    }
-
-    /**
-     * Process file with smart fallback (language detection + multi-sheet output)
-     */
-    private function processSmartFallback(string $filePath, string $originalName, Request $request)
-    {
-        try {
-            Log::info('Smart fallback process started', [
-                'file_path' => $filePath,
-                'original_name' => $originalName
-            ]);
-            
-            // Parse file to get raw data
-            Log::info('Parsing file for smart fallback');
-            $parsed = $this->csvParser->parse($filePath);
-            $data = $parsed['data'];
-            
-            Log::info('File parsed successfully', [
-                'data_count' => count($data),
-                'headers' => $parsed['headers'] ?? 'No headers'
-            ]);
-            
-            // Extract all text content from the file
-            $sourceTexts = [];
-            foreach ($data as $row) {
-                foreach ($row as $value) {
-                    $text = trim($value);
-                    if (!empty($text)) {
-                        $sourceTexts[] = $text;
-                    }
-                }
-            }
-            
-            Log::info('Text extraction completed', [
-                'source_texts_count' => count($sourceTexts),
-                'sample_texts' => array_slice($sourceTexts, 0, 3)
-            ]);
-            
-            if (empty($sourceTexts)) {
-                Log::error('No text content found in file');
-                return back()->with('error', 'No text content found in file');
-            }
-            
-            // Detect source language from first few texts
-            $sampleText = implode(' ', array_slice($sourceTexts, 0, 3));
-            Log::info('Detecting language', ['sample_text' => $sampleText]);
-            
-            try {
-                $detectedLanguage = $this->languageDetection->detectLanguage($sampleText);
-                Log::info('Language detection successful', ['detected_language' => $detectedLanguage]);
-            } catch (\Exception $e) {
-                Log::error('Language detection failed', [
-                    'error' => $e->getMessage(),
-                    'file' => $e->getFile(),
-                    'line' => $e->getLine()
-                ]);
-                $detectedLanguage = 'en'; // Fallback to English
-            }
-            
-            Log::info('Smart fallback processing', [
-                'file' => $originalName,
-                'detected_language' => $detectedLanguage,
-                'text_count' => count($sourceTexts)
-            ]);
-            
-            // Get preset languages for translation (in specific order)
-            $presetLanguages = $this->languageDetection->getPresetLanguages();
-            
-            // Remove detected language from target languages if it's in the list
-            $targetLanguages = array_filter($presetLanguages, function($lang) use ($detectedLanguage) {
-                return $lang !== $detectedLanguage;
-            });
-            
-            Log::info('Using preset language configuration', [
-                'preset_languages' => $presetLanguages,
-                'target_languages' => array_values($targetLanguages),
-                'detected_language' => $detectedLanguage
-            ]);
-            
-            $translations = [];
-            $translationsCompleted = 0;
-            
-            // Translate to each target language
-            Log::info('Starting translation process', [
-                'target_languages' => $targetLanguages,
-                'source_texts_count' => count($sourceTexts)
-            ]);
-            
-            foreach ($targetLanguages as $targetLang) {
-                try {
-                    Log::info("Starting translation for {$targetLang}");
-                    $translatedTexts = $this->translationService->translateBatch($sourceTexts, $targetLang);
-                    $translations[$targetLang] = $translatedTexts;
-                    $translationsCompleted += count($translatedTexts);
-                    
-                    Log::info("Smart fallback translated {$targetLang}", [
-                        'count' => count($translatedTexts),
-                        'language' => $targetLang
-                    ]);
-                    
-                } catch (\Exception $e) {
-                    Log::error("Smart fallback failed for {$targetLang}", [
-                        'error' => $e->getMessage(),
-                        'file' => $e->getFile(),
-                        'line' => $e->getLine()
-                    ]);
-                    // Continue with other languages
-                }
-            }
-            
-            if (empty($translations)) {
-                return back()->with('error', 'Failed to translate to any target languages');
-            }
-            
-            // Create multi-sheet XLSX output
-            $outputFilename = 'smart_translations_' . time() . '_' . uniqid() . '.xlsx';
-            $outputPath = storage_path('app/public/temp/' . $outputFilename);
-            
-            // Ensure temp directory exists
-            $tempDir = storage_path('app/public/temp');
-            if (!file_exists($tempDir)) {
-                mkdir($tempDir, 0755, true);
-            }
-            
-            // Create XLSX with separate sheets for each language
-            try {
-                Log::info('Creating multi-sheet XLSX', [
-                    'output_path' => $outputPath,
-                    'translations_count' => count($translations)
-                ]);
-                $this->multiSheetService->createMultiSheetXlsx($sourceTexts, $translations, $detectedLanguage, $outputPath);
-                Log::info('Multi-sheet XLSX created successfully');
-            } catch (\Exception $e) {
-                Log::error('Failed to create multi-sheet XLSX', [
-                    'error' => $e->getMessage(),
-                    'file' => $e->getFile(),
-                    'line' => $e->getLine()
-                ]);
-                throw $e; // Re-throw to be caught by outer catch
-            }
-            
-            Log::info('Smart fallback completed', [
-                'file' => $originalName,
-                'source_language' => $detectedLanguage,
-                'target_languages' => array_keys($translations),
-                'translations_completed' => $translationsCompleted
-            ]);
-            
-            return response()->download($outputPath, $outputFilename)->deleteFileAfterSend(true);
-            
-        } catch (\Exception $e) {
-            Log::error('Smart fallback failed', [
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return back()->with('error', 'Smart fallback failed: ' . $e->getMessage());
         }
     }
 }

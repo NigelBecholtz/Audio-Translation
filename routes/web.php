@@ -89,5 +89,8 @@ Route::middleware(['auth', 'throttle:60,1'])->group(function () {
         // CSV Translation Routes
         Route::get('/csv-translations', [\App\Http\Controllers\Admin\CsvTranslationController::class, 'index'])->name('csv-translations.index');
         Route::post('/csv-translations/process', [\App\Http\Controllers\Admin\CsvTranslationController::class, 'process'])->name('csv-translations.process');
+        Route::get('/csv-translations/{job}/status', [\App\Http\Controllers\Admin\CsvTranslationController::class, 'status'])->name('csv-translations.status');
+        Route::get('/csv-translations/{job}/status-api', [\App\Http\Controllers\Admin\CsvTranslationController::class, 'statusApi'])->name('csv-translations.status-api');
+        Route::get('/csv-translations/{job}/download', [\App\Http\Controllers\Admin\CsvTranslationController::class, 'download'])->name('csv-translations.download');
     });
 });

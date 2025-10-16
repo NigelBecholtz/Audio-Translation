@@ -61,7 +61,7 @@
                                 required
                                 class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none focus:border-blue-500"
                             >
-                            <p class="mt-1 text-sm text-gray-500">Maximum file size: 10MB. Supports CSV and XLSX files.</p>
+                            <p class="mt-1 text-sm text-gray-500">Maximum file size: 100MB. Supports CSV and XLSX files.</p>
                         </div>
 
                         <!-- Language Selector -->
@@ -203,19 +203,31 @@
                             </div>
                         </div>
 
-                        <!-- Info Box -->
-                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                            <h3 class="text-sm font-semibold text-blue-900 mb-2">File Format Requirements:</h3>
-                            <ul class="text-sm text-blue-800 space-y-1">
-                                <li>• <strong>CSV:</strong> Delimiter: <strong>semicolon (;)</strong></li>
-                                <li>• <strong>XLSX:</strong> Standard Excel format</li>
-                                <li>• First column: <strong>en</strong> (English source text) - REQUIRED</li>
-                                <li>• Other columns: target languages (es, fr, de, it, pt, ru, ja, ko, zh, ar, hi, etc.)</li>
-                                <li>• Only <strong>empty cells</strong> will be translated</li>
-                                <li>• Existing translations will be preserved</li>
-                                <li>• <strong>KEY column is optional</strong> - not required for translation</li>
-                            </ul>
-                        </div>
+            <!-- Background Processing Notice -->
+            <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
+                <h3 class="text-sm font-semibold text-purple-900 mb-2">⚡ Background Processing:</h3>
+                <ul class="text-sm text-purple-800 space-y-1">
+                    <li>• Files are processed in the background - <strong>no timeout issues!</strong></li>
+                    <li>• Upload files up to <strong>100MB</strong> (previously 10MB)</li>
+                    <li>• Perfect for <strong>huge files</strong> with 100,000+ rows</li>
+                    <li>• Track progress in real-time on the status page</li>
+                    <li>• Close your browser - come back later to download</li>
+                </ul>
+            </div>
+
+            <!-- Info Box -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 class="text-sm font-semibold text-blue-900 mb-2">File Format Requirements:</h3>
+                <ul class="text-sm text-blue-800 space-y-1">
+                    <li>• <strong>CSV:</strong> Delimiter: <strong>semicolon (;)</strong></li>
+                    <li>• <strong>XLSX:</strong> Standard Excel format</li>
+                    <li>• First column: <strong>en</strong> (English source text) - REQUIRED</li>
+                    <li>• Other columns: target languages (es, fr, de, it, pt, ru, ja, ko, zh, ar, hi, etc.)</li>
+                    <li>• Only <strong>empty cells</strong> will be translated</li>
+                    <li>• Existing translations will be preserved</li>
+                    <li>• <strong>KEY column is optional</strong> - not required for translation</li>
+                </ul>
+            </div>
 
                         <!-- Smart Fallback Info -->
                         <div class="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -265,7 +277,7 @@ Goodbye;;;;;</code></pre>
                                 </svg>
                             </button>
                             <p class="mt-2 text-sm text-gray-500 text-center">
-                                Processing may take a few minutes depending on file size
+                                Large files are processed in the background. You'll be redirected to a status page.
                             </p>
                         </div>
                     </div>
@@ -387,9 +399,9 @@ Goodbye;;;;;</code></pre>
         document.getElementById('csv_file').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
-                const maxSize = 10 * 1024 * 1024; // 10MB
+                const maxSize = 100 * 1024 * 1024; // 100MB
                 if (file.size > maxSize) {
-                    alert('File size exceeds 10MB limit');
+                    alert('File size exceeds 100MB limit');
                     e.target.value = '';
                 }
                 
