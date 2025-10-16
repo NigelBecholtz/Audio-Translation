@@ -109,7 +109,14 @@ class ProcessCsvTranslationJob implements ShouldQueue
         $this->handleEnUsColumns($data, $headers);
 
         // Get target languages
-        $targetLanguages = $this->translationJob->target_languages ?? array_diff($headers, ['en']);
+        $targetLanguages = $this->translationJob->target_languages ?? array_diff($headers, ['en', 'en_US']);
+        
+        Log::info('Standard translation target languages', [
+            'job_id' => $this->translationJob->id,
+            'selected_languages' => $this->translationJob->target_languages,
+            'headers' => $headers,
+            'final_target_languages' => $targetLanguages
+        ]);
 
         // Count total items to translate
         $totalItems = 0;
@@ -209,6 +216,10 @@ class ProcessCsvTranslationJob implements ShouldQueue
         // Parse file to get raw data
         $parsed = $csvParser->parse($fullPath);
         $data = $parsed['data'];
+        $headers = $parsed['headers'] ?? [];
+        
+        // Handle en_US columns - copy from en column
+        $this->handleEnUsColumns($data, $headers);
         
         // Extract all text content from the file
         $sourceTexts = [];
@@ -238,10 +249,21 @@ class ProcessCsvTranslationJob implements ShouldQueue
         // Get preset languages for translation
         $presetLanguages = $languageDetection->getPresetLanguages();
         
+        Log::info('Preset languages retrieved', [
+            'job_id' => $this->translationJob->id,
+            'preset_languages' => $presetLanguages,
+            'detected_language' => $detectedLanguage
+        ]);
+        
         // Remove detected language from target languages
         $targetLanguages = array_filter($presetLanguages, function($lang) use ($detectedLanguage) {
             return $lang !== $detectedLanguage;
         });
+        
+        Log::info('Target languages after filtering', [
+            'job_id' => $this->translationJob->id,
+            'target_languages' => array_values($targetLanguages)
+        ]);
         
         $totalItems = count($sourceTexts) * count($targetLanguages);
         $this->translationJob->update(['total_items' => $totalItems]);
