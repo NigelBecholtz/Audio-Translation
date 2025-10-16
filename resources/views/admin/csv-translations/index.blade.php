@@ -117,6 +117,10 @@
                                     <span class="text-sm">Arabic (ar)</span>
                                 </label>
                                 <label class="flex items-center">
+                                    <input type="checkbox" name="languages[]" value="sq" class="mr-2">
+                                    <span class="text-sm">Albanian (sq)</span>
+                                </label>
+                                <label class="flex items-center">
                                     <input type="checkbox" name="languages[]" value="hi" class="mr-2">
                                     <span class="text-sm">Hindi (hi)</span>
                                 </label>
@@ -317,6 +321,9 @@ Goodbye;;;;;</code></pre>
                     </div>
                     <div class="text-sm">
                         <span class="font-medium">ar:</span> Arabic
+                    </div>
+                    <div class="text-sm">
+                        <span class="font-medium">sq:</span> Albanian
                     </div>
                     <div class="text-sm">
                         <span class="font-medium">hi:</span> Hindi
