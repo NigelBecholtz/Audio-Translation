@@ -111,7 +111,7 @@ class LanguageDetectionService
 
     /**
      * Get preset language configuration
-     * Order: EN | ES | AL | BG | SK | LV | FI | GR | NL | FR | IT | RO | CA
+     * Order: EN | ES | DE | FR | IT | NL | RO | EL | SQ | SK | LV | BG | FI | CA
      *
      * @return array Array of language codes in specific order
      */
@@ -120,16 +120,17 @@ class LanguageDetectionService
         return [
             'en',  // English
             'es',  // Spanish
-            'sq',  // Albanian (AL)
-            'bg',  // Bulgarian
-            'sk',  // Slovak
-            'lv',  // Latvian
-            'fi',  // Finnish
-            'el',  // Greek (GR)
-            'nl',  // Dutch
+            'de',  // German
             'fr',  // French
             'it',  // Italian
+            'nl',  // Dutch
             'ro',  // Romanian
+            'el',  // Greek
+            'sq',  // Albanian
+            'sk',  // Slovak
+            'lv',  // Latvian
+            'bg',  // Bulgarian
+            'fi',  // Finnish
             'ca'   // Catalan
         ];
     }
