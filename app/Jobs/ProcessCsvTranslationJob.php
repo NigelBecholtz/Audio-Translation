@@ -105,6 +105,9 @@ class ProcessCsvTranslationJob implements ShouldQueue
         $headers = $parsed['headers'];
         $data = $parsed['data'];
 
+        // Handle en_US columns - copy from en column
+        $this->handleEnUsColumns($data, $headers);
+
         // Get target languages
         $targetLanguages = $this->translationJob->target_languages ?? array_diff($headers, ['en']);
 
@@ -292,6 +295,28 @@ class ProcessCsvTranslationJob implements ShouldQueue
         
         // Cleanup original upload
         Storage::disk('public')->delete($this->translationJob->file_path);
+    }
+
+    /**
+     * Handle en_US columns by copying values from en column
+     */
+    private function handleEnUsColumns(array &$data, array $headers): void
+    {
+        foreach ($headers as $header) {
+            if ($header === 'en_US' || strtolower($header) === 'en_us') {
+                Log::info('Found en_US column, copying values from en column');
+                
+                foreach ($data as $index => $row) {
+                    if (!empty($row['en'])) {
+                        $data[$index][$header] = $row['en'];
+                    }
+                }
+                
+                Log::info('Copied values from en to en_US column', [
+                    'rows_processed' => count($data)
+                ]);
+            }
+        }
     }
 
     /**
