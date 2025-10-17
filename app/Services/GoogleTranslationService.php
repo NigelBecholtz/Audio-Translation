@@ -131,7 +131,7 @@ class GoogleTranslationService
             $allTranslations = [];
             
             foreach ($chunks as $chunk) {
-                $response = Http::timeout(60)
+                $response = Http::timeout(300)
                     ->withHeaders([
                         'Authorization' => 'Bearer ' . $accessToken,
                         'Content-Type' => 'application/json',
