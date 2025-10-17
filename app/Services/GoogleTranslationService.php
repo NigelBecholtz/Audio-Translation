@@ -126,8 +126,8 @@ class GoogleTranslationService
             // Google Cloud Translation API v3 endpoint
             $endpoint = "https://translation.googleapis.com/v3/projects/{$this->projectId}:translateText";
             
-            // Split into chunks if needed (max 200 texts per request to stay under 30k character limit)
-            $chunks = array_chunk($nonEmptyTexts, 200);
+            // Split into chunks if needed (max 750 texts per request for optimal performance)
+            $chunks = array_chunk($nonEmptyTexts, 750);
             $allTranslations = [];
             
             foreach ($chunks as $chunk) {
