@@ -126,12 +126,12 @@ class GoogleTranslationService
             // Google Cloud Translation API v3 endpoint
             $endpoint = "https://translation.googleapis.com/v3/projects/{$this->projectId}:translateText";
             
-            // Split into chunks if needed (max 128 texts per request)
-            $chunks = array_chunk($nonEmptyTexts, 100);
+            // Split into chunks if needed (max 500 texts per request for better performance)
+            $chunks = array_chunk($nonEmptyTexts, 500);
             $allTranslations = [];
             
             foreach ($chunks as $chunk) {
-                $response = Http::timeout(30)
+                $response = Http::timeout(60)
                     ->withHeaders([
                         'Authorization' => 'Bearer ' . $accessToken,
                         'Content-Type' => 'application/json',
@@ -166,9 +166,9 @@ class GoogleTranslationService
                     $allTranslations[] = $translatedText;
                 }
                 
-                // Rate limiting: small delay between chunks
+                // Rate limiting: reduced delay for larger batches
                 if (count($chunks) > 1) {
-                    usleep(500000); // 0.5 second
+                    usleep(200000); // 0.2 second (reduced from 0.5s)
                 }
             }
 

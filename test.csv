@@ -1,0 +1,6 @@
+key;en;en_US;es_AR;ca;fr;de;pt;it;nl;ro;tr
+rental_purpose;Rental regime;;;;;;;;;;
+st_mt_rentals_with_bookings;Short (or mid-term) rentals with bookings;;;;;;;;;;
+lt_rentals_with_bookings;Long-term rentals with bookings;;;;;;;;;;
+st_lt_rentals_with_bookings;Short + long-term rentals with bookings;;;;;;;;;;
+rentals_no_booking;Long-term rentals (without bookings);;;;;;;;;;
