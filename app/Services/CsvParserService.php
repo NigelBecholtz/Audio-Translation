@@ -44,7 +44,17 @@ class CsvParserService
         $rowNumber = 0;
 
         try {
-            while (($row = fgetcsv($handle, 0, ';')) !== false) {
+            // Try comma first, then semicolon as fallback
+            $delimiter = ',';
+            $testRow = fgetcsv($handle, 0, ',');
+            if ($testRow === false || count($testRow) < 2) {
+                rewind($handle);
+                $delimiter = ';';
+            } else {
+                rewind($handle);
+            }
+            
+            while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
                 $rowNumber++;
                 
                 // First row contains headers
@@ -123,8 +133,8 @@ class CsvParserService
             // Write UTF-8 BOM for proper encoding
             fwrite($handle, "\xEF\xBB\xBF");
 
-            // Write headers
-            fputcsv($handle, $headers, ';');
+            // Write headers with proper Excel formatting
+            fputcsv($handle, $headers, ',', '"');
 
             // Write data rows
             foreach ($data as $row) {
@@ -140,9 +150,12 @@ class CsvParserService
                         $value = mb_convert_encoding($value, 'UTF-8', 'auto');
                     }
                     
+                    // Escape special characters for Excel compatibility
+                    $value = str_replace(["\r\n", "\r", "\n"], " ", $value);
+                    
                     $rowData[] = $value;
                 }
-                fputcsv($handle, $rowData, ';');
+                fputcsv($handle, $rowData, ',', '"');
             }
 
             fclose($handle);
