@@ -132,7 +132,7 @@ class ProcessCsvTranslationJob implements ShouldQueue
 
         $processedItems = 0;
 
-        // Process each target language
+        // Process each target language (can be parallelized in future)
         foreach ($targetLanguages as $targetLang) {
             // Collect texts that need translation for this language
             $textsToTranslate = [];
@@ -149,8 +149,8 @@ class ProcessCsvTranslationJob implements ShouldQueue
             // Batch translate all texts for this language (with chunking for large files)
             if (!empty($textsToTranslate)) {
                 try {
-                    // Process in chunks of 50 for large files to prevent timeout
-                    $chunkSize = 50;
+                    // Process in larger chunks for better performance
+                    $chunkSize = 100;
                     $chunks = array_chunk($textsToTranslate, $chunkSize);
                     $chunkIndices = array_chunk($rowIndices, $chunkSize);
                     
@@ -177,9 +177,9 @@ class ProcessCsvTranslationJob implements ShouldQueue
                             'language' => $targetLang
                         ]);
                         
-                        // Small delay between chunks to prevent rate limiting
+                        // Reduced delay for faster processing
                         if (count($chunks) > 1) {
-                            sleep(2);
+                            sleep(1);
                         }
                     }
 
@@ -283,8 +283,8 @@ class ProcessCsvTranslationJob implements ShouldQueue
         // Translate to each target language with chunking
         foreach ($targetLanguages as $targetLang) {
             try {
-                // Process in chunks of 50 for large files
-                $chunkSize = 50;
+                // Process in larger chunks for better performance
+                $chunkSize = 100;
                 $chunks = array_chunk($sourceTexts, $chunkSize);
                 $translatedTexts = [];
                 
@@ -299,9 +299,9 @@ class ProcessCsvTranslationJob implements ShouldQueue
                         'language' => $targetLang
                     ]);
                     
-                    // Small delay between chunks
+                    // Reduced delay for faster processing
                     if (count($chunks) > 1) {
-                        sleep(2);
+                        sleep(1);
                     }
                 }
                 
