@@ -211,9 +211,9 @@ class ExcelParserService
             $worksheet = $spreadsheet->getActiveSheet();
             
             // Set headers (row 1)
-            $col = 1;
+            $col = 'A';
             foreach ($headers as $header) {
-                $worksheet->setCellValueByColumnAndRow($col, 1, $header);
+                $worksheet->setCellValue($col . '1', $header);
                 $col++;
             }
             
@@ -224,7 +224,7 @@ class ExcelParserService
             // Set data (starting from row 2)
             $row = 2;
             foreach ($data as $rowData) {
-                $col = 1;
+                $col = 'A';
                 foreach ($headers as $header) {
                     $value = $rowData[$header] ?? '';
                     
@@ -233,15 +233,15 @@ class ExcelParserService
                     $value = str_replace(["\r\n", "\r", "\n"], " ", $value);
                     
                     // Set cell value
-                    $worksheet->setCellValueByColumnAndRow($col, $row, $value);
+                    $worksheet->setCellValue($col . $row, $value);
                     $col++;
                 }
                 $row++;
             }
             
             // Auto-size columns
-            foreach (range(1, count($headers)) as $col) {
-                $worksheet->getColumnDimensionByColumn($col)->setAutoSize(true);
+            foreach (range('A', chr(ord('A') + count($headers) - 1)) as $col) {
+                $worksheet->getColumnDimension($col)->setAutoSize(true);
             }
             
             // Create writer and save
@@ -284,7 +284,7 @@ class ExcelParserService
             fwrite($handle, "\xEF\xBB\xBF");
 
             // Write headers with proper Excel formatting
-            fputcsv($handle, $headers, ',', '"');
+            fputcsv($handle, $headers, ',', '"', '\\');
 
             // Write data rows
             foreach ($data as $row) {
@@ -305,7 +305,7 @@ class ExcelParserService
                     
                     $rowData[] = $value;
                 }
-                fputcsv($handle, $rowData, ',', '"');
+                fputcsv($handle, $rowData, ',', '"', '\\');
             }
 
             fclose($handle);

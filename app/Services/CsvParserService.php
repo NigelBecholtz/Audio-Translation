@@ -46,7 +46,7 @@ class CsvParserService
         try {
             // Try comma first, then semicolon as fallback
             $delimiter = ',';
-            $testRow = fgetcsv($handle, 0, ',');
+            $testRow = fgetcsv($handle, 0, ',', '"', '\\');
             if ($testRow === false || count($testRow) < 2) {
                 rewind($handle);
                 $delimiter = ';';
@@ -54,7 +54,7 @@ class CsvParserService
                 rewind($handle);
             }
             
-            while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
+            while (($row = fgetcsv($handle, 0, $delimiter, '"', '\\')) !== false) {
                 $rowNumber++;
                 
                 // First row contains headers
@@ -134,7 +134,7 @@ class CsvParserService
             fwrite($handle, "\xEF\xBB\xBF");
 
             // Write headers with proper Excel formatting
-            fputcsv($handle, $headers, ',', '"');
+            fputcsv($handle, $headers, ',', '"', '\\');
 
             // Write data rows
             foreach ($data as $row) {
@@ -155,7 +155,7 @@ class CsvParserService
                     
                     $rowData[] = $value;
                 }
-                fputcsv($handle, $rowData, ',', '"');
+                fputcsv($handle, $rowData, ',', '"', '\\');
             }
 
             fclose($handle);
