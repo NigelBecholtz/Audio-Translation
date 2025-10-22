@@ -183,7 +183,8 @@ class ProcessCsvTranslationJob implements ShouldQueue
         $this->translationJob->update(['processed_items' => $processedItems]);
 
         // Export to new file - always use CSV for better compatibility
-        $outputFilename = 'translated_' . time() . '_' . uniqid() . '.csv';
+        $originalName = pathinfo($this->translationJob->original_filename, PATHINFO_FILENAME);
+        $outputFilename = 'translated_' . $originalName . '_' . date('Y-m-d_H-i-s') . '.csv';
         $outputPath = 'temp/' . $outputFilename;
         $fullOutputPath = storage_path('app/public/' . $outputPath);
         
@@ -298,7 +299,8 @@ class ProcessCsvTranslationJob implements ShouldQueue
         }
         
         // Create CSV output for better compatibility
-        $outputFilename = 'smart_translations_' . time() . '_' . uniqid() . '.csv';
+        $originalName = pathinfo($this->translationJob->original_filename, PATHINFO_FILENAME);
+        $outputFilename = 'smart_translations_' . $originalName . '_' . date('Y-m-d_H-i-s') . '.csv';
         $outputPath = 'temp/' . $outputFilename;
         $fullOutputPath = storage_path('app/public/' . $outputPath);
         
