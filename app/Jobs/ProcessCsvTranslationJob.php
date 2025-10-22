@@ -16,8 +16,8 @@ class ProcessCsvTranslationJob implements ShouldQueue
 {
     use Queueable;
 
-    public $timeout = 3600; // 1 hour timeout
-    public $tries = 1; // Don't retry failed jobs automatically
+    public $timeout = 7200; // 2 hour timeout for large files
+    public $tries = 3; // Allow retries for large files
 
     /**
      * Create a new job instance.
@@ -146,31 +146,42 @@ class ProcessCsvTranslationJob implements ShouldQueue
                 }
             }
 
-            // Batch translate all texts for this language
+            // Batch translate all texts for this language (with chunking for large files)
             if (!empty($textsToTranslate)) {
                 try {
-                    $translations = $translationService->translateBatch($textsToTranslate, $targetLang);
+                    // Process in chunks of 50 for large files to prevent timeout
+                    $chunkSize = 50;
+                    $chunks = array_chunk($textsToTranslate, $chunkSize);
+                    $chunkIndices = array_chunk($rowIndices, $chunkSize);
                     
-                    // Update data with translations
-                    foreach ($rowIndices as $idx => $rowIndex) {
-                        if (isset($translations[$idx])) {
-                            $data[$rowIndex][$targetLang] = $translations[$idx];
-                            $processedItems++;
-
-                            // Update progress every 100 items
-                            if ($processedItems % 100 === 0) {
-                                $this->translationJob->update([
-                                    'processed_items' => $processedItems
-                                ]);
+                    foreach ($chunks as $chunkIndex => $chunk) {
+                        $translations = $translationService->translateBatch($chunk, $targetLang);
+                        
+                        // Update data with translations
+                        foreach ($chunkIndices[$chunkIndex] as $idx => $rowIndex) {
+                            if (isset($translations[$idx])) {
+                                $data[$rowIndex][$targetLang] = $translations[$idx];
+                                $processedItems++;
                             }
                         }
+                        
+                        // Update progress after each chunk
+                        $this->translationJob->update([
+                            'processed_items' => $processedItems
+                        ]);
+                        
+                        Log::info("Translated {$targetLang} chunk " . ($chunkIndex + 1) . "/" . count($chunks), [
+                            'job_id' => $this->translationJob->id,
+                            'chunk_size' => count($chunk),
+                            'total_processed' => $processedItems,
+                            'language' => $targetLang
+                        ]);
+                        
+                        // Small delay between chunks to prevent rate limiting
+                        if (count($chunks) > 1) {
+                            sleep(2);
+                        }
                     }
-
-                    Log::info("Translated {$targetLang}", [
-                        'job_id' => $this->translationJob->id,
-                        'count' => count($textsToTranslate),
-                        'language' => $targetLang
-                    ]);
 
                 } catch (\Exception $e) {
                     Log::warning("Failed to translate {$targetLang}: " . $e->getMessage());
@@ -269,20 +280,35 @@ class ProcessCsvTranslationJob implements ShouldQueue
         $translations = [];
         $processedItems = 0;
         
-        // Translate to each target language
+        // Translate to each target language with chunking
         foreach ($targetLanguages as $targetLang) {
             try {
-                $translatedTexts = $translationService->translateBatch($sourceTexts, $targetLang);
+                // Process in chunks of 50 for large files
+                $chunkSize = 50;
+                $chunks = array_chunk($sourceTexts, $chunkSize);
+                $translatedTexts = [];
+                
+                foreach ($chunks as $chunkIndex => $chunk) {
+                    $chunkTranslations = $translationService->translateBatch($chunk, $targetLang);
+                    $translatedTexts = array_merge($translatedTexts, $chunkTranslations);
+                    
+                    Log::info("Smart fallback translated {$targetLang} chunk " . ($chunkIndex + 1) . "/" . count($chunks), [
+                        'job_id' => $this->translationJob->id,
+                        'chunk_size' => count($chunk),
+                        'total_translated' => count($translatedTexts),
+                        'language' => $targetLang
+                    ]);
+                    
+                    // Small delay between chunks
+                    if (count($chunks) > 1) {
+                        sleep(2);
+                    }
+                }
+                
                 $translations[$targetLang] = $translatedTexts;
                 $processedItems += count($translatedTexts);
                 
                 $this->translationJob->update(['processed_items' => $processedItems]);
-                
-                Log::info("Smart fallback translated {$targetLang}", [
-                    'job_id' => $this->translationJob->id,
-                    'count' => count($translatedTexts),
-                    'language' => $targetLang
-                ]);
                 
             } catch (\Exception $e) {
                 Log::error("Smart fallback failed for {$targetLang}", [
