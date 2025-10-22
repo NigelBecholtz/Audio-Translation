@@ -205,14 +205,63 @@ class ExcelParserService
      */
     public function exportToXlsx(array $headers, array $data, string $filePath): void
     {
-        // For now, always export as CSV with .xlsx extension
-        // This ensures compatibility while we debug the PhpSpreadsheet issue
-        $this->exportToCsv($headers, $data, $filePath);
-        
-        Log::info('File exported as CSV with XLSX extension', [
-            'file' => basename($filePath),
-            'rows' => count($data)
-        ]);
+        try {
+            // Create a new Spreadsheet object
+            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            $worksheet = $spreadsheet->getActiveSheet();
+            
+            // Set headers (row 1)
+            $col = 1;
+            foreach ($headers as $header) {
+                $worksheet->setCellValueByColumnAndRow($col, 1, $header);
+                $col++;
+            }
+            
+            // Style the header row
+            $worksheet->getStyle('A1:' . \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers)) . '1')
+                ->getFont()->setBold(true);
+            
+            // Set data (starting from row 2)
+            $row = 2;
+            foreach ($data as $rowData) {
+                $col = 1;
+                foreach ($headers as $header) {
+                    $value = $rowData[$header] ?? '';
+                    
+                    // Clean the value
+                    $value = html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    $value = str_replace(["\r\n", "\r", "\n"], " ", $value);
+                    
+                    // Set cell value
+                    $worksheet->setCellValueByColumnAndRow($col, $row, $value);
+                    $col++;
+                }
+                $row++;
+            }
+            
+            // Auto-size columns
+            foreach (range(1, count($headers)) as $col) {
+                $worksheet->getColumnDimensionByColumn($col)->setAutoSize(true);
+            }
+            
+            // Create writer and save
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            $writer->save($filePath);
+            
+            Log::info('XLSX exported successfully', [
+                'file' => basename($filePath),
+                'rows' => count($data)
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('XLSX export failed', [
+                'error' => $e->getMessage(),
+                'file' => basename($filePath)
+            ]);
+            
+            // Fallback to CSV if XLSX fails
+            $this->exportToCsv($headers, $data, $filePath);
+        }
     }
 
     /**
@@ -220,6 +269,11 @@ class ExcelParserService
      */
     private function exportToCsv(array $headers, array $data, string $filePath): void
     {
+        // If the file should be XLSX but we're falling back to CSV, change extension
+        if (pathinfo($filePath, PATHINFO_EXTENSION) === 'xlsx') {
+            $filePath = str_replace('.xlsx', '.csv', $filePath);
+        }
+        
         $handle = fopen($filePath, 'w');
         if ($handle === false) {
             throw new \Exception('Could not create file');
@@ -256,7 +310,7 @@ class ExcelParserService
 
             fclose($handle);
 
-            Log::info('File exported successfully', [
+            Log::info('CSV file exported successfully', [
                 'file' => basename($filePath),
                 'rows' => count($data)
             ]);

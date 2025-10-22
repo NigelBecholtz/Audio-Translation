@@ -182,10 +182,8 @@ class ProcessCsvTranslationJob implements ShouldQueue
         // Final progress update
         $this->translationJob->update(['processed_items' => $processedItems]);
 
-        // Export to new file
-        $extension = pathinfo($this->translationJob->original_filename, PATHINFO_EXTENSION);
-        $outputExtension = $extension === 'xlsx' ? 'xlsx' : 'csv';
-        $outputFilename = 'translated_' . time() . '_' . uniqid() . '.' . $outputExtension;
+        // Export to new file - always use CSV for better compatibility
+        $outputFilename = 'translated_' . time() . '_' . uniqid() . '.csv';
         $outputPath = 'temp/' . $outputFilename;
         $fullOutputPath = storage_path('app/public/' . $outputPath);
         
@@ -299,8 +297,8 @@ class ProcessCsvTranslationJob implements ShouldQueue
             throw new \Exception('Failed to translate to any target languages');
         }
         
-        // Create multi-sheet XLSX output
-        $outputFilename = 'smart_translations_' . time() . '_' . uniqid() . '.xlsx';
+        // Create CSV output for better compatibility
+        $outputFilename = 'smart_translations_' . time() . '_' . uniqid() . '.csv';
         $outputPath = 'temp/' . $outputFilename;
         $fullOutputPath = storage_path('app/public/' . $outputPath);
         
@@ -310,8 +308,9 @@ class ProcessCsvTranslationJob implements ShouldQueue
             mkdir($tempDir, 0755, true);
         }
         
-        // Create XLSX with separate sheets for each language
-        $multiSheetService->createMultiSheetXlsx($sourceTexts, $translations, $detectedLanguage, $fullOutputPath);
+        // Create CSV with all translations in one sheet
+        $csvParser = new CsvParserService();
+        $csvParser->exportToCsv($headers, $data, $fullOutputPath);
         
         $this->translationJob->update(['output_path' => $outputPath]);
         
