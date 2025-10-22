@@ -36,11 +36,14 @@ class ExcelParserService
             
             $zip->close();
 
-            Log::info('XLSX parsed successfully', [
-                'file' => basename($filePath),
-                'rows' => count($worksheetData['data']),
-                'columns' => count($worksheetData['headers'])
-            ]);
+            // Log success if Log facade is available
+            if (class_exists('Illuminate\Support\Facades\Log')) {
+                Log::info('XLSX parsed successfully', [
+                    'file' => basename($filePath),
+                    'rows' => count($worksheetData['data']),
+                    'columns' => count($worksheetData['headers'])
+                ]);
+            }
 
             return $worksheetData;
 
@@ -210,34 +213,17 @@ class ExcelParserService
             $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
             $worksheet = $spreadsheet->getActiveSheet();
             
-            // Set headers (row 1)
-            $col = 'A';
-            foreach ($headers as $header) {
-                $worksheet->setCellValue($col . '1', $header);
-                $col++;
-            }
+            // Set worksheet title
+            $worksheet->setTitle('Translations');
+            
+            // Prepare data array with headers first
+            $allData = array_merge([$headers], $data);
+            
+            // Use fromArray method for better compatibility
+            $worksheet->fromArray($allData, null, 'A1');
             
             // Style the header row
-            $worksheet->getStyle('A1:' . \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers)) . '1')
-                ->getFont()->setBold(true);
-            
-            // Set data (starting from row 2)
-            $row = 2;
-            foreach ($data as $rowData) {
-                $col = 'A';
-                foreach ($headers as $header) {
-                    $value = $rowData[$header] ?? '';
-                    
-                    // Clean the value
-                    $value = html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                    $value = str_replace(["\r\n", "\r", "\n"], " ", $value);
-                    
-                    // Set cell value
-                    $worksheet->setCellValue($col . $row, $value);
-                    $col++;
-                }
-                $row++;
-            }
+            $worksheet->getStyle('A1:' . chr(ord('A') + count($headers) - 1) . '1')->getFont()->setBold(true);
             
             // Auto-size columns
             foreach (range('A', chr(ord('A') + count($headers) - 1)) as $col) {
@@ -248,16 +234,22 @@ class ExcelParserService
             $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
             $writer->save($filePath);
             
-            Log::info('XLSX exported successfully', [
-                'file' => basename($filePath),
-                'rows' => count($data)
-            ]);
+            // Log success if Log facade is available
+            if (class_exists('Illuminate\Support\Facades\Log')) {
+                Log::info('XLSX exported successfully', [
+                    'file' => basename($filePath),
+                    'rows' => count($data)
+                ]);
+            }
             
         } catch (\Exception $e) {
-            Log::error('XLSX export failed', [
-                'error' => $e->getMessage(),
-                'file' => basename($filePath)
-            ]);
+            // Log error if Log facade is available
+            if (class_exists('Illuminate\Support\Facades\Log')) {
+                Log::error('XLSX export failed', [
+                    'error' => $e->getMessage(),
+                    'file' => basename($filePath)
+                ]);
+            }
             
             // Fallback to CSV if XLSX fails
             $this->exportToCsv($headers, $data, $filePath);
@@ -310,10 +302,13 @@ class ExcelParserService
 
             fclose($handle);
 
-            Log::info('CSV file exported successfully', [
-                'file' => basename($filePath),
-                'rows' => count($data)
-            ]);
+            // Log success if Log facade is available
+            if (class_exists('Illuminate\Support\Facades\Log')) {
+                Log::info('CSV file exported successfully', [
+                    'file' => basename($filePath),
+                    'rows' => count($data)
+                ]);
+            }
 
         } catch (\Exception $e) {
             if (is_resource($handle)) {
