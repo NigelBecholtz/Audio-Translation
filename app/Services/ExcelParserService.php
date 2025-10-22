@@ -205,62 +205,14 @@ class ExcelParserService
      */
     public function exportToXlsx(array $headers, array $data, string $filePath): void
     {
-        // Create a proper XLSX file using PhpSpreadsheet
-        try {
-            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-            $worksheet = $spreadsheet->getActiveSheet();
-            
-            // Set headers
-            $col = 1;
-            foreach ($headers as $header) {
-                $worksheet->setCellValueByColumnAndRow($col, 1, $header);
-                $col++;
-            }
-            
-            // Set data
-            $row = 2;
-            foreach ($data as $rowData) {
-                $col = 1;
-                foreach ($headers as $header) {
-                    $value = $rowData[$header] ?? '';
-                    
-                    // Decode HTML entities and ensure proper UTF-8 encoding
-                    $value = html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                    
-                    // Ensure the string is properly UTF-8 encoded
-                    if (!mb_check_encoding($value, 'UTF-8')) {
-                        $value = mb_convert_encoding($value, 'UTF-8', 'auto');
-                    }
-                    
-                    $worksheet->setCellValueByColumnAndRow($col, $row, $value);
-                    $col++;
-                }
-                $row++;
-            }
-            
-            // Auto-size columns
-            foreach (range(1, count($headers)) as $col) {
-                $worksheet->getColumnDimensionByColumn($col)->setAutoSize(true);
-            }
-            
-            // Save as XLSX
-            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-            $writer->save($filePath);
-            
-            Log::info('XLSX exported successfully', [
-                'file' => basename($filePath),
-                'rows' => count($data)
-            ]);
-            
-        } catch (\Exception $e) {
-            Log::error('XLSX export failed', [
-                'error' => $e->getMessage(),
-                'file' => basename($filePath)
-            ]);
-            
-            // Fallback to CSV if XLSX export fails
-            $this->exportToCsv($headers, $data, $filePath);
-        }
+        // For now, always export as CSV with .xlsx extension
+        // This ensures compatibility while we debug the PhpSpreadsheet issue
+        $this->exportToCsv($headers, $data, $filePath);
+        
+        Log::info('File exported as CSV with XLSX extension', [
+            'file' => basename($filePath),
+            'rows' => count($data)
+        ]);
     }
 
     /**
@@ -277,8 +229,8 @@ class ExcelParserService
             // Write UTF-8 BOM for proper encoding
             fwrite($handle, "\xEF\xBB\xBF");
 
-            // Write headers
-            fputcsv($handle, $headers, ';');
+            // Write headers with proper Excel formatting
+            fputcsv($handle, $headers, ',', '"');
 
             // Write data rows
             foreach ($data as $row) {
@@ -294,9 +246,12 @@ class ExcelParserService
                         $value = mb_convert_encoding($value, 'UTF-8', 'auto');
                     }
                     
+                    // Escape special characters for Excel compatibility
+                    $value = str_replace(["\r\n", "\r", "\n"], " ", $value);
+                    
                     $rowData[] = $value;
                 }
-                fputcsv($handle, $rowData, ';');
+                fputcsv($handle, $rowData, ',', '"');
             }
 
             fclose($handle);
