@@ -554,7 +554,22 @@ function updateProgress(data) {
     const statusText = document.getElementById('status-text');
     
     if (data.is_pending_approval) {
-        // Reload page to show approval button
+        // Reload page to show transcription approval button
+        clearInterval(pollInterval);
+        setTimeout(() => window.location.reload(), 1000);
+    } else if (data.is_pending_tts_approval) {
+        // Update status badge for TTS approval and reload to show TTS approval section
+        if (statusBadge) {
+            statusBadge.className = 'inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-purple-100 text-purple-800';
+        }
+        if (statusIcon) {
+            statusIcon.className = 'fas fa-clock mr-2';
+        }
+        if (statusText) {
+            statusText.textContent = '{{ __('Awaiting TTS Approval') }}';
+        }
+
+        // Reload page to show TTS approval section
         clearInterval(pollInterval);
         setTimeout(() => window.location.reload(), 1000);
     } else if (data.is_completed) {
