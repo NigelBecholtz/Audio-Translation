@@ -75,39 +75,14 @@ class ProcessAudioTranslationJob implements ShouldQueue
 
             $this->audioFile->update([
                 'translated_text' => $translatedText,
-                'processing_progress' => 70,
-                'processing_message' => $isSameLanguage ? 'Ready for audio generation!' : 'Translation completed!'
-            ]);
-
-            // Step 2: Generate audio with TTS
-            $this->audioFile->update([
-                'status' => 'generating_audio',
-                'processing_stage' => 'generating_audio',
-                'processing_progress' => 80,
-                'processing_message' => $isSameLanguage ? 'Generating audio with AI voice (accent improvement)...' : 'Generating translated audio...'
-            ]);
-
-            $translatedAudioPath = $processingService->generateAudio(
-                $translatedText,
-                $this->audioFile->target_language,
-                $this->audioFile->voice,
-                $this->audioFile->style_instruction
-            );
-
-            $this->audioFile->update([
-                'translated_audio_path' => $translatedAudioPath,
-                'status' => 'completed',
-                'processing_stage' => 'completed',
+                'status' => 'pending_tts_approval',
+                'processing_stage' => 'pending_tts_approval',
                 'processing_progress' => 100,
-                'processing_message' => 'Processing complete!'
+                'processing_message' => $isSameLanguage ? 'Translation completed! Ready to generate audio (accent improvement).' : 'Translation completed! Please review and approve to generate audio.'
             ]);
-            
-            // Deduct credits
-            $processingService->deductCredits(
-                $this->audioFile->user,
-                config('stripe.default_cost_per_translation'),
-                'Credits used for audio translation'
-            );
+
+            // Stop here - wait for user approval for TTS generation
+            return;
 
         } catch (\Exception $e) {
             Log::error('Audio translation processing failed', [

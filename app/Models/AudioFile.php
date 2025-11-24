@@ -62,4 +62,9 @@ class AudioFile extends Model
     {
         return $this->status === 'pending_approval';
     }
+
+    public function isPendingTTSApproval(): bool
+    {
+        return $this->status === 'pending_tts_approval';
+    }
 }

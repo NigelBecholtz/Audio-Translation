@@ -24,24 +24,27 @@
                 <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                         <h3 class="text-xl font-bold text-white">{{ __('Status') }}</h3>
-                        <span id="status-badge" class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium 
+                        <span id="status-badge" class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium
                             @if($audioFile->isCompleted()) bg-green-100 text-green-800
                             @elseif($audioFile->isFailed()) bg-red-100 text-red-800
                             @elseif($audioFile->isPendingApproval()) bg-yellow-100 text-yellow-800
+                            @elseif($audioFile->isPendingTTSApproval()) bg-purple-100 text-purple-800
                             @elseif($audioFile->isProcessing()) bg-yellow-100 text-yellow-800 pulse-animation
                             @else bg-gray-100 text-gray-800
                             @endif">
-                            <i id="status-icon" class="mr-2 
+                            <i id="status-icon" class="mr-2
                                 @if($audioFile->isCompleted()) fas fa-check-circle
                                 @elseif($audioFile->isFailed()) fas fa-exclamation-triangle
                                 @elseif($audioFile->isPendingApproval()) fas fa-clock
+                                @elseif($audioFile->isPendingTTSApproval()) fas fa-clock
                                 @elseif($audioFile->isProcessing()) fas fa-spinner fa-spin
                                 @else fas fa-upload
                                 @endif"></i>
                             <span id="status-text">
                                 @if($audioFile->isCompleted()) {{ __('Completed') }}
                                 @elseif($audioFile->isFailed()) {{ __('Failed') }}
-                                @elseif($audioFile->isPendingApproval()) {{ __('Awaiting Approval') }}
+                                @elseif($audioFile->isPendingApproval()) {{ __('Awaiting Transcription Approval') }}
+                                @elseif($audioFile->isPendingTTSApproval()) {{ __('Awaiting TTS Approval') }}
                                 @elseif($audioFile->isProcessing()) {{ __('Processing...') }}
                                 @else {{ __('Uploaded') }}
                                 @endif
@@ -119,13 +122,21 @@
 
                         <!-- Step 3: Translation -->
                         <div class="flex items-center gap-4">
-                            @if($audioFile->translated_text)
+                            @if($audioFile->translated_text && !$audioFile->isPendingTTSApproval())
                                 <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
                                     <i class="fas fa-check text-green-600"></i>
                                 </div>
                                 <div class="flex-1">
                                     <h4 class="font-semibold text-white text-lg">{{ __('Text Translated') }}</h4>
                                     <p class="text-sm text-gray-400">{{ __('The text has been translated to') }} {{ strtoupper($audioFile->target_language) }}</p>
+                                </div>
+                            @elseif($audioFile->isPendingTTSApproval())
+                                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-check text-green-600"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-white text-lg">{{ __('Translation Complete') }}</h4>
+                                    <p class="text-sm text-gray-400">{{ __('Translation completed. Ready for TTS approval.') }}</p>
                                 </div>
                             @elseif($audioFile->status === 'translating')
                                 <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -146,7 +157,44 @@
                             @endif
                         </div>
 
-                        <!-- Step 4: Audio Generation -->
+                        <!-- Step 4: TTS Approval -->
+                        <div class="flex items-center gap-4">
+                            @if($audioFile->translated_audio_path)
+                                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-check text-green-600"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-white text-lg">{{ __('TTS Approved') }}</h4>
+                                    <p class="text-sm text-gray-400">{{ __('Text-to-speech generation has been approved') }}</p>
+                                </div>
+                            @elseif($audioFile->isPendingTTSApproval())
+                                <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-clock text-yellow-600"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-white text-lg">{{ __('Awaiting TTS Approval') }}</h4>
+                                    <p class="text-sm text-gray-400">{{ __('Please review the translation and approve TTS generation') }}</p>
+                                </div>
+                            @elseif($audioFile->status === 'generating_audio')
+                                <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-spinner fa-spin text-yellow-600"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-white text-lg">{{ __('TTS Approved') }}</h4>
+                                    <p class="text-sm text-gray-400">{{ __('Text-to-speech generation has been approved') }}</p>
+                                </div>
+                            @else
+                                <div class="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-clock text-gray-400"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-white text-lg">{{ __('Waiting for TTS Approval') }}</h4>
+                                    <p class="text-sm text-gray-400">{{ __('TTS approval needed after translation') }}</p>
+                                </div>
+                            @endif
+                        </div>
+
+                        <!-- Step 5: Audio Generation -->
                         <div class="flex items-center gap-4">
                             @if($audioFile->translated_audio_path)
                                 <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -275,13 +323,56 @@
                 <!-- Translated Text -->
                 @if($audioFile->translated_text)
                     <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
-                        <h3 class="text-xl font-bold text-white mb-4 flex items-center">
-                            <i class="fas fa-language mr-2 text-green-400"></i>
-                            {{ __('Translated Text') }} ({{ strtoupper($audioFile->target_language) }})
-                        </h3>
-                        <div class="bg-gradient-to-r from-green-900/30 to-blue-900/30 p-6 rounded-xl border border-gray-600/30">
-                            <p class="text-white leading-relaxed text-lg">{{ $audioFile->translated_text }}</p>
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                            <h3 class="text-xl font-bold text-white flex items-center">
+                                <i class="fas fa-language mr-2 text-green-400"></i>
+                                {{ __('Translated Text') }} ({{ strtoupper($audioFile->target_language) }})
+                            </h3>
+                            @if($audioFile->isPendingTTSApproval())
+                                <div class="inline-flex items-center px-4 py-2 bg-yellow-500/20 border-2 border-yellow-500 rounded-xl">
+                                    <i class="fas fa-clock mr-2 text-yellow-400"></i>
+                                    <span class="text-yellow-300 font-semibold">{{ __('Awaiting TTS Approval') }}</span>
+                                </div>
+                            @endif
                         </div>
+
+                        @if($audioFile->isPendingTTSApproval())
+                            <!-- TTS Approval Form -->
+                            <form method="POST" action="{{ route('audio.approve-tts', $audioFile->id) }}" class="space-y-4">
+                                @csrf
+                                <div class="bg-gradient-to-r from-green-900/30 to-blue-900/30 p-6 rounded-xl border border-gray-600/30">
+                                    <p class="text-white leading-relaxed text-lg mb-6">{{ $audioFile->translated_text }}</p>
+
+                                    <div class="bg-gradient-to-r from-purple-900/30 to-pink-900/30 p-6 rounded-xl border-2 border-purple-500/50">
+                                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                            <div class="flex-1">
+                                                <h4 class="font-bold text-white text-lg mb-2 flex items-center">
+                                                    <i class="fas fa-volume-up mr-2 text-purple-400"></i>
+                                                    {{ __('Review and Approve Text-to-Speech') }}
+                                                </h4>
+                                                <p class="text-gray-300 text-sm">
+                                                    {{ __('Review the translated text above. When ready, click the button below to generate the audio file using voice:') }}
+                                                    <strong class="text-purple-300">{{ ucfirst($audioFile->voice) }}</strong>
+                                                </p>
+                                            </div>
+                                            <div class="flex gap-3 flex-shrink-0">
+                                                <button
+                                                    type="submit"
+                                                    class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl font-bold text-lg">
+                                                    <i class="fas fa-volume-up mr-2"></i>
+                                                    {{ __('Generate Audio') }}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        @else
+                            <!-- Read-only Translated Text (when already approved or completed) -->
+                            <div class="bg-gradient-to-r from-green-900/30 to-blue-900/30 p-6 rounded-xl border border-gray-600/30">
+                                <p class="text-white leading-relaxed text-lg">{{ $audioFile->translated_text }}</p>
+                            </div>
+                        @endif
                     </div>
                 @endif
 
@@ -399,7 +490,7 @@
 
 <script>
 // Real-time progress tracking
-@if($audioFile->isProcessing() || $audioFile->status === 'uploaded' || (!$audioFile->isCompleted() && !$audioFile->isFailed() && !$audioFile->isPendingApproval()))
+@if($audioFile->isProcessing() || $audioFile->status === 'uploaded' || (!$audioFile->isCompleted() && !$audioFile->isFailed() && !$audioFile->isPendingApproval() && !$audioFile->isPendingTTSApproval()))
 let pollInterval;
 const audioFileId = {{ $audioFile->id }};
 

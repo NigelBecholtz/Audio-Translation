@@ -137,6 +137,7 @@ class AudioController extends Controller
             'is_failed' => $audioFile->status === 'failed',
             'is_processing' => in_array($audioFile->status, ['uploaded', 'transcribing', 'translating', 'generating_audio']),
             'is_pending_approval' => $audioFile->status === 'pending_approval',
+            'is_pending_tts_approval' => $audioFile->status === 'pending_tts_approval',
         ]);
     }
 
@@ -188,6 +189,39 @@ class AudioController extends Controller
                 'error' => $e->getMessage()
             ]);
             return back()->with('error', __('Failed to approve transcription: ') . $e->getMessage());
+        }
+    }
+
+    /**
+     * Approve translation and start TTS generation
+     */
+    public function approveTTS($id)
+    {
+        try {
+            // Use user's audioFiles relationship for automatic authorization
+            $audioFile = auth()->user()->audioFiles()->findOrFail($id);
+
+            if ($audioFile->status !== 'pending_tts_approval') {
+                return back()->with('error', __('This translation is not pending TTS approval.'));
+            }
+
+            if (!$audioFile->translated_text) {
+                return back()->with('error', __('No translated text found to generate audio for.'));
+            }
+
+            // Dispatch job to generate TTS
+            \App\Jobs\ProcessAudioTTSJob::dispatch($audioFile);
+
+            return redirect()->route('audio.show', $audioFile->id)
+                ->with('success', __('TTS generation started! Audio will be created soon...'));
+
+        } catch (\Exception $e) {
+            Log::error('Failed to approve TTS', [
+                'audio_file_id' => $id,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
+            return back()->with('error', __('Failed to approve TTS: ') . $e->getMessage());
         }
     }
 
