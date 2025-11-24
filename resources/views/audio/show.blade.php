@@ -373,34 +373,97 @@
                         </div>
 
                         @if($audioFile->isPendingTTSApproval())
-                            <!-- TTS Approval Form -->
-                            <form method="POST" action="{{ route('audio.approve-tts', $audioFile->id) }}" class="space-y-4">
+                            <!-- Editable Translated Text Form -->
+                            <form method="POST" action="{{ route('audio.save-translated-text', $audioFile->id) }}" id="saveTranslatedTextForm" class="space-y-4">
                                 @csrf
-                                <div class="bg-gradient-to-r from-green-900/30 to-blue-900/30 p-6 rounded-xl border border-gray-600/30">
-                                    <p class="text-white leading-relaxed text-lg mb-6">{{ $audioFile->translated_text }}</p>
+                                <div>
+                                    <label for="edited_translated_text" class="block text-sm font-semibold text-gray-300 mb-2">
+                                        <i class="fas fa-edit mr-2 text-green-400"></i>
+                                        {{ __('Edit translated text if needed') }}
+                                    </label>
+                                    <textarea
+                                        id="edited_translated_text"
+                                        name="translated_text"
+                                        rows="8"
+                                        class="w-full px-4 py-3 text-lg border-2 border-gray-600 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-400 focus:border-green-500 transition-all bg-gray-700 text-white resize-none font-mono"
+                                        placeholder="{{ __('Edit the translated text here...') }}">{{ old('translated_text', $audioFile->translated_text) }}</textarea>
+                                    <p class="mt-2 text-xs text-gray-400 flex items-center">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        {{ __('You can edit the translated text before generating audio. The edited version will be used for TTS generation.') }}
+                                    </p>
+                                    @error('translated_text')
+                                        <p class="mt-2 text-sm text-red-400 flex items-center font-semibold">
+                                            <i class="fas fa-exclamation-circle mr-2"></i>
+                                            {{ $message }}
+                                        </p>
+                                    @enderror
+                                </div>
 
-                                    <div class="bg-gradient-to-r from-purple-900/30 to-pink-900/30 p-6 rounded-xl border-2 border-purple-500/50">
+                                <!-- Save Translated Text Section -->
+                                <div class="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 p-6 rounded-xl border-2 border-yellow-500/50 mb-4">
+                                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                        <div class="flex-1">
+                                            <h4 class="font-bold text-white text-lg mb-2 flex items-center">
+                                                <i class="fas fa-save mr-2 text-yellow-400"></i>
+                                                {{ __('Save Translated Text Changes') }}
+                                            </h4>
+                                            <p class="text-gray-300 text-sm">
+                                                {{ __('Save your edited translated text before proceeding to audio generation.') }}
+                                            </p>
+                                        </div>
+                                        <div class="flex gap-3 flex-shrink-0">
+                                            <button
+                                                type="button"
+                                                onclick="resetTranslatedText()"
+                                                class="inline-flex items-center px-6 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-500 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold">
+                                                <i class="fas fa-undo mr-2"></i>
+                                                {{ __('Reset') }}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onclick="saveTranslatedText()"
+                                                id="saveTranslatedTextBtn"
+                                                class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-xl hover:from-yellow-600 hover:to-orange-600 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold">
+                                                <i class="fas fa-save mr-2"></i>
+                                                {{ __('Save Changes') }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div id="saveTranslatedTextStatus" class="mt-3 hidden">
+                                        <p class="text-sm text-green-400 flex items-center">
+                                            <i class="fas fa-check-circle mr-2"></i>
+                                            <span id="saveTranslatedTextStatusText"></span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Generate Audio Section -->
+                                <div class="bg-gradient-to-r from-purple-900/30 to-pink-900/30 p-6 rounded-xl border-2 border-purple-500/50">
+                                    <form id="approveTTSForm" method="POST" action="{{ route('audio.approve-tts', $audioFile->id) }}">
+                                        @csrf
                                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                             <div class="flex-1">
                                                 <h4 class="font-bold text-white text-lg mb-2 flex items-center">
                                                     <i class="fas fa-volume-up mr-2 text-purple-400"></i>
-                                                    {{ __('Review and Approve Text-to-Speech') }}
+                                                    {{ __('Generate Audio') }}
                                                 </h4>
                                                 <p class="text-gray-300 text-sm">
-                                                    {{ __('Review the translated text above. When ready, click the button below to generate the audio file using voice:') }}
+                                                    {{ __('Proceed with the current translated text to generate the audio file using voice:') }}
                                                     <strong class="text-purple-300">{{ ucfirst($audioFile->voice) }}</strong>
+                                                    <br>{{ __('Make sure to save your changes first.') }}
                                                 </p>
                                             </div>
-                                            <div class="flex gap-3 flex-shrink-0">
+                                            <div class="flex-shrink-0">
                                                 <button
                                                     type="submit"
+                                                    id="generateAudioBtn"
                                                     class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl font-bold text-lg">
                                                     <i class="fas fa-volume-up mr-2"></i>
                                                     {{ __('Generate Audio') }}
                                                 </button>
                                             </div>
                                         </div>
-                                    </div>
+                                    </form>
                                 </div>
                             </form>
                         @else
@@ -690,6 +753,76 @@ function resetTranscription() {
     const textarea = document.getElementById('edited_transcription');
     if (textarea) {
         textarea.value = originalTranscription;
+    }
+}
+
+// Save translated text changes
+function saveTranslatedText() {
+    const textarea = document.getElementById('edited_translated_text');
+    const saveBtn = document.getElementById('saveTranslatedTextBtn');
+    const saveStatus = document.getElementById('saveTranslatedTextStatus');
+    const saveStatusText = document.getElementById('saveTranslatedTextStatusText');
+
+    if (!textarea || !saveBtn) return;
+
+    const translatedText = textarea.value.trim();
+    if (!translatedText) {
+        alert('{{ __("Translated text cannot be empty.") }}');
+        return;
+    }
+
+    // Disable button and show loading
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>{{ __("Saving...") }}';
+
+    // Send save request
+    fetch(`{{ route("audio.save-translated-text", $audioFile->id) }}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({
+            translated_text: translatedText
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            saveStatusText.textContent = data.message;
+            saveStatus.className = 'mt-3 text-green-400 flex items-center';
+            saveStatus.classList.remove('hidden');
+
+            // Hide message after 3 seconds
+            setTimeout(() => {
+                saveStatus.classList.add('hidden');
+            }, 3000);
+        } else if (data.errors) {
+            // Show validation errors
+            const errorMessages = Object.values(data.errors).flat().join('\n');
+            alert(errorMessages);
+        } else {
+            alert(data.error || '{{ __("Failed to save translated text.") }}');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('{{ __("Failed to save translated text. Please try again.") }}');
+    })
+    .finally(() => {
+        // Re-enable button
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="fas fa-save mr-2"></i>{{ __("Save Changes") }}';
+    });
+}
+
+// Reset translated text to original
+function resetTranslatedText() {
+    const originalTranslatedText = @json($audioFile->translated_text ?? '');
+    const textarea = document.getElementById('edited_translated_text');
+    if (textarea) {
+        textarea.value = originalTranslatedText;
     }
 }
 </script>

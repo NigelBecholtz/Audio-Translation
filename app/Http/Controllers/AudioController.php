@@ -233,6 +233,56 @@ class AudioController extends Controller
     }
 
     /**
+     * Save edited translated text
+     */
+    public function saveTranslatedText(Request $request, $id)
+    {
+        try {
+            // Use user's audioFiles relationship for automatic authorization
+            $audioFile = auth()->user()->audioFiles()->findOrFail($id);
+
+            if ($audioFile->status !== 'pending_tts_approval') {
+                return response()->json(['error' => __('This translation is not pending approval.')], 400);
+            }
+
+            // Validate the edited translated text
+            $request->validate([
+                'translated_text' => [
+                    'required',
+                    'string',
+                    'max:50000', // Same max as text-to-audio
+                ],
+            ]);
+
+            $editedTranslatedText = trim($request->input('translated_text'));
+
+            if (empty($editedTranslatedText)) {
+                return response()->json(['error' => __('Translated text cannot be empty.')], 400);
+            }
+
+            // Update the translated text with the edited version
+            $audioFile->update([
+                'translated_text' => $editedTranslatedText
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => __('Translated text saved successfully!')
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            Log::error('Failed to save translated text', [
+                'audio_file_id' => $id,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
+            return response()->json(['error' => __('Failed to save translated text: ') . $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Approve translation and start TTS generation
      */
     public function approveTTS($id)
@@ -246,7 +296,7 @@ class AudioController extends Controller
             }
 
             if (!$audioFile->translated_text) {
-                return back()->with('error', __('No translated text found to generate audio for.'));
+                return back()->with('error', __('No translated text found. Please save your translated text first.'));
             }
 
             // Dispatch job to generate TTS
