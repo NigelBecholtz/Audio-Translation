@@ -299,6 +299,14 @@ class AudioController extends Controller
                 return back()->with('error', __('No translated text found. Please save your translated text first.'));
             }
 
+            // Update status to show TTS generation is starting
+            $audioFile->update([
+                'status' => 'generating_audio',
+                'processing_stage' => 'generating_audio',
+                'processing_progress' => 80,
+                'processing_message' => __('Starting audio generation...')
+            ]);
+
             // Dispatch job to generate TTS
             \App\Jobs\ProcessAudioTTSJob::dispatch($audioFile);
 
