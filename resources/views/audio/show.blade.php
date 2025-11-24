@@ -363,6 +363,25 @@
                             </div>
                         @endif
                         
+                        @if($audioFile->status === 'uploaded' && $audioFile->created_at->diffInMinutes(now()) > 2)
+                            <div class="p-4 bg-yellow-900/30 border border-yellow-600/30 rounded-xl mb-3">
+                                <div class="flex items-start">
+                                    <i class="fas fa-exclamation-triangle text-yellow-400 mt-1 mr-3 flex-shrink-0"></i>
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-yellow-200">{{ __('Processing seems stuck') }}</h4>
+                                        <p class="text-sm text-yellow-300 mt-1 mb-3">{{ __('The job may not have started. Try retrying the processing.') }}</p>
+                                        <form method="POST" action="{{ route('audio.retry', $audioFile->id) }}">
+                                            @csrf
+                                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-all font-semibold text-sm">
+                                                <i class="fas fa-redo mr-2"></i>
+                                                {{ __('Retry Processing') }}
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                        
                         <form method="POST" action="{{ route('audio.destroy', $audioFile->id) }}" onsubmit="return confirm('{{ __('Are you sure you want to delete this translation?') }}')">
                             @csrf
                             @method('DELETE')
@@ -380,7 +399,7 @@
 
 <script>
 // Real-time progress tracking
-@if($audioFile->isProcessing() || (!$audioFile->isCompleted() && !$audioFile->isFailed() && !$audioFile->isPendingApproval()))
+@if($audioFile->isProcessing() || $audioFile->status === 'uploaded' || (!$audioFile->isCompleted() && !$audioFile->isFailed() && !$audioFile->isPendingApproval()))
 let pollInterval;
 const audioFileId = {{ $audioFile->id }};
 

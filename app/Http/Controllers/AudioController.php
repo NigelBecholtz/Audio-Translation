@@ -190,4 +190,34 @@ class AudioController extends Controller
             return back()->with('error', __('Failed to approve transcription: ') . $e->getMessage());
         }
     }
+
+    /**
+     * Retry processing for stuck jobs
+     */
+    public function retry($id)
+    {
+        try {
+            // Use user's audioFiles relationship for automatic authorization
+            $audioFile = auth()->user()->audioFiles()->findOrFail($id);
+            
+            // Only allow retry if status is 'uploaded' and it's been more than 2 minutes
+            if ($audioFile->status !== 'uploaded') {
+                return back()->with('error', __('This file is not in uploaded status. Cannot retry.'));
+            }
+
+            // Dispatch job again
+            ProcessAudioJob::dispatch($audioFile);
+
+            return redirect()->route('audio.show', $audioFile->id)
+                ->with('success', __('Processing restarted! Please wait...'));
+
+        } catch (\Exception $e) {
+            Log::error('Failed to retry processing', [
+                'audio_file_id' => $id,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
+            return back()->with('error', __('Failed to retry processing: ') . $e->getMessage());
+        }
+    }
 }

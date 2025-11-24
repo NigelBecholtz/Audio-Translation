@@ -55,7 +55,7 @@ class AudioFile extends Model
 
     public function isProcessing(): bool
     {
-        return in_array($this->status, ['transcribing', 'translating', 'generating_audio']);
+        return in_array($this->status, ['uploaded', 'transcribing', 'translating', 'generating_audio']);
     }
 
     public function isPendingApproval(): bool
