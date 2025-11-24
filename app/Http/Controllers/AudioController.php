@@ -142,16 +142,16 @@ class AudioController extends Controller
     }
 
     /**
-     * Approve transcription and continue with translation and audio generation
+     * Save edited transcription without proceeding to translation
      */
-    public function approveTranscription(Request $request, $id)
+    public function saveTranscription(Request $request, $id)
     {
         try {
             // Use user's audioFiles relationship for automatic authorization
             $audioFile = auth()->user()->audioFiles()->findOrFail($id);
-            
+
             if ($audioFile->status !== 'pending_approval') {
-                return back()->with('error', __('This transcription is not pending approval.'));
+                return response()->json(['error' => __('This transcription is not pending approval.')], 400);
             }
 
             // Validate the edited transcription
@@ -164,9 +164,9 @@ class AudioController extends Controller
             ]);
 
             $editedTranscription = trim($request->input('transcription'));
-            
+
             if (empty($editedTranscription)) {
-                return back()->with('error', __('Transcription cannot be empty.'));
+                return response()->json(['error' => __('Transcription cannot be empty.')], 400);
             }
 
             // Update the transcription with the edited version
@@ -174,14 +174,46 @@ class AudioController extends Controller
                 'transcription' => $editedTranscription
             ]);
 
+            return response()->json([
+                'success' => true,
+                'message' => __('Transcription saved successfully!')
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            Log::error('Failed to save transcription', [
+                'audio_file_id' => $id,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
+            return response()->json(['error' => __('Failed to save transcription: ') . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Approve transcription and continue with translation and audio generation
+     */
+    public function approveTranscription(Request $request, $id)
+    {
+        try {
+            // Use user's audioFiles relationship for automatic authorization
+            $audioFile = auth()->user()->audioFiles()->findOrFail($id);
+
+            if ($audioFile->status !== 'pending_approval') {
+                return back()->with('error', __('This transcription is not pending approval.'));
+            }
+
+            if (!$audioFile->transcription) {
+                return back()->with('error', __('No transcription found. Please save your transcription first.'));
+            }
+
             // Dispatch job to continue with translation and audio generation
             \App\Jobs\ProcessAudioTranslationJob::dispatch($audioFile);
 
             return redirect()->route('audio.show', $audioFile->id)
                 ->with('success', __('Transcription approved! Translation and audio generation started...'));
 
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
             Log::error('Failed to approve transcription', [
                 'audio_file_id' => $id,

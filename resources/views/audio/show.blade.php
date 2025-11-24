@@ -282,30 +282,64 @@
                                     @enderror
                                 </div>
                                 
-                                <div class="bg-gradient-to-r from-blue-900/30 to-indigo-900/30 p-6 rounded-xl border-2 border-blue-500/50">
+                                <!-- Save Transcription Section -->
+                                <div class="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 p-6 rounded-xl border-2 border-yellow-500/50 mb-4">
                                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                         <div class="flex-1">
                                             <h4 class="font-bold text-white text-lg mb-2 flex items-center">
-                                                <i class="fas fa-check-circle mr-2 text-blue-400"></i>
-                                                {{ __('Review and Approve Transcription') }}
+                                                <i class="fas fa-save mr-2 text-yellow-400"></i>
+                                                {{ __('Save Changes') }}
                                             </h4>
                                             <p class="text-gray-300 text-sm">
-                                                {{ __('Review and edit the transcription above if needed. When ready, click the button below to continue with translation and audio generation.') }}
+                                                {{ __('Save your edited transcription before proceeding to translation.') }}
                                             </p>
                                         </div>
                                         <div class="flex gap-3 flex-shrink-0">
-                                            <button 
-                                                type="button" 
-                                                onclick="resetTranscription()" 
+                                            <button
+                                                type="button"
+                                                onclick="resetTranscription()"
                                                 class="inline-flex items-center px-6 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-500 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold">
                                                 <i class="fas fa-undo mr-2"></i>
                                                 {{ __('Reset') }}
                                             </button>
-                                            <button 
-                                                type="submit" 
-                                                class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg hover:shadow-xl font-bold text-lg">
-                                                <i class="fas fa-check-circle mr-2"></i>
-                                                {{ __('Approve & Continue') }}
+                                            <button
+                                                type="button"
+                                                onclick="saveTranscription()"
+                                                id="saveTranscriptionBtn"
+                                                class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-xl hover:from-yellow-600 hover:to-orange-600 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold">
+                                                <i class="fas fa-save mr-2"></i>
+                                                {{ __('Save') }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div id="saveStatus" class="mt-3 hidden">
+                                        <p class="text-sm text-green-400 flex items-center">
+                                            <i class="fas fa-check-circle mr-2"></i>
+                                            <span id="saveStatusText"></span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Continue to Translation Section -->
+                                <div class="bg-gradient-to-r from-blue-900/30 to-indigo-900/30 p-6 rounded-xl border-2 border-blue-500/50">
+                                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                        <div class="flex-1">
+                                            <h4 class="font-bold text-white text-lg mb-2 flex items-center">
+                                                <i class="fas fa-arrow-right mr-2 text-blue-400"></i>
+                                                {{ __('Continue to Translation') }}
+                                            </h4>
+                                            <p class="text-gray-300 text-sm">
+                                                {{ __('Proceed with the current transcription to translation and audio generation. Make sure to save your changes first.') }}
+                                            </p>
+                                        </div>
+                                        <div class="flex-shrink-0">
+                                            <button
+                                                type="button"
+                                                onclick="continueToTranslation()"
+                                                id="continueBtn"
+                                                class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 shadow-lg hover:shadow-xl font-bold text-lg">
+                                                <i class="fas fa-arrow-right mr-2"></i>
+                                                {{ __('Continue') }}
                                             </button>
                                         </div>
                                     </div>
@@ -569,6 +603,92 @@ window.addEventListener('beforeunload', () => {
     if (pollInterval) clearInterval(pollInterval);
 });
 @endif
+
+// Save transcription changes
+function saveTranscription() {
+    const textarea = document.getElementById('edited_transcription');
+    const saveBtn = document.getElementById('saveTranscriptionBtn');
+    const saveStatus = document.getElementById('saveStatus');
+    const saveStatusText = document.getElementById('saveStatusText');
+
+    if (!textarea || !saveBtn) return;
+
+    const transcription = textarea.value.trim();
+    if (!transcription) {
+        alert('{{ __("Transcription cannot be empty.") }}');
+        return;
+    }
+
+    // Disable button and show loading
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>{{ __("Saving...") }}';
+
+    // Send save request
+    fetch(`{{ route("audio.save-transcription", $audioFile->id) }}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({
+            transcription: transcription
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            saveStatusText.textContent = data.message;
+            saveStatus.className = 'mt-3 text-green-400 flex items-center';
+            saveStatus.classList.remove('hidden');
+
+            // Hide message after 3 seconds
+            setTimeout(() => {
+                saveStatus.classList.add('hidden');
+            }, 3000);
+        } else if (data.errors) {
+            // Show validation errors
+            const errorMessages = Object.values(data.errors).flat().join('\n');
+            alert(errorMessages);
+        } else {
+            alert(data.error || '{{ __("Failed to save transcription.") }}');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('{{ __("Failed to save transcription. Please try again.") }}');
+    })
+    .finally(() => {
+        // Re-enable button
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="fas fa-save mr-2"></i>{{ __("Save") }}';
+    });
+}
+
+// Continue to translation
+function continueToTranslation() {
+    const continueBtn = document.getElementById('continueBtn');
+
+    if (!continueBtn) return;
+
+    // Disable button and show loading
+    continueBtn.disabled = true;
+    continueBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>{{ __("Processing...") }}';
+
+    // Create and submit form to continue
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `{{ route("audio.approve-transcription", $audioFile->id) }}`;
+
+    const csrfToken = document.createElement('input');
+    csrfToken.type = 'hidden';
+    csrfToken.name = '_token';
+    csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    form.appendChild(csrfToken);
+    document.body.appendChild(form);
+    form.submit();
+}
 
 // Reset transcription to original
 function resetTranscription() {
