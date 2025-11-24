@@ -206,29 +206,67 @@
                                 </div>
                             @endif
                         </div>
-                        <div class="bg-gray-700/50 p-6 rounded-xl border border-gray-600/30 mb-4">
-                            <p class="text-white leading-relaxed text-lg">{{ $audioFile->transcription }}</p>
-                        </div>
+                        
                         @if($audioFile->isPendingApproval())
-                            <div class="bg-gradient-to-r from-blue-900/30 to-indigo-900/30 p-6 rounded-xl border-2 border-blue-500/50">
-                                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                                    <div class="flex-1">
-                                        <h4 class="font-bold text-white text-lg mb-2 flex items-center">
-                                            <i class="fas fa-check-circle mr-2 text-blue-400"></i>
-                                            {{ __('Review and Approve Transcription') }}
-                                        </h4>
-                                        <p class="text-gray-300 text-sm">
-                                            {{ __('Please review the transcription above. If it looks correct, click the button below to continue with translation and audio generation.') }}
+                            <!-- Editable Transcription Form -->
+                            <form method="POST" action="{{ route('audio.approve-transcription', $audioFile->id) }}" id="approveTranscriptionForm" class="space-y-4">
+                                @csrf
+                                <div>
+                                    <label for="edited_transcription" class="block text-sm font-semibold text-gray-300 mb-2">
+                                        <i class="fas fa-edit mr-2 text-blue-400"></i>
+                                        {{ __('Edit transcription if needed') }}
+                                    </label>
+                                    <textarea 
+                                        id="edited_transcription" 
+                                        name="transcription" 
+                                        rows="8"
+                                        class="w-full px-4 py-3 text-lg border-2 border-gray-600 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-400 focus:border-blue-500 transition-all bg-gray-700 text-white resize-none font-mono"
+                                        placeholder="{{ __('Edit the transcription here...') }}">{{ old('transcription', $audioFile->transcription) }}</textarea>
+                                    <p class="mt-2 text-xs text-gray-400 flex items-center">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        {{ __('You can edit the transcription before approving. The edited version will be used for translation and audio generation.') }}
+                                    </p>
+                                    @error('transcription')
+                                        <p class="mt-2 text-sm text-red-400 flex items-center font-semibold">
+                                            <i class="fas fa-exclamation-circle mr-2"></i>
+                                            {{ $message }}
                                         </p>
-                                    </div>
-                                    <form method="POST" action="{{ route('audio.approve-transcription', $audioFile->id) }}" class="flex-shrink-0">
-                                        @csrf
-                                        <button type="submit" class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg hover:shadow-xl font-bold text-lg">
-                                            <i class="fas fa-check-circle mr-2"></i>
-                                            {{ __('Approve & Continue') }}
-                                        </button>
-                                    </form>
+                                    @enderror
                                 </div>
+                                
+                                <div class="bg-gradient-to-r from-blue-900/30 to-indigo-900/30 p-6 rounded-xl border-2 border-blue-500/50">
+                                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                        <div class="flex-1">
+                                            <h4 class="font-bold text-white text-lg mb-2 flex items-center">
+                                                <i class="fas fa-check-circle mr-2 text-blue-400"></i>
+                                                {{ __('Review and Approve Transcription') }}
+                                            </h4>
+                                            <p class="text-gray-300 text-sm">
+                                                {{ __('Review and edit the transcription above if needed. When ready, click the button below to continue with translation and audio generation.') }}
+                                            </p>
+                                        </div>
+                                        <div class="flex gap-3 flex-shrink-0">
+                                            <button 
+                                                type="button" 
+                                                onclick="resetTranscription()" 
+                                                class="inline-flex items-center px-6 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-500 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold">
+                                                <i class="fas fa-undo mr-2"></i>
+                                                {{ __('Reset') }}
+                                            </button>
+                                            <button 
+                                                type="submit" 
+                                                class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg hover:shadow-xl font-bold text-lg">
+                                                <i class="fas fa-check-circle mr-2"></i>
+                                                {{ __('Approve & Continue') }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        @else
+                            <!-- Read-only Transcription (when already approved or completed) -->
+                            <div class="bg-gray-700/50 p-6 rounded-xl border border-gray-600/30">
+                                <p class="text-white leading-relaxed text-lg whitespace-pre-wrap">{{ $audioFile->transcription }}</p>
                             </div>
                         @endif
                     </div>
@@ -421,6 +459,15 @@ window.addEventListener('beforeunload', () => {
     if (pollInterval) clearInterval(pollInterval);
 });
 @endif
+
+// Reset transcription to original
+function resetTranscription() {
+    const originalTranscription = @json($audioFile->transcription ?? '');
+    const textarea = document.getElementById('edited_transcription');
+    if (textarea) {
+        textarea.value = originalTranscription;
+    }
+}
 </script>
 
 @endsection

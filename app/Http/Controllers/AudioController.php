@@ -143,7 +143,7 @@ class AudioController extends Controller
     /**
      * Approve transcription and continue with translation and audio generation
      */
-    public function approveTranscription($id)
+    public function approveTranscription(Request $request, $id)
     {
         try {
             // Use user's audioFiles relationship for automatic authorization
@@ -153,9 +153,25 @@ class AudioController extends Controller
                 return back()->with('error', __('This transcription is not pending approval.'));
             }
 
-            if (!$audioFile->transcription) {
-                return back()->with('error', __('No transcription found to approve.'));
+            // Validate the edited transcription
+            $request->validate([
+                'transcription' => [
+                    'required',
+                    'string',
+                    'max:50000', // Same max as text-to-audio
+                ],
+            ]);
+
+            $editedTranscription = trim($request->input('transcription'));
+            
+            if (empty($editedTranscription)) {
+                return back()->with('error', __('Transcription cannot be empty.'));
             }
+
+            // Update the transcription with the edited version
+            $audioFile->update([
+                'transcription' => $editedTranscription
+            ]);
 
             // Dispatch job to continue with translation and audio generation
             \App\Jobs\ProcessAudioTranslationJob::dispatch($audioFile);
@@ -163,6 +179,8 @@ class AudioController extends Controller
             return redirect()->route('audio.show', $audioFile->id)
                 ->with('success', __('Transcription approved! Translation and audio generation started...'));
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
             Log::error('Failed to approve transcription', [
                 'audio_file_id' => $id,
