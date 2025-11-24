@@ -166,6 +166,11 @@ class GoogleTranslationService
                     // Decode HTML entities to proper UTF-8 characters
                     $translatedText = html_entity_decode($translatedText, ENT_QUOTES | ENT_HTML5, 'UTF-8');
                     
+                    // Capitalize first letter of each sentence
+                    if (!empty($translatedText)) {
+                        $translatedText = $this->capitalizeSentences($translatedText);
+                    }
+                    
                     $allTranslations[] = $translatedText;
                 }
                 
@@ -196,6 +201,66 @@ class GoogleTranslationService
             ]);
             throw new \Exception('Translation failed: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Capitalize the first letter of each sentence in the text
+     *
+     * @param string $text
+     * @return string
+     */
+    private function capitalizeSentences(string $text): string
+    {
+        if (empty(trim($text))) {
+            return $text;
+        }
+
+        // Trim whitespace
+        $text = trim($text);
+        
+        // Always capitalize the first letter of the text
+        // This ensures every translation starts with a capital letter
+        if (mb_strlen($text, 'UTF-8') > 0) {
+            // Find the first letter in the string (might be after quotes or other characters)
+            $textLength = mb_strlen($text, 'UTF-8');
+            $firstLetterPos = -1;
+            $firstLetter = '';
+            
+            for ($i = 0; $i < $textLength; $i++) {
+                $char = mb_substr($text, $i, 1, 'UTF-8');
+                // Check if it's any letter (lowercase or uppercase)
+                if (preg_match('/\p{L}/u', $char)) {
+                    $firstLetterPos = $i;
+                    $firstLetter = $char;
+                    break;
+                }
+            }
+            
+            // If we found a letter, capitalize it (if it's not already uppercase)
+            if ($firstLetterPos >= 0) {
+                // Only capitalize if it's lowercase
+                if (preg_match('/\p{Ll}/u', $firstLetter)) {
+                    $before = mb_substr($text, 0, $firstLetterPos, 'UTF-8');
+                    $after = mb_substr($text, $firstLetterPos + 1, null, 'UTF-8');
+                    $text = $before . mb_strtoupper($firstLetter, 'UTF-8') . $after;
+                }
+            }
+        }
+        
+        // Pattern to match sentence endings (. ! ?) followed by whitespace and then a lowercase letter
+        // \p{Ll} matches any lowercase letter in any language (Unicode)
+        $pattern = '/([.!?])\s+(\p{Ll})/u';
+        $text = preg_replace_callback($pattern, function($matches) {
+            return $matches[1] . ' ' . mb_strtoupper($matches[2], 'UTF-8');
+        }, $text);
+        
+        // Handle cases where sentence ends and next sentence starts immediately (no space)
+        $pattern = '/([.!?])(\p{Ll})/u';
+        $text = preg_replace_callback($pattern, function($matches) {
+            return $matches[1] . mb_strtoupper($matches[2], 'UTF-8');
+        }, $text);
+        
+        return $text;
     }
 
     /**

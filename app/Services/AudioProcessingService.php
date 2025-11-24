@@ -138,12 +138,33 @@ class AudioProcessingService
                 throw new \Exception('Audio file not found: ' . $filePath);
             }
 
-            $response = \OpenAI\Laravel\Facades\OpenAI::audio()->transcribe([
+            // Convert extended language codes (en-gb, en-us) to ISO-639-1 format (en) for Whisper API
+            $whisperLanguage = $this->convertToIso6391($audioFile->source_language);
+            
+            if ($whisperLanguage !== $audioFile->source_language) {
+                Log::info('Language code converted for Whisper API', [
+                    'original' => $audioFile->source_language,
+                    'converted' => $whisperLanguage
+                ]);
+            }
+            
+            // Build transcription parameters
+            $transcriptionParams = [
                 'model' => 'whisper-1',
                 'file' => fopen($filePath, 'r'),
-                'language' => $audioFile->source_language,
+                'language' => $whisperLanguage,
                 'response_format' => 'text',
-            ]);
+            ];
+            
+            // Add prompt hint for English variants to help with accent detection
+            if ($whisperLanguage === 'en' && $audioFile->source_language !== 'en') {
+                $accentHint = $this->getAccentHint($audioFile->source_language);
+                if ($accentHint) {
+                    $transcriptionParams['prompt'] = $accentHint;
+                }
+            }
+            
+            $response = \OpenAI\Laravel\Facades\OpenAI::audio()->transcribe($transcriptionParams);
 
             $transcription = is_string($response) ? $response : $response->text;
             
@@ -277,6 +298,54 @@ class AudioProcessingService
     public function deductCredits($user, float $amount = 0.5, string $description = 'Credits used for audio processing'): void
     {
         $this->creditService->deductCredit($user, $description, $amount);
+    }
+
+    /**
+     * Convert extended language codes (en-gb, en-us) to ISO-639-1 format for Whisper API
+     * Whisper API only accepts ISO-639-1 codes (e.g., 'en'), not extended codes (e.g., 'en-gb')
+     *
+     * @param string $languageCode Extended or ISO-639-1 language code
+     * @return string ISO-639-1 language code
+     */
+    private function convertToIso6391(string $languageCode): string
+    {
+        // Normalize to lowercase
+        $code = strtolower(trim($languageCode));
+        
+        // Map extended English codes to 'en'
+        $englishVariants = ['en-us', 'en-gb', 'en-au', 'en-ca', 'en-in'];
+        if (in_array($code, $englishVariants)) {
+            return 'en';
+        }
+        
+        // Extract base language code if it's in format 'xx-XX' or 'xx_XX'
+        if (preg_match('/^([a-z]{2})(?:[-_][a-z]{2,})?$/i', $code, $matches)) {
+            return strtolower($matches[1]);
+        }
+        
+        // Return as-is if already in ISO-639-1 format
+        return $code;
+    }
+
+    /**
+     * Get accent hint prompt for Whisper API to help with English variant detection
+     * This helps Whisper use the correct spelling and terminology
+     *
+     * @param string $languageCode Extended language code (e.g., 'en-gb', 'en-us')
+     * @return string|null Prompt hint or null if not applicable
+     */
+    private function getAccentHint(string $languageCode): ?string
+    {
+        $hints = [
+            'en-gb' => 'This is British English. Use British spelling: colour, realise, centre, organise, etc.',
+            'en-us' => 'This is American English. Use American spelling: color, realize, center, organize, etc.',
+            'en-au' => 'This is Australian English. Use Australian/British spelling: colour, realise, centre, etc.',
+            'en-ca' => 'This is Canadian English. Use Canadian spelling (mix of British and American).',
+            'en-in' => 'This is Indian English. Use British spelling with Indian English terminology.',
+        ];
+        
+        $code = strtolower(trim($languageCode));
+        return $hints[$code] ?? null;
     }
 }
 

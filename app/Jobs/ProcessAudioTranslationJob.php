@@ -11,7 +11,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
-class ProcessAudioJob implements ShouldQueue
+class ProcessAudioTranslationJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -42,27 +42,7 @@ class ProcessAudioJob implements ShouldQueue
     public function handle(AudioProcessingService $processingService): void
     {
         try {
-            // Step 1: Transcribe with Whisper
-            $this->audioFile->update([
-                'status' => 'transcribing',
-                'processing_stage' => 'transcribing',
-                'processing_progress' => 10,
-                'processing_message' => 'Starting transcription...'
-            ]);
-
-            $transcription = $processingService->transcribeAudio($this->audioFile);
-            $this->audioFile->update([
-                'transcription' => $transcription,
-                'status' => 'pending_approval',
-                'processing_stage' => 'pending_approval',
-                'processing_progress' => 50,
-                'processing_message' => 'Transcription completed! Please review and approve to continue.'
-            ]);
-
-            // Stop here - wait for user approval
-            return;
-
-            // Step 2: Translate text (skip if same language for accent improvement)
+            // Step 1: Translate text (skip if same language for accent improvement)
             $sourceBase = $this->getBaseLanguageCode($this->audioFile->source_language);
             $targetBase = $this->getBaseLanguageCode($this->audioFile->target_language);
             $isSameLanguage = ($sourceBase === $targetBase);
@@ -72,22 +52,22 @@ class ProcessAudioJob implements ShouldQueue
                 $this->audioFile->update([
                     'status' => 'generating_audio',
                     'processing_stage' => 'generating_audio',
-                    'processing_progress' => 50,
+                    'processing_progress' => 60,
                     'processing_message' => 'Skipping translation (accent improvement mode)...'
                 ]);
                 
-                $translatedText = $transcription; // Use transcription as-is
+                $translatedText = $this->audioFile->transcription; // Use transcription as-is
             } else {
                 // Different languages - translate
                 $this->audioFile->update([
                     'status' => 'translating',
                     'processing_stage' => 'translating',
-                    'processing_progress' => 50,
+                    'processing_progress' => 60,
                     'processing_message' => 'Translating text with AI...'
                 ]);
 
                 $translatedText = $processingService->translateText(
-                    $transcription,
+                    $this->audioFile->transcription,
                     $this->audioFile->source_language,
                     $this->audioFile->target_language
                 );
@@ -95,15 +75,15 @@ class ProcessAudioJob implements ShouldQueue
 
             $this->audioFile->update([
                 'translated_text' => $translatedText,
-                'processing_progress' => 60,
+                'processing_progress' => 70,
                 'processing_message' => $isSameLanguage ? 'Ready for audio generation!' : 'Translation completed!'
             ]);
 
-            // Step 3: Generate audio with TTS
+            // Step 2: Generate audio with TTS
             $this->audioFile->update([
                 'status' => 'generating_audio',
                 'processing_stage' => 'generating_audio',
-                'processing_progress' => 70,
+                'processing_progress' => 80,
                 'processing_message' => $isSameLanguage ? 'Generating audio with AI voice (accent improvement)...' : 'Generating translated audio...'
             ]);
 
@@ -130,7 +110,7 @@ class ProcessAudioJob implements ShouldQueue
             );
 
         } catch (\Exception $e) {
-            Log::error('Audio processing failed', [
+            Log::error('Audio translation processing failed', [
                 'audio_file_id' => $this->audioFile->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
@@ -154,7 +134,7 @@ class ProcessAudioJob implements ShouldQueue
      */
     public function failed(\Throwable $exception): void
     {
-        Log::error('Audio processing job failed permanently', [
+        Log::error('Audio translation job failed permanently', [
             'audio_file_id' => $this->audioFile->id,
             'error' => $exception->getMessage(),
             'attempts' => $this->attempts()
@@ -187,3 +167,4 @@ class ProcessAudioJob implements ShouldQueue
         return $code;
     }
 }
+

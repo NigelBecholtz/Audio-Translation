@@ -43,6 +43,7 @@ Route::middleware(['auth', 'throttle:60,1'])->group(function () {
     
     Route::resource('audio', AudioController::class)->except(['store']);
     Route::get('audio/{id}/download', [AudioController::class, 'download'])->name('audio.download');
+    Route::post('audio/{id}/approve-transcription', [AudioController::class, 'approveTranscription'])->name('audio.approve-transcription');
 });
 
 // Status endpoints WITHOUT rate limiting for real-time polling

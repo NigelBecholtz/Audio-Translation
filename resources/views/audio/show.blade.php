@@ -27,18 +27,21 @@
                         <span id="status-badge" class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium 
                             @if($audioFile->isCompleted()) bg-green-100 text-green-800
                             @elseif($audioFile->isFailed()) bg-red-100 text-red-800
+                            @elseif($audioFile->isPendingApproval()) bg-yellow-100 text-yellow-800
                             @elseif($audioFile->isProcessing()) bg-yellow-100 text-yellow-800 pulse-animation
                             @else bg-gray-100 text-gray-800
                             @endif">
                             <i id="status-icon" class="mr-2 
                                 @if($audioFile->isCompleted()) fas fa-check-circle
                                 @elseif($audioFile->isFailed()) fas fa-exclamation-triangle
+                                @elseif($audioFile->isPendingApproval()) fas fa-clock
                                 @elseif($audioFile->isProcessing()) fas fa-spinner fa-spin
                                 @else fas fa-upload
                                 @endif"></i>
                             <span id="status-text">
                                 @if($audioFile->isCompleted()) {{ __('Completed') }}
                                 @elseif($audioFile->isFailed()) {{ __('Failed') }}
+                                @elseif($audioFile->isPendingApproval()) {{ __('Awaiting Approval') }}
                                 @elseif($audioFile->isProcessing()) {{ __('Processing...') }}
                                 @else {{ __('Uploaded') }}
                                 @endif
@@ -79,13 +82,21 @@
 
                         <!-- Step 2: Transcription -->
                         <div class="flex items-center gap-4">
-                            @if($audioFile->transcription)
+                            @if($audioFile->transcription && !$audioFile->isPendingApproval())
                                 <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
                                     <i class="fas fa-check text-green-600"></i>
                                 </div>
                                 <div class="flex-1">
                                     <h4 class="font-semibold text-white text-lg">{{ __('Audio Transcribed') }}</h4>
                                     <p class="text-sm text-gray-400">{{ __('Whisper AI has converted the audio to text') }}</p>
+                                </div>
+                            @elseif($audioFile->isPendingApproval())
+                                <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-clock text-yellow-600"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-white text-lg">{{ __('Awaiting Your Approval') }}</h4>
+                                    <p class="text-sm text-gray-400">{{ __('Please review the transcription and approve to continue') }}</p>
                                 </div>
                             @elseif($audioFile->status === 'transcribing')
                                 <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -183,13 +194,43 @@
                 <!-- Transcription -->
                 @if($audioFile->transcription)
                     <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
-                        <h3 class="text-xl font-bold text-white mb-4 flex items-center">
-                            <i class="fas fa-file-text mr-2 text-indigo-400"></i>
-                            {{ __('Transcription') }} ({{ strtoupper($audioFile->source_language) }})
-                        </h3>
-                        <div class="bg-gray-700/50 p-6 rounded-xl border border-gray-600/30">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                            <h3 class="text-xl font-bold text-white flex items-center">
+                                <i class="fas fa-file-text mr-2 text-indigo-400"></i>
+                                {{ __('Transcription') }} ({{ strtoupper($audioFile->source_language) }})
+                            </h3>
+                            @if($audioFile->isPendingApproval())
+                                <div class="inline-flex items-center px-4 py-2 bg-yellow-500/20 border-2 border-yellow-500 rounded-xl">
+                                    <i class="fas fa-clock mr-2 text-yellow-400"></i>
+                                    <span class="text-yellow-300 font-semibold">{{ __('Awaiting Approval') }}</span>
+                                </div>
+                            @endif
+                        </div>
+                        <div class="bg-gray-700/50 p-6 rounded-xl border border-gray-600/30 mb-4">
                             <p class="text-white leading-relaxed text-lg">{{ $audioFile->transcription }}</p>
                         </div>
+                        @if($audioFile->isPendingApproval())
+                            <div class="bg-gradient-to-r from-blue-900/30 to-indigo-900/30 p-6 rounded-xl border-2 border-blue-500/50">
+                                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-white text-lg mb-2 flex items-center">
+                                            <i class="fas fa-check-circle mr-2 text-blue-400"></i>
+                                            {{ __('Review and Approve Transcription') }}
+                                        </h4>
+                                        <p class="text-gray-300 text-sm">
+                                            {{ __('Please review the transcription above. If it looks correct, click the button below to continue with translation and audio generation.') }}
+                                        </p>
+                                    </div>
+                                    <form method="POST" action="{{ route('audio.approve-transcription', $audioFile->id) }}" class="flex-shrink-0">
+                                        @csrf
+                                        <button type="submit" class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg hover:shadow-xl font-bold text-lg">
+                                            <i class="fas fa-check-circle mr-2"></i>
+                                            {{ __('Approve & Continue') }}
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 @endif
 
@@ -301,7 +342,7 @@
 
 <script>
 // Real-time progress tracking
-@if($audioFile->isProcessing() || (!$audioFile->isCompleted() && !$audioFile->isFailed()))
+@if($audioFile->isProcessing() || (!$audioFile->isCompleted() && !$audioFile->isFailed() && !$audioFile->isPendingApproval()))
 let pollInterval;
 const audioFileId = {{ $audioFile->id }};
 
@@ -328,7 +369,11 @@ function updateProgress(data) {
     const statusIcon = document.getElementById('status-icon');
     const statusText = document.getElementById('status-text');
     
-    if (data.is_completed) {
+    if (data.is_pending_approval) {
+        // Reload page to show approval button
+        clearInterval(pollInterval);
+        setTimeout(() => window.location.reload(), 1000);
+    } else if (data.is_completed) {
         if (statusBadge) {
             statusBadge.className = 'inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800';
         }

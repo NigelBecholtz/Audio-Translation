@@ -136,6 +136,40 @@ class AudioController extends Controller
             'is_completed' => $audioFile->status === 'completed',
             'is_failed' => $audioFile->status === 'failed',
             'is_processing' => in_array($audioFile->status, ['uploaded', 'transcribing', 'translating', 'generating_audio']),
+            'is_pending_approval' => $audioFile->status === 'pending_approval',
         ]);
+    }
+
+    /**
+     * Approve transcription and continue with translation and audio generation
+     */
+    public function approveTranscription($id)
+    {
+        try {
+            // Use user's audioFiles relationship for automatic authorization
+            $audioFile = auth()->user()->audioFiles()->findOrFail($id);
+            
+            if ($audioFile->status !== 'pending_approval') {
+                return back()->with('error', __('This transcription is not pending approval.'));
+            }
+
+            if (!$audioFile->transcription) {
+                return back()->with('error', __('No transcription found to approve.'));
+            }
+
+            // Dispatch job to continue with translation and audio generation
+            \App\Jobs\ProcessAudioTranslationJob::dispatch($audioFile);
+
+            return redirect()->route('audio.show', $audioFile->id)
+                ->with('success', __('Transcription approved! Translation and audio generation started...'));
+
+        } catch (\Exception $e) {
+            Log::error('Failed to approve transcription', [
+                'audio_file_id' => $id,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
+            return back()->with('error', __('Failed to approve transcription: ') . $e->getMessage());
+        }
     }
 }

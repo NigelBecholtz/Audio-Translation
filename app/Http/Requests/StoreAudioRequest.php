@@ -73,7 +73,8 @@ class StoreAudioRequest extends FormRequest
                 'required',
                 'string',
                 Rule::in($languageCodes),
-                'different:source_language'
+                // Allow same language for accent improvement (e.g., English to English)
+                // Removed 'different:source_language' rule to enable accent improvement feature
             ],
             'voice' => [
                 'required',
@@ -107,9 +108,8 @@ class StoreAudioRequest extends FormRequest
             'source_language.required' => 'Please select the source language of your audio.',
             'source_language.in' => 'The selected source language is invalid.',
             
-            'target_language.required' => 'Please select the target language for translation.',
+            'target_language.required' => 'Please select the target language for translation or accent improvement.',
             'target_language.in' => 'The selected target language is invalid.',
-            'target_language.different' => 'The target language must be different from the source language.',
             
             'voice.required' => 'Please select a voice for the translated audio.',
             'voice.regex' => 'The selected voice is invalid.',
@@ -146,5 +146,23 @@ class StoreAudioRequest extends FormRequest
         throw new \Illuminate\Auth\Access\AuthorizationException(
             __('You have no more translations available. Purchase credits to continue!')
         );
+    }
+
+    /**
+     * Get base language code (e.g., 'en-gb' -> 'en', 'es' -> 'es')
+     *
+     * @param string $languageCode
+     * @return string
+     */
+    private function getBaseLanguageCode(string $languageCode): string
+    {
+        $code = strtolower(trim($languageCode));
+        
+        // Extract base language code if it's in format 'xx-XX' or 'xx_XX'
+        if (preg_match('/^([a-z]{2})(?:[-_][a-z]{2,})?$/i', $code, $matches)) {
+            return strtolower($matches[1]);
+        }
+        
+        return $code;
     }
 }
