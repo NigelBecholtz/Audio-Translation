@@ -208,6 +208,14 @@ class AudioController extends Controller
                 return back()->with('error', __('No transcription found. Please save your transcription first.'));
             }
 
+            // Update status to show translation is starting
+            $audioFile->update([
+                'status' => 'translating',
+                'processing_stage' => 'translating',
+                'processing_progress' => 10,
+                'processing_message' => __('Starting translation...')
+            ]);
+
             // Dispatch job to continue with translation and audio generation
             \App\Jobs\ProcessAudioTranslationJob::dispatch($audioFile);
 

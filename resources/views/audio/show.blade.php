@@ -322,6 +322,9 @@
 
                                 <!-- Continue to Translation Section -->
                                 <div class="bg-gradient-to-r from-blue-900/30 to-indigo-900/30 p-6 rounded-xl border-2 border-blue-500/50">
+                                    <form id="continueForm" method="POST" action="{{ route('audio.approve-transcription', $audioFile->id) }}" style="display: none;">
+                                        @csrf
+                                    </form>
                                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                         <div class="flex-1">
                                             <h4 class="font-bold text-white text-lg mb-2 flex items-center">
@@ -668,26 +671,23 @@ function saveTranscription() {
 // Continue to translation
 function continueToTranslation() {
     const continueBtn = document.getElementById('continueBtn');
+    const continueForm = document.getElementById('continueForm');
 
-    if (!continueBtn) return;
+    if (!continueBtn || !continueForm) return;
 
     // Disable button and show loading
     continueBtn.disabled = true;
     continueBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>{{ __("Processing...") }}';
 
-    // Create and submit form to continue
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = `{{ route("audio.approve-transcription", $audioFile->id) }}`;
+    // Submit the hidden form
+    continueForm.submit();
 
-    const csrfToken = document.createElement('input');
-    csrfToken.type = 'hidden';
-    csrfToken.name = '_token';
-    csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-    form.appendChild(csrfToken);
-    document.body.appendChild(form);
-    form.submit();
+    // Fallback: reload page after 3 seconds if form doesn't redirect
+    setTimeout(() => {
+        if (continueBtn.disabled) {
+            window.location.reload();
+        }
+    }, 3000);
 }
 
 // Reset transcription to original
