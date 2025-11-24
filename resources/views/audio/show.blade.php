@@ -437,35 +437,36 @@
                                     </div>
                                 </div>
 
-                                <!-- Generate Audio Section -->
-                                <div class="bg-gradient-to-r from-purple-900/30 to-pink-900/30 p-6 rounded-xl border-2 border-purple-500/50">
-                                    <form id="approveTTSForm" method="POST" action="{{ route('audio.approve-tts', $audioFile->id) }}">
-                                        @csrf
-                                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                                            <div class="flex-1">
-                                                <h4 class="font-bold text-white text-lg mb-2 flex items-center">
-                                                    <i class="fas fa-volume-up mr-2 text-purple-400"></i>
-                                                    {{ __('Generate Audio') }}
-                                                </h4>
-                                                <p class="text-gray-300 text-sm">
-                                                    {{ __('Proceed with the current translated text to generate the audio file using voice:') }}
-                                                    <strong class="text-purple-300">{{ ucfirst($audioFile->voice) }}</strong>
-                                                    <br>{{ __('Make sure to save your changes first.') }}
-                                                </p>
-                                            </div>
-                                            <div class="flex-shrink-0">
-                                                <button
-                                                    type="submit"
-                                                    id="generateAudioBtn"
-                                                    class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl font-bold text-lg">
-                                                    <i class="fas fa-volume-up mr-2"></i>
-                                                    {{ __('Generate Audio') }}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </form>
-                                </div>
                             </form>
+
+                            <!-- Generate Audio Section -->
+                            <div class="bg-gradient-to-r from-purple-900/30 to-pink-900/30 p-6 rounded-xl border-2 border-purple-500/50 mt-4">
+                                <form id="approveTTSForm" method="POST" action="{{ route('audio.approve-tts', $audioFile->id) }}">
+                                    @csrf
+                                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                        <div class="flex-1">
+                                            <h4 class="font-bold text-white text-lg mb-2 flex items-center">
+                                                <i class="fas fa-volume-up mr-2 text-purple-400"></i>
+                                                {{ __('Generate Audio') }}
+                                            </h4>
+                                            <p class="text-gray-300 text-sm">
+                                                {{ __('Proceed with the current translated text to generate the audio file using voice:') }}
+                                                <strong class="text-purple-300">{{ ucfirst($audioFile->voice) }}</strong>
+                                                <br>{{ __('Make sure to save your changes first.') }}
+                                            </p>
+                                        </div>
+                                        <div class="flex-shrink-0">
+                                            <button
+                                                type="submit"
+                                                id="generateAudioBtn"
+                                                class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl font-bold text-lg">
+                                                <i class="fas fa-volume-up mr-2"></i>
+                                                {{ __('Generate Audio') }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
                         @else
                             <!-- Read-only Translated Text (when already approved or completed) -->
                             <div class="bg-gradient-to-r from-green-900/30 to-blue-900/30 p-6 rounded-xl border border-gray-600/30">
