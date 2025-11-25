@@ -104,14 +104,18 @@
                         <i class="fas fa-language mr-2 text-blue-400"></i>
                         {{ __('Select languages to translate to') }}
                     </label>
+                    <p class="text-xs text-gray-400 mb-2">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        {{ __('Hold Ctrl (Windows) or Cmd (Mac) to select multiple languages') }}
+                    </p>
                     @if($availableLanguages->isEmpty())
                         <div class="p-4 bg-gray-700/50 border border-gray-600/50 rounded-xl text-gray-300">
                             {{ __('All available languages have already been generated for this audio file.') }}
                         </div>
                     @else
-                        <select name="additional_languages" id="additional_languages"
-                                class="w-full px-4 py-3 text-lg border-2 border-gray-600 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-400 focus:border-blue-500 transition-all bg-gray-700 text-white">
-                            <option value="">{{ __('Select additional language') }}</option>
+                        <select name="additional_languages[]" id="additional_languages" multiple
+                                class="w-full px-4 py-3 text-base border-2 border-gray-600 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-400 focus:border-blue-500 transition-all bg-gray-700 text-white"
+                                size="10">
 
                             <!-- Priority Languages -->
                             <optgroup label="⭐ Most Used Languages">
