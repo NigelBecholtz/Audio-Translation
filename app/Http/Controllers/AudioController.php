@@ -153,7 +153,15 @@ class AudioController extends Controller
     {
         try {
             // Use user's audioFiles relationship for automatic authorization
-            $audioFile = auth()->user()->audioFiles()->findOrFail($id);
+            $audioFile = auth()->user()->audioFiles()->find($id);
+            
+            if (!$audioFile) {
+                Log::warning('Audio file not found for save transcription', [
+                    'audio_file_id' => $id,
+                    'user_id' => auth()->id(),
+                ]);
+                return response()->json(['error' => __('Audio file not found or you do not have permission to access it.')], 404);
+            }
 
             if ($audioFile->status !== 'pending_approval') {
                 return response()->json(['error' => __('This transcription is not pending approval.')], 400);
@@ -186,13 +194,20 @@ class AudioController extends Controller
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['errors' => $e->errors()], 422);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::warning('Audio file not found for save transcription', [
+                'audio_file_id' => $id,
+                'user_id' => auth()->id(),
+            ]);
+            return response()->json(['error' => __('Audio file not found or you do not have permission to access it.')], 404);
         } catch (\Exception $e) {
             Log::error('Failed to save transcription', [
                 'audio_file_id' => $id,
                 'user_id' => auth()->id(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
-            return response()->json(['error' => __('Failed to save transcription: ') . $e->getMessage()], 500);
+            return response()->json(['error' => __('Failed to save transcription. Please try again.')], 500);
         }
     }
 
