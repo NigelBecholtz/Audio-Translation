@@ -80,9 +80,10 @@ class ProcessAdditionalAudioTranslation implements ShouldQueue
                 'target_language' => $audioTranslation->target_language,
             ]);
 
-            $translatedText = $translationService->translate(
+            // GoogleTranslationService::translateText() only takes text and target language
+            // It will auto-detect source language or use the configured default
+            $translatedText = $translationService->translateText(
                 $audioTranslation->audioFile->transcription,
-                $audioTranslation->audioFile->source_language,
                 $audioTranslation->target_language
             );
 
