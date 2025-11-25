@@ -260,28 +260,16 @@
                             <form method="POST" action="{{ route('audio.approve-transcription', $audioFile->id) }}" id="approveTranscriptionForm" class="space-y-4">
                                 @csrf
                                 <div>
-                                    <div class="flex items-center justify-between mb-2">
-                                        <label for="edited_transcription" class="block text-sm font-semibold text-gray-300">
-                                            <i class="fas fa-edit mr-2 text-blue-400"></i>
-                                            {{ __('Edit transcription if needed') }}
-                                        </label>
-                                        <button
-                                            type="button"
-                                            onclick="toggleTranscriptionEditor()"
-                                            id="transcriptionExpandBtn"
-                                            class="inline-flex items-center px-3 py-1 text-xs bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors duration-200">
-                                            <i class="fas fa-expand mr-1"></i>
-                                            {{ __('Expand') }}
-                                        </button>
-                                    </div>
-                                    <div class="transcription-editor-container">
-                                        <textarea
-                                            id="edited_transcription"
-                                            name="transcription"
-                                            rows="8"
-                                            class="w-full px-4 py-3 text-lg border-2 border-gray-600 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-400 focus:border-blue-500 transition-all bg-gray-700 text-white resize-none font-mono"
-                                            placeholder="{{ __('Edit the transcription here...') }}">{{ old('transcription', $audioFile->transcription) }}</textarea>
-                                    </div>
+                                    <label for="edited_transcription" class="block text-sm font-semibold text-gray-300 mb-2">
+                                        <i class="fas fa-edit mr-2 text-blue-400"></i>
+                                        {{ __('Edit transcription if needed') }}
+                                    </label>
+                                    <textarea
+                                        id="edited_transcription"
+                                        name="transcription"
+                                        rows="8"
+                                        class="w-full px-4 py-3 text-lg border-2 border-gray-600 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-400 focus:border-blue-500 transition-all bg-gray-700 text-white resize-y font-mono"
+                                        placeholder="{{ __('Edit the transcription here...') }}">{{ old('transcription', $audioFile->transcription) }}</textarea>
                                     <p class="mt-2 text-xs text-gray-400 flex items-center">
                                         <i class="fas fa-info-circle mr-1"></i>
                                         {{ __('You can edit the transcription before approving. The edited version will be used for translation and audio generation.') }}
@@ -389,28 +377,16 @@
                             <form method="POST" action="{{ route('audio.save-translated-text', $audioFile->id) }}" id="saveTranslatedTextForm" class="space-y-4">
                                 @csrf
                                 <div>
-                                    <div class="flex items-center justify-between mb-2">
-                                        <label for="edited_translated_text" class="block text-sm font-semibold text-gray-300">
-                                            <i class="fas fa-edit mr-2 text-green-400"></i>
-                                            {{ __('Edit translated text if needed') }}
-                                        </label>
-                                        <button
-                                            type="button"
-                                            onclick="toggleTranslatedTextEditor()"
-                                            id="translatedTextExpandBtn"
-                                            class="inline-flex items-center px-3 py-1 text-xs bg-green-600 hover:bg-green-500 text-white rounded-lg transition-colors duration-200">
-                                            <i class="fas fa-expand mr-1"></i>
-                                            {{ __('Expand') }}
-                                        </button>
-                                    </div>
-                                    <div class="translated-text-editor-container">
-                                        <textarea
-                                            id="edited_translated_text"
-                                            name="translated_text"
-                                            rows="8"
-                                            class="w-full px-4 py-3 text-lg border-2 border-gray-600 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-400 focus:border-green-500 transition-all bg-gray-700 text-white resize-none font-mono"
-                                            placeholder="{{ __('Edit the translated text here...') }}">{{ old('translated_text', $audioFile->translated_text) }}</textarea>
-                                    </div>
+                                    <label for="edited_translated_text" class="block text-sm font-semibold text-gray-300 mb-2">
+                                        <i class="fas fa-edit mr-2 text-green-400"></i>
+                                        {{ __('Edit translated text if needed') }}
+                                    </label>
+                                    <textarea
+                                        id="edited_translated_text"
+                                        name="translated_text"
+                                        rows="8"
+                                        class="w-full px-4 py-3 text-lg border-2 border-gray-600 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-400 focus:border-green-500 transition-all bg-gray-700 text-white resize-y font-mono"
+                                        placeholder="{{ __('Edit the translated text here...') }}">{{ old('translated_text', $audioFile->translated_text) }}</textarea>
                                     <p class="mt-2 text-xs text-gray-400 flex items-center">
                                         <i class="fas fa-info-circle mr-1"></i>
                                         {{ __('You can edit the translated text before generating audio. The edited version will be used for TTS generation.') }}
@@ -612,65 +588,6 @@
     </div>
 </div>
 
-<style>
-/* Expandable text editors */
-.transcription-editor-container,
-.translated-text-editor-container {
-    transition: all 0.3s ease;
-}
-
-.transcription-editor-container.expanded,
-.translated-text-editor-container.expanded {
-    position: fixed;
-    top: 10%;
-    left: 5%;
-    right: 5%;
-    bottom: 10%;
-    z-index: 1000;
-    background: rgba(31, 41, 55, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 1rem;
-    border: 2px solid rgba(59, 130, 246, 0.5);
-    padding: 2rem;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
-}
-
-.transcription-editor-container.expanded textarea,
-.translated-text-editor-container.expanded textarea {
-    height: calc(100% - 4rem) !important;
-    resize: vertical;
-}
-
-.transcription-editor-container.expanded::before,
-.translated-text-editor-container.expanded::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1));
-    border-radius: 1rem;
-    pointer-events: none;
-    z-index: -1;
-}
-
-/* Dark overlay when editors are expanded */
-body.editor-expanded {
-    overflow: hidden;
-}
-
-body.editor-expanded::after {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
-    z-index: 999;
-}
-</style>
 
 <script>
 // Real-time progress tracking
@@ -922,91 +839,6 @@ function resetTranslatedText() {
     }
 }
 
-// Toggle transcription editor expansion
-function toggleTranscriptionEditor() {
-    const container = document.querySelector('.transcription-editor-container');
-    const textarea = document.getElementById('edited_transcription');
-    const button = document.getElementById('transcriptionExpandBtn');
-    const icon = button.querySelector('i');
-    const text = button.querySelector('span') || button.lastChild;
-
-    if (container.classList.contains('expanded')) {
-        // Collapse
-        container.classList.remove('expanded');
-        textarea.rows = 8;
-        textarea.classList.add('resize-none');
-        textarea.classList.remove('resize-y');
-        icon.className = 'fas fa-expand mr-1';
-        if (text.nodeType === Node.TEXT_NODE) {
-            text.textContent = '{{ __("Expand") }}';
-        } else if (text.tagName === 'SPAN') {
-            text.textContent = '{{ __("Expand") }}';
-        }
-        button.classList.remove('bg-blue-800');
-        button.classList.add('bg-blue-600', 'hover:bg-blue-500');
-        document.body.classList.remove('editor-expanded');
-    } else {
-        // Expand
-        container.classList.add('expanded');
-        textarea.rows = 20;
-        textarea.classList.remove('resize-none');
-        textarea.classList.add('resize-y');
-        icon.className = 'fas fa-compress mr-1';
-        if (text.nodeType === Node.TEXT_NODE) {
-            text.textContent = '{{ __("Collapse") }}';
-        } else if (text.tagName === 'SPAN') {
-            text.textContent = '{{ __("Collapse") }}';
-        }
-        button.classList.remove('bg-blue-600', 'hover:bg-blue-500');
-        button.classList.add('bg-blue-800', 'hover:bg-blue-700');
-        document.body.classList.add('editor-expanded');
-        // Focus on textarea when expanded
-        setTimeout(() => textarea.focus(), 100);
-    }
-}
-
-// Toggle translated text editor expansion
-function toggleTranslatedTextEditor() {
-    const container = document.querySelector('.translated-text-editor-container');
-    const textarea = document.getElementById('edited_translated_text');
-    const button = document.getElementById('translatedTextExpandBtn');
-    const icon = button.querySelector('i');
-    const text = button.querySelector('span') || button.lastChild;
-
-    if (container.classList.contains('expanded')) {
-        // Collapse
-        container.classList.remove('expanded');
-        textarea.rows = 8;
-        textarea.classList.add('resize-none');
-        textarea.classList.remove('resize-y');
-        icon.className = 'fas fa-expand mr-1';
-        if (text.nodeType === Node.TEXT_NODE) {
-            text.textContent = '{{ __("Expand") }}';
-        } else if (text.tagName === 'SPAN') {
-            text.textContent = '{{ __("Expand") }}';
-        }
-        button.classList.remove('bg-green-800');
-        button.classList.add('bg-green-600', 'hover:bg-green-500');
-        document.body.classList.remove('editor-expanded');
-    } else {
-        // Expand
-        container.classList.add('expanded');
-        textarea.rows = 20;
-        textarea.classList.remove('resize-none');
-        textarea.classList.add('resize-y');
-        icon.className = 'fas fa-compress mr-1';
-        if (text.nodeType === Node.TEXT_NODE) {
-            text.textContent = '{{ __("Collapse") }}';
-        } else if (text.tagName === 'SPAN') {
-            text.textContent = '{{ __("Collapse") }}';
-        }
-        button.classList.remove('bg-green-600', 'hover:bg-green-500');
-        button.classList.add('bg-green-800', 'hover:bg-green-700');
-        document.body.classList.add('editor-expanded');
-        // Focus on textarea when expanded
-        setTimeout(() => textarea.focus(), 100);
-    }
-}
 </script>
 
 @endsection
