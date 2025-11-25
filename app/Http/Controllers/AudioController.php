@@ -82,7 +82,10 @@ class AudioController extends Controller
     public function show($id)
     {
         // Use user's audioFiles relationship for automatic authorization
-        $audioFile = auth()->user()->audioFiles()->findOrFail($id);
+        // Eager load audioTranslations to prevent null issues in view
+        $audioFile = auth()->user()->audioFiles()
+            ->with('audioTranslations')
+            ->findOrFail($id);
         
         return view('audio.show', compact('audioFile'));
     }
@@ -360,7 +363,10 @@ class AudioController extends Controller
      */
     public function showAdditionalTranslations($id)
     {
-        $audioFile = auth()->user()->audioFiles()->findOrFail($id);
+        // Eager load audioTranslations to prevent null issues
+        $audioFile = auth()->user()->audioFiles()
+            ->with('audioTranslations')
+            ->findOrFail($id);
 
         // Only allow if the original translation is completed
         if (!$audioFile->isCompleted()) {
@@ -375,8 +381,8 @@ class AudioController extends Controller
                        !$audioFile->audioTranslations()->where('target_language', $code)->exists();
             });
 
-        // Get existing audio translations
-        $audioTranslations = $audioFile->audioTranslations;
+        // Get existing audio translations - ensure it's always a collection
+        $audioTranslations = $audioFile->audioTranslations ?? collect();
 
         return view('audio.additional-translations', compact('audioFile', 'availableLanguages', 'audioTranslations'));
     }
@@ -394,41 +400,44 @@ class AudioController extends Controller
         }
 
         $request->validate([
-            'additional_languages' => 'required|string|in:' . implode(',', array_keys(config('audio.available_languages'))),
+            'additional_languages' => 'required|array|min:1',
+            'additional_languages.*' => 'required|string|in:' . implode(',', array_keys(config('audio.available_languages'))),
             'voice' => 'required|string',
             'style_instruction' => 'nullable|string|max:' . config('audio.max_style_instruction_length', 5000),
         ]);
 
-        $targetLanguage = $request->input('additional_languages');
+        $additionalLanguages = $request->input('additional_languages');
         $voice = $request->input('voice');
         $styleInstruction = $request->input('style_instruction', $audioFile->style_instruction);
 
-        // Check if already exists
-        if ($audioFile->audioTranslations()->where('target_language', $targetLanguage)->exists()) {
-            return back()->with('error', __('This language has already been translated for this audio file.'));
-        }
-
         // Check credits
-        $totalCost = config('stripe.default_cost_per_translation');
+        $totalCost = count($additionalLanguages) * config('stripe.default_cost_per_translation');
         if (!$audioFile->user->hasEnoughCredits($totalCost)) {
-            return back()->with('error', __('You don\'t have enough credits. You need ') . $totalCost . __(' credits for this translation.'));
+            return back()->with('error', __('You don\'t have enough credits. You need ') . $totalCost . __(' credits for these translations.'));
         }
 
-        // Create audio translation record and dispatch job
-        $audioTranslation = AudioTranslation::create([
-            'audio_file_id' => $audioFile->id,
-            'target_language' => $targetLanguage,
-            'translated_text' => '', // Will be filled by the job
-            'voice' => $voice,
-            'style_instruction' => $styleInstruction,
-            'status' => 'pending',
-        ]);
+        // Create audio translation records and dispatch jobs
+        foreach ($additionalLanguages as $targetLanguage) {
+            // Skip if already exists
+            if ($audioFile->audioTranslations()->where('target_language', $targetLanguage)->exists()) {
+                continue;
+            }
 
-        // Dispatch job for processing
-        ProcessAdditionalAudioTranslation::dispatch($audioTranslation);
+            $audioTranslation = AudioTranslation::create([
+                'audio_file_id' => $audioFile->id,
+                'target_language' => $targetLanguage,
+                'translated_text' => '', // Will be filled by the job
+                'voice' => $voice,
+                'style_instruction' => $styleInstruction,
+                'status' => 'pending',
+            ]);
+
+            // Dispatch job for processing
+            ProcessAdditionalAudioTranslation::dispatch($audioTranslation);
+        }
 
         return redirect()->route('audio.show', $audioFile->id)
-            ->with('success', __('Additional translation started! You will be notified when it is ready.'));
+            ->with('success', __('Additional translations started! You will be notified when they are ready.'));
     }
 
     /**

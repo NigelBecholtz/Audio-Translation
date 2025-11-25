@@ -43,7 +43,7 @@
         </div>
 
         <!-- Existing Translations -->
-        @if($audioTranslations->count() > 0)
+        @if($audioTranslations && $audioTranslations->count() > 0)
         <div class="mb-8">
             <h2 class="text-2xl font-bold text-white mb-4 flex items-center">
                 <i class="fas fa-list mr-2 text-green-400"></i>

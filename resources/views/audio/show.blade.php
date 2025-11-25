@@ -474,7 +474,7 @@
                 @endif
 
                 <!-- Audio Translations -->
-                @if($audioFile->isCompleted() || $audioFile->audioTranslations()->count() > 0)
+                @if($audioFile->isCompleted() || ($audioFile->audioTranslations && $audioFile->audioTranslations->count() > 0))
                     <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
                         <h3 class="text-xl font-bold text-white mb-6 flex items-center">
                             <i class="fas fa-volume-up mr-2 text-green-400"></i>
@@ -504,6 +504,7 @@
                             @endif
 
                             <!-- Additional Translations -->
+                            @if($audioFile->audioTranslations && $audioFile->audioTranslations->count() > 0)
                             @foreach($audioFile->audioTranslations as $translation)
                             <div class="bg-gray-700/50 p-4 rounded-xl border border-gray-600/30">
                                 <div class="flex items-center justify-between mb-3">
@@ -547,6 +548,7 @@
                                 @endif
                             </div>
                             @endforeach
+                            @endif
                         </div>
                     </div>
                 @endif

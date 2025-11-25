@@ -126,6 +126,23 @@ class User extends Authenticatable
     }
 
     /**
+     * Check if user has enough credits for a transaction
+     *
+     * @param float $amount
+     * @return bool
+     */
+    public function hasEnoughCredits(float $amount): bool
+    {
+        // Check free translations first
+        if ($this->translations_used < $this->translations_limit) {
+            return true;
+        }
+        
+        // Then check if user has enough credits
+        return $this->credits >= $amount;
+    }
+
+    /**
      * Safely set admin status (not mass assignable)
      * Only use this in admin-controlled contexts
      */
