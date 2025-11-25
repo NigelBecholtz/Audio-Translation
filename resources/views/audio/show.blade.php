@@ -322,29 +322,26 @@
 
                                 <!-- Continue to Translation Section -->
                                 <div class="bg-gradient-to-r from-blue-900/30 to-indigo-900/30 p-6 rounded-xl border-2 border-blue-500/50">
-                                    <form id="continueForm" method="POST" action="{{ route('audio.approve-transcription', $audioFile->id) }}">
-                                        @csrf
-                                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                                            <div class="flex-1">
-                                                <h4 class="font-bold text-white text-lg mb-2 flex items-center">
-                                                    <i class="fas fa-arrow-right mr-2 text-blue-400"></i>
-                                                    {{ __('Continue to Translation') }}
-                                                </h4>
-                                                <p class="text-gray-300 text-sm">
-                                                    {{ __('Proceed with the current transcription to translation and audio generation. Make sure to save your changes first.') }}
-                                                </p>
-                                            </div>
-                                            <div class="flex-shrink-0">
-                                                <button
-                                                    type="submit"
-                                                    id="continueBtn"
-                                                    class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 shadow-lg hover:shadow-xl font-bold text-lg">
-                                                    <i class="fas fa-arrow-right mr-2"></i>
-                                                    {{ __('Continue') }}
-                                                </button>
-                                            </div>
+                                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                        <div class="flex-1">
+                                            <h4 class="font-bold text-white text-lg mb-2 flex items-center">
+                                                <i class="fas fa-arrow-right mr-2 text-blue-400"></i>
+                                                {{ __('Continue to Translation') }}
+                                            </h4>
+                                            <p class="text-gray-300 text-sm">
+                                                {{ __('Proceed with the current transcription to translation and audio generation. Make sure to save your changes first.') }}
+                                            </p>
                                         </div>
-                                    </form>
+                                        <div class="flex-shrink-0">
+                                            <button
+                                                type="submit"
+                                                id="continueBtn"
+                                                class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 shadow-lg hover:shadow-xl font-bold text-lg">
+                                                <i class="fas fa-arrow-right mr-2"></i>
+                                                {{ __('Continue') }}
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </form>
                         @else
