@@ -511,7 +511,13 @@
                                     <h4 class="font-semibold text-white">
                                         {{ __('Translation to') }} {{ strtoupper($translation->target_language) }}
                                         @if($translation->isProcessing())
-                                            <span class="text-sm text-blue-400 font-normal">({{ __('Processing...') }})</span>
+                                            <span class="text-sm text-blue-400 font-normal">
+                                                @if($translation->processing_message)
+                                                    ({{ $translation->processing_message }})
+                                                @else
+                                                    ({{ __('Processing...') }})
+                                                @endif
+                                            </span>
                                         @elseif($translation->isFailed())
                                             <span class="text-sm text-red-400 font-normal">({{ __('Failed') }})</span>
                                         @else
@@ -533,9 +539,25 @@
                                     {{ __('Your browser does not support the audio element.') }}
                                 </audio>
                                 @elseif($translation->isProcessing())
-                                <div class="flex items-center justify-center py-4">
-                                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400"></div>
-                                    <span class="ml-2 text-blue-400">{{ __('Generating audio...') }}</span>
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-center py-4">
+                                        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400"></div>
+                                        <span class="ml-2 text-blue-400 font-semibold">
+                                            @if($translation->processing_message)
+                                                {{ $translation->processing_message }}
+                                            @elseif($translation->status === 'translating')
+                                                {{ __('Translating text...') }}
+                                            @else
+                                                {{ __('Generating audio...') }}
+                                            @endif
+                                        </span>
+                                    </div>
+                                    @if($translation->processing_progress > 0)
+                                    <div class="w-full bg-gray-700 rounded-full h-2.5">
+                                        <div class="bg-blue-500 h-2.5 rounded-full transition-all duration-300" style="width: {{ $translation->processing_progress }}%"></div>
+                                    </div>
+                                    <p class="text-center text-xs text-gray-400">{{ $translation->processing_progress }}% {{ __('complete') }}</p>
+                                    @endif
                                 </div>
                                 @elseif($translation->isFailed())
                                 <div class="text-center py-4">
@@ -907,6 +929,21 @@ function resetTranslatedText() {
         textarea.value = originalTranslatedText;
     }
 }
+
+// Auto-refresh page when translations are processing
+@if($audioFile->audioTranslations && $audioFile->audioTranslations->whereIn('status', ['translating', 'generating_audio', 'pending'])->count() > 0)
+(function() {
+    let refreshInterval = setInterval(function() {
+        // Simple page reload every 5 seconds when processing
+        window.location.reload();
+    }, 5000); // Refresh every 5 seconds
+
+    // Stop refreshing after 10 minutes to prevent infinite loops
+    setTimeout(function() {
+        clearInterval(refreshInterval);
+    }, 600000);
+})();
+@endif
 
 </script>
 

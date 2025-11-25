@@ -16,7 +16,10 @@ class AudioTranslation extends Model
         'style_instruction',
         'status',
         'error_message',
-        'cost'
+        'cost',
+        'processing_stage',
+        'processing_progress',
+        'processing_message'
     ];
 
     protected $casts = [

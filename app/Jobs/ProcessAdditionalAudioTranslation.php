@@ -32,6 +32,9 @@ class ProcessAdditionalAudioTranslation implements ShouldQueue
             // Step 1: Translate the text to the target language
             $this->audioTranslation->update([
                 'status' => 'translating',
+                'processing_stage' => 'translating',
+                'processing_progress' => 25,
+                'processing_message' => 'Translating text to ' . strtoupper($this->audioTranslation->target_language) . '...'
             ]);
 
             $translationService = app(GoogleTranslationService::class);
@@ -45,6 +48,9 @@ class ProcessAdditionalAudioTranslation implements ShouldQueue
             $this->audioTranslation->update([
                 'translated_text' => $translatedText,
                 'status' => 'generating_audio',
+                'processing_stage' => 'generating_audio',
+                'processing_progress' => 60,
+                'processing_message' => 'Translation completed! Generating audio with AI voice...'
             ]);
 
             $styleInstruction = $this->audioTranslation->style_instruction
@@ -61,6 +67,9 @@ class ProcessAdditionalAudioTranslation implements ShouldQueue
             $this->audioTranslation->update([
                 'translated_audio_path' => $translatedAudioPath,
                 'status' => 'completed',
+                'processing_stage' => 'completed',
+                'processing_progress' => 100,
+                'processing_message' => 'Translation completed successfully!'
             ]);
 
             // Deduct credits
@@ -78,6 +87,9 @@ class ProcessAdditionalAudioTranslation implements ShouldQueue
 
             $this->audioTranslation->update([
                 'status' => 'failed',
+                'processing_stage' => 'failed',
+                'processing_progress' => 0,
+                'processing_message' => 'Processing failed: ' . $e->getMessage(),
                 'error_message' => $e->getMessage(),
             ]);
 
