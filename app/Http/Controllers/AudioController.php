@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Actions\Audio\CreateAudioTranslationAction;
 use App\Http\Requests\StoreAudioRequest;
 use App\Jobs\ProcessAudioJob;
+use App\Jobs\ProcessAdditionalAudioTranslation;
 use App\Models\AudioFile;
 use App\Models\CreditTransaction;
 use App\Models\TextToAudio;
+use App\Models\AudioTranslation;
+use App\Models\AudioTranslation;
 use App\Services\AudioProcessingService;
 use App\Services\SanitizationService;
 use App\Traits\HasAudioFiles;
@@ -395,10 +398,12 @@ class AudioController extends Controller
             'additional_languages' => 'required|array|min:1',
             'additional_languages.*' => 'required|string|in:' . implode(',', array_keys(config('audio.available_languages'))),
             'voice' => 'required|string',
+            'style_instruction' => 'nullable|string|max:' . config('audio.max_style_instruction_length', 5000),
         ]);
 
         $additionalLanguages = $request->input('additional_languages');
         $voice = $request->input('voice');
+        $styleInstruction = $request->input('style_instruction', $audioFile->style_instruction);
 
         // Check credits
         $totalCost = count($additionalLanguages) * config('stripe.default_cost_per_translation');
@@ -418,6 +423,7 @@ class AudioController extends Controller
                 'target_language' => $targetLanguage,
                 'translated_text' => '', // Will be filled by the job
                 'voice' => $voice,
+                'style_instruction' => $styleInstruction,
                 'status' => 'pending',
             ]);
 

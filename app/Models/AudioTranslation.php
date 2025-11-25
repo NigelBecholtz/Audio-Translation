@@ -13,6 +13,7 @@ class AudioTranslation extends Model
         'translated_text',
         'translated_audio_path',
         'voice',
+        'style_instruction',
         'status',
         'error_message',
         'cost'

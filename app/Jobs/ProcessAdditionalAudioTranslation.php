@@ -2,12 +2,19 @@
 
 namespace App\Jobs;
 
+use App\Models\AudioTranslation;
+use App\Services\AudioProcessingService;
+use App\Services\GoogleTranslationService;
+use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class ProcessAdditionalAudioTranslation implements ShouldQueue
 {
-    use Queueable;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     /**
      * Create a new job instance.
@@ -40,10 +47,14 @@ class ProcessAdditionalAudioTranslation implements ShouldQueue
                 'status' => 'generating_audio',
             ]);
 
+            $styleInstruction = $this->audioTranslation->style_instruction
+                ?: $this->audioTranslation->audioFile->style_instruction;
+
             $translatedAudioPath = $processingService->generateAudio(
                 $translatedText,
+                $this->audioTranslation->target_language,
                 $this->audioTranslation->voice,
-                $this->audioTranslation->target_language
+                $styleInstruction
             );
 
             // Step 3: Complete the translation
