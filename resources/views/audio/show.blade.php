@@ -473,17 +473,81 @@
                     </div>
                 @endif
 
-                <!-- Translated Audio Preview -->
-                @if($audioFile->translated_audio_path && $audioFile->isCompleted() && \Storage::disk('public')->exists($audioFile->translated_audio_path))
+                <!-- Audio Translations -->
+                @if($audioFile->isCompleted() || $audioFile->audioTranslations()->count() > 0)
                     <div class="bg-gray-800/90 backdrop-blur-sm shadow-xl rounded-2xl border border-gray-600/30 p-6 fade-in">
-                        <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                        <h3 class="text-xl font-bold text-white mb-6 flex items-center">
                             <i class="fas fa-volume-up mr-2 text-green-400"></i>
-                            {{ __('Translated Audio Preview') }}
+                            {{ __('Audio Translations') }}
                         </h3>
-                        <audio controls class="w-full rounded-lg" preload="metadata">
-                            <source src="{{ asset('storage/' . $audioFile->translated_audio_path) }}" type="audio/mpeg">
-                            {{ __('Your browser does not support the audio element.') }}
-                        </audio>
+
+                        <div class="space-y-4">
+                            <!-- Original Translation -->
+                            @if($audioFile->translated_audio_path && $audioFile->isCompleted() && \Storage::disk('public')->exists($audioFile->translated_audio_path))
+                            <div class="bg-gray-700/50 p-4 rounded-xl border border-gray-600/30">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h4 class="font-semibold text-white">
+                                        {{ __('Translation to') }} {{ strtoupper($audioFile->target_language) }}
+                                        <span class="text-sm text-gray-400 font-normal">({{ __('Original') }})</span>
+                                    </h4>
+                                    <a href="{{ route('audio.download', $audioFile->id) }}"
+                                       class="inline-flex items-center px-3 py-1 bg-green-600 hover:bg-green-500 text-white rounded-lg transition-colors duration-200 text-sm">
+                                        <i class="fas fa-download mr-1"></i>
+                                        {{ __('Download') }}
+                                    </a>
+                                </div>
+                                <audio controls class="w-full rounded-lg" preload="metadata">
+                                    <source src="{{ asset('storage/' . $audioFile->translated_audio_path) }}" type="audio/mpeg">
+                                    {{ __('Your browser does not support the audio element.') }}
+                                </audio>
+                            </div>
+                            @endif
+
+                            <!-- Additional Translations -->
+                            @foreach($audioFile->audioTranslations as $translation)
+                            <div class="bg-gray-700/50 p-4 rounded-xl border border-gray-600/30">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h4 class="font-semibold text-white">
+                                        {{ __('Translation to') }} {{ strtoupper($translation->target_language) }}
+                                        @if($translation->isProcessing())
+                                            <span class="text-sm text-blue-400 font-normal">({{ __('Processing...') }})</span>
+                                        @elseif($translation->isFailed())
+                                            <span class="text-sm text-red-400 font-normal">({{ __('Failed') }})</span>
+                                        @else
+                                            <span class="text-sm text-gray-400 font-normal">({{ __('Ready') }})</span>
+                                        @endif
+                                    </h4>
+                                    @if($translation->isCompleted())
+                                    <a href="{{ route('audio.download-translation', [$audioFile->id, $translation->id]) }}"
+                                       class="inline-flex items-center px-3 py-1 bg-green-600 hover:bg-green-500 text-white rounded-lg transition-colors duration-200 text-sm">
+                                        <i class="fas fa-download mr-1"></i>
+                                        {{ __('Download') }}
+                                    </a>
+                                    @endif
+                                </div>
+
+                                @if($translation->isCompleted() && $translation->translated_audio_path && \Storage::disk('public')->exists($translation->translated_audio_path))
+                                <audio controls class="w-full rounded-lg" preload="metadata">
+                                    <source src="{{ asset('storage/' . $translation->translated_audio_path) }}" type="audio/mpeg">
+                                    {{ __('Your browser does not support the audio element.') }}
+                                </audio>
+                                @elseif($translation->isProcessing())
+                                <div class="flex items-center justify-center py-4">
+                                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400"></div>
+                                    <span class="ml-2 text-blue-400">{{ __('Generating audio...') }}</span>
+                                </div>
+                                @elseif($translation->isFailed())
+                                <div class="text-center py-4">
+                                    <p class="text-red-400 text-sm">{{ $translation->error_message ?: __('Translation failed') }}</p>
+                                </div>
+                                @else
+                                <div class="text-center py-4">
+                                    <p class="text-gray-400 text-sm">{{ __('Translation queued for processing') }}</p>
+                                </div>
+                                @endif
+                            </div>
+                            @endforeach
+                        </div>
                     </div>
                 @endif
             </div>
@@ -532,10 +596,16 @@
                     </h3>
                     <div class="space-y-3">
                         @if($audioFile->isCompleted())
-                            <a href="{{ route('audio.download', $audioFile->id) }}" 
+                            <a href="{{ route('audio.download', $audioFile->id) }}"
                                class="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg hover:shadow-xl hover-lift font-medium">
                                 <i class="fas fa-download mr-2"></i>
                                 {{ __('Download Translated Audio') }}
+                            </a>
+
+                            <a href="{{ route('audio.additional-translations', $audioFile->id) }}"
+                               class="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl hover-lift font-medium">
+                                <i class="fas fa-plus mr-2"></i>
+                                {{ __('Add More Languages') }}
                             </a>
                         @endif
                         

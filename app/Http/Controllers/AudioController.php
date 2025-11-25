@@ -352,4 +352,105 @@ class AudioController extends Controller
             return back()->with('error', __('Failed to retry processing: ') . $e->getMessage());
         }
     }
+
+    /**
+     * Show form for selecting additional languages
+     */
+    public function showAdditionalTranslations($id)
+    {
+        $audioFile = auth()->user()->audioFiles()->findOrFail($id);
+
+        // Only allow if the original translation is completed
+        if (!$audioFile->isCompleted()) {
+            return redirect()->route('audio.show', $audioFile->id)
+                ->with('error', __('You can only add additional translations after the original translation is completed.'));
+        }
+
+        // Get available languages (exclude source and already translated languages)
+        $availableLanguages = collect(config('audio.available_languages'))
+            ->filter(function ($language, $code) use ($audioFile) {
+                return $code !== $audioFile->source_language &&
+                       !$audioFile->audioTranslations()->where('target_language', $code)->exists();
+            });
+
+        // Get existing audio translations
+        $audioTranslations = $audioFile->audioTranslations;
+
+        return view('audio.additional-translations', compact('audioFile', 'availableLanguages', 'audioTranslations'));
+    }
+
+    /**
+     * Store additional language translations
+     */
+    public function storeAdditionalTranslations(Request $request, $id)
+    {
+        $audioFile = auth()->user()->audioFiles()->findOrFail($id);
+
+        if (!$audioFile->isCompleted()) {
+            return redirect()->route('audio.show', $audioFile->id)
+                ->with('error', __('You can only add additional translations after the original translation is completed.'));
+        }
+
+        $request->validate([
+            'additional_languages' => 'required|array|min:1',
+            'additional_languages.*' => 'required|string|in:' . implode(',', array_keys(config('audio.available_languages'))),
+            'voice' => 'required|string',
+        ]);
+
+        $additionalLanguages = $request->input('additional_languages');
+        $voice = $request->input('voice');
+
+        // Check credits
+        $totalCost = count($additionalLanguages) * config('stripe.default_cost_per_translation');
+        if (!$audioFile->user->hasEnoughCredits($totalCost)) {
+            return back()->with('error', __('You don\'t have enough credits. You need ') . $totalCost . __(' credits for these translations.'));
+        }
+
+        // Create audio translation records and dispatch jobs
+        foreach ($additionalLanguages as $targetLanguage) {
+            // Skip if already exists
+            if ($audioFile->audioTranslations()->where('target_language', $targetLanguage)->exists()) {
+                continue;
+            }
+
+            $audioTranslation = AudioTranslation::create([
+                'audio_file_id' => $audioFile->id,
+                'target_language' => $targetLanguage,
+                'translated_text' => '', // Will be filled by the job
+                'voice' => $voice,
+                'status' => 'pending',
+            ]);
+
+            // Dispatch job for processing
+            ProcessAdditionalAudioTranslation::dispatch($audioTranslation);
+        }
+
+        return redirect()->route('audio.show', $audioFile->id)
+            ->with('success', __('Additional translations started! You will be notified when they are ready.'));
+    }
+
+    /**
+     * Download specific audio translation
+     */
+    public function downloadTranslation($audioFileId, $translationId)
+    {
+        $audioFile = auth()->user()->audioFiles()->findOrFail($audioFileId);
+        $audioTranslation = $audioFile->audioTranslations()->findOrFail($translationId);
+
+        if (!$audioTranslation->isCompleted() || !$audioTranslation->translated_audio_path) {
+            return back()->with('error', __('This translation is not ready for download yet.'));
+        }
+
+        $filePath = storage_path('app/public/' . $audioTranslation->translated_audio_path);
+
+        if (!file_exists($filePath)) {
+            return back()->with('error', __('Audio file not found.'));
+        }
+
+        $filename = pathinfo($audioFile->original_filename, PATHINFO_FILENAME) .
+                   '_to_' . strtoupper($audioTranslation->target_language) .
+                   '.' . pathinfo($audioTranslation->translated_audio_path, PATHINFO_EXTENSION);
+
+        return response()->download($filePath, $filename);
+    }
 }

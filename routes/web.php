@@ -48,6 +48,11 @@ Route::middleware(['auth', 'throttle:60,1'])->group(function () {
     Route::post('audio/{id}/approve-transcription', [AudioController::class, 'approveTranscription'])->name('audio.approve-transcription');
     Route::post('audio/{id}/approve-tts', [AudioController::class, 'approveTTS'])->name('audio.approve-tts');
     Route::post('audio/{id}/retry', [AudioController::class, 'retry'])->name('audio.retry');
+
+// Additional translations
+Route::get('audio/{id}/additional-translations', [AudioController::class, 'showAdditionalTranslations'])->name('audio.additional-translations');
+Route::post('audio/{id}/additional-translations', [AudioController::class, 'storeAdditionalTranslations'])->name('audio.store-additional-translations');
+Route::get('audio/{audioFileId}/download-translation/{translationId}', [AudioController::class, 'downloadTranslation'])->name('audio.download-translation');
 });
 
 // Status endpoints WITHOUT rate limiting for real-time polling

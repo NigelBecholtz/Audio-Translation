@@ -43,6 +43,11 @@ class AudioFile extends Model
         return $this->hasMany(Translation::class);
     }
 
+    public function audioTranslations(): HasMany
+    {
+        return $this->hasMany(AudioTranslation::class);
+    }
+
     public function isCompleted(): bool
     {
         return $this->status === 'completed';
