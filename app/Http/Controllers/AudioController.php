@@ -400,20 +400,22 @@ class AudioController extends Controller
         }
 
         $request->validate([
-            'additional_languages' => 'required|array|min:1',
-            'additional_languages.*' => 'required|string|in:' . implode(',', array_keys(config('audio.available_languages'))),
+            'additional_languages' => 'required|string|in:' . implode(',', array_keys(config('audio.available_languages'))),
             'voice' => 'required|string',
             'style_instruction' => 'nullable|string|max:' . config('audio.max_style_instruction_length', 5000),
         ]);
 
-        $additionalLanguages = $request->input('additional_languages');
+        // Convert single language to array for processing
+        $targetLanguage = $request->input('additional_languages');
+        $additionalLanguages = [$targetLanguage];
+        
         $voice = $request->input('voice');
         $styleInstruction = $request->input('style_instruction', $audioFile->style_instruction);
 
         // Check credits
         $totalCost = count($additionalLanguages) * config('stripe.default_cost_per_translation');
         if (!$audioFile->user->hasEnoughCredits($totalCost)) {
-            return back()->with('error', __('You don\'t have enough credits. You need ') . $totalCost . __(' credits for these translations.'));
+            return back()->with('error', __('You don\'t have enough credits. You need ') . $totalCost . __(' credits for this translation.'));
         }
 
         // Create audio translation records and dispatch jobs
