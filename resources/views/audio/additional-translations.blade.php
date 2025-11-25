@@ -242,10 +242,25 @@
                             <i class="fas fa-palette mr-2 text-pink-400"></i>
                             {{ __('Style Instruction (optional)') }}
                         </label>
-                        <span class="text-xs text-gray-400">
-                            {{ __('Will be applied to every selected language.') }}
-                        </span>
+                        <a href="{{ route('style-presets.index') }}" target="_blank" class="text-blue-400 hover:text-blue-300 text-xs font-semibold">
+                            <i class="fas fa-cog mr-1"></i>
+                            {{ __('Manage Presets') }}
+                        </a>
                     </div>
+
+                    <!-- Preset Selector -->
+                    <div class="mb-4">
+                        <select id="stylePresetSelect"
+                                class="w-full px-4 py-3 text-base border-2 border-gray-600 rounded-xl focus:outline-none focus:ring-4 focus:ring-pink-400 focus:border-pink-500 transition-all bg-gray-700 text-white">
+                            <option value="">{{ __('Choose a preset or write custom...') }}</option>
+                            <option value="custom">✏️ {{ __('Custom (manual)') }}</option>
+                        </select>
+                        <p class="mt-2 text-xs text-gray-400">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            {{ __('Select a preset to auto-fill, or write your own below') }}
+                        </p>
+                    </div>
+
                     <textarea name="style_instruction"
                               id="style_instruction"
                               rows="4"
@@ -296,4 +311,42 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Style Preset Functionality
+    const stylePresetSelect = document.getElementById('stylePresetSelect');
+    const styleInstructionTextarea = document.getElementById('style_instruction');
+
+    if (stylePresetSelect && styleInstructionTextarea) {
+        // Load presets from API
+        fetch('{{ route("style-presets.api") }}')
+            .then(response => response.json())
+            .then(presets => {
+                presets.forEach(preset => {
+                    const option = document.createElement('option');
+                    option.value = preset.id;
+                    option.textContent = (preset.is_default ? '⭐ ' : '📝 ') + preset.name;
+                    option.dataset.instruction = preset.instruction;
+                    stylePresetSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error loading presets:', error));
+
+        // Handle preset selection
+        stylePresetSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+
+            if (selectedOption.dataset.instruction) {
+                styleInstructionTextarea.value = selectedOption.dataset.instruction;
+            } else if (this.value === '') {
+                styleInstructionTextarea.value = '';
+            }
+            // 'custom' option leaves textarea as-is for manual input
+        });
+    }
+});
+</script>
+@endpush
 
