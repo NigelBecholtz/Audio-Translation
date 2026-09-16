@@ -3,8 +3,8 @@
 namespace App\Jobs;
 
 use App\Models\CsvTranslationJob;
-use App\Services\GoogleTranslationService;
 use App\Services\CsvParserService;
+use App\Services\GoogleTranslationService;
 use App\Services\LanguageDetectionService;
 use App\Services\MultiSheetService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -17,6 +17,7 @@ class ProcessCsvTranslationJob implements ShouldQueue
     use Queueable;
 
     public $timeout = 7200; // 2 hour timeout for large files
+
     public $tries = 3; // Allow retries for large files
 
     /**
@@ -39,17 +40,17 @@ class ProcessCsvTranslationJob implements ShouldQueue
     ): void {
         Log::info('Starting CSV translation job', [
             'job_id' => $this->translationJob->id,
-            'file' => $this->translationJob->original_filename
+            'file' => $this->translationJob->original_filename,
         ]);
 
         try {
             // Update status to processing
             $this->translationJob->update([
                 'status' => 'processing',
-                'started_at' => now()
+                'started_at' => now(),
             ]);
 
-            $fullPath = storage_path('app/public/' . $this->translationJob->file_path);
+            $fullPath = storage_path('app/public/'.$this->translationJob->file_path);
 
             // Check if we should use smart fallback
             if ($this->translationJob->use_smart_fallback) {
@@ -67,25 +68,25 @@ class ProcessCsvTranslationJob implements ShouldQueue
             // Mark as completed
             $this->translationJob->update([
                 'status' => 'completed',
-                'completed_at' => now()
+                'completed_at' => now(),
             ]);
 
             Log::info('CSV translation job completed', [
                 'job_id' => $this->translationJob->id,
-                'processed_items' => $this->translationJob->processed_items
+                'processed_items' => $this->translationJob->processed_items,
             ]);
 
         } catch (\Exception $e) {
             Log::error('CSV translation job failed', [
                 'job_id' => $this->translationJob->id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             $this->translationJob->update([
                 'status' => 'failed',
                 'error_message' => $e->getMessage(),
-                'completed_at' => now()
+                'completed_at' => now(),
             ]);
 
             throw $e;
@@ -110,19 +111,19 @@ class ProcessCsvTranslationJob implements ShouldQueue
 
         // Get target languages
         $targetLanguages = $this->translationJob->target_languages ?? array_diff($headers, ['en', 'en_US']);
-        
+
         Log::info('Standard translation target languages', [
             'job_id' => $this->translationJob->id,
             'selected_languages' => $this->translationJob->target_languages,
             'headers' => $headers,
-            'final_target_languages' => $targetLanguages
+            'final_target_languages' => $targetLanguages,
         ]);
 
         // Count total items to translate
         $totalItems = 0;
         foreach ($targetLanguages as $targetLang) {
             foreach ($data as $row) {
-                if (empty($row[$targetLang]) && !empty($row['en'])) {
+                if (empty($row[$targetLang]) && ! empty($row['en'])) {
                     $totalItems++;
                 }
             }
@@ -140,23 +141,23 @@ class ProcessCsvTranslationJob implements ShouldQueue
 
             foreach ($data as $index => $row) {
                 // Only translate if cell is empty and source text exists
-                if (empty($row[$targetLang]) && !empty($row['en'])) {
+                if (empty($row[$targetLang]) && ! empty($row['en'])) {
                     $textsToTranslate[] = $row['en'];
                     $rowIndices[] = $index;
                 }
             }
 
             // Batch translate all texts for this language (with chunking for large files)
-            if (!empty($textsToTranslate)) {
+            if (! empty($textsToTranslate)) {
                 try {
                     // Process in larger chunks for better performance
                     $chunkSize = 100;
                     $chunks = array_chunk($textsToTranslate, $chunkSize);
                     $chunkIndices = array_chunk($rowIndices, $chunkSize);
-                    
+
                     foreach ($chunks as $chunkIndex => $chunk) {
-                        $translations = $translationService->translateBatch($chunk, $targetLang);
-                        
+                        $translations = $translationService->translateBatch($chunk, $targetLang, 'en');
+
                         // Update data with translations
                         foreach ($chunkIndices[$chunkIndex] as $idx => $rowIndex) {
                             if (isset($translations[$idx])) {
@@ -164,19 +165,19 @@ class ProcessCsvTranslationJob implements ShouldQueue
                                 $processedItems++;
                             }
                         }
-                        
+
                         // Update progress after each chunk
                         $this->translationJob->update([
-                            'processed_items' => $processedItems
+                            'processed_items' => $processedItems,
                         ]);
-                        
-                        Log::info("Translated {$targetLang} chunk " . ($chunkIndex + 1) . "/" . count($chunks), [
+
+                        Log::info("Translated {$targetLang} chunk ".($chunkIndex + 1).'/'.count($chunks), [
                             'job_id' => $this->translationJob->id,
                             'chunk_size' => count($chunk),
                             'total_processed' => $processedItems,
-                            'language' => $targetLang
+                            'language' => $targetLang,
                         ]);
-                        
+
                         // Reduced delay for faster processing
                         if (count($chunks) > 1) {
                             sleep(1);
@@ -184,7 +185,7 @@ class ProcessCsvTranslationJob implements ShouldQueue
                     }
 
                 } catch (\Exception $e) {
-                    Log::warning("Failed to translate {$targetLang}: " . $e->getMessage());
+                    Log::warning("Failed to translate {$targetLang}: ".$e->getMessage());
                     // Continue with other languages even if one fails
                 }
             }
@@ -194,13 +195,13 @@ class ProcessCsvTranslationJob implements ShouldQueue
         $this->translationJob->update(['processed_items' => $processedItems]);
 
         // Export to new file - always use CSV for better compatibility
-        $outputFilename = 'translated_' . time() . '_' . uniqid() . '.csv';
-        $outputPath = 'temp/' . $outputFilename;
-        $fullOutputPath = storage_path('app/public/' . $outputPath);
-        
+        $outputFilename = 'translated_'.time().'_'.uniqid().'.csv';
+        $outputPath = 'temp/'.$outputFilename;
+        $fullOutputPath = storage_path('app/public/'.$outputPath);
+
         // Ensure temp directory exists
         $tempDir = storage_path('app/public/temp');
-        if (!file_exists($tempDir)) {
+        if (! file_exists($tempDir)) {
             mkdir($tempDir, 0755, true);
         }
 
@@ -226,60 +227,60 @@ class ProcessCsvTranslationJob implements ShouldQueue
         $parsed = $csvParser->parse($fullPath);
         $data = $parsed['data'];
         $headers = $parsed['headers'] ?? [];
-        
+
         // Handle en_US columns - copy from en column
         $this->handleEnUsColumns($data, $headers);
-        
+
         // Extract all text content from the file
         $sourceTexts = [];
         foreach ($data as $row) {
             foreach ($row as $value) {
                 $text = trim($value);
-                if (!empty($text)) {
+                if (! empty($text)) {
                     $sourceTexts[] = $text;
                 }
             }
         }
-        
+
         if (empty($sourceTexts)) {
             throw new \Exception('No text content found in file');
         }
-        
+
         // Detect source language from first few texts
         $sampleText = implode(' ', array_slice($sourceTexts, 0, 3));
-        
+
         try {
             $detectedLanguage = $languageDetection->detectLanguage($sampleText);
         } catch (\Exception $e) {
             Log::error('Language detection failed', ['error' => $e->getMessage()]);
             $detectedLanguage = 'en'; // Fallback to English
         }
-        
+
         // Get preset languages for translation
         $presetLanguages = $languageDetection->getPresetLanguages();
-        
+
         Log::info('Preset languages retrieved', [
             'job_id' => $this->translationJob->id,
             'preset_languages' => $presetLanguages,
-            'detected_language' => $detectedLanguage
+            'detected_language' => $detectedLanguage,
         ]);
-        
+
         // Remove detected language from target languages
-        $targetLanguages = array_filter($presetLanguages, function($lang) use ($detectedLanguage) {
+        $targetLanguages = array_filter($presetLanguages, function ($lang) use ($detectedLanguage) {
             return $lang !== $detectedLanguage;
         });
-        
+
         Log::info('Target languages after filtering', [
             'job_id' => $this->translationJob->id,
-            'target_languages' => array_values($targetLanguages)
+            'target_languages' => array_values($targetLanguages),
         ]);
-        
+
         $totalItems = count($sourceTexts) * count($targetLanguages);
         $this->translationJob->update(['total_items' => $totalItems]);
-        
+
         $translations = [];
         $processedItems = 0;
-        
+
         // Translate to each target language with chunking
         foreach ($targetLanguages as $targetLang) {
             try {
@@ -287,60 +288,60 @@ class ProcessCsvTranslationJob implements ShouldQueue
                 $chunkSize = 100;
                 $chunks = array_chunk($sourceTexts, $chunkSize);
                 $translatedTexts = [];
-                
+
                 foreach ($chunks as $chunkIndex => $chunk) {
-                    $chunkTranslations = $translationService->translateBatch($chunk, $targetLang);
+                    $chunkTranslations = $translationService->translateBatch($chunk, $targetLang, $detectedLanguage);
                     $translatedTexts = array_merge($translatedTexts, $chunkTranslations);
-                    
-                    Log::info("Smart fallback translated {$targetLang} chunk " . ($chunkIndex + 1) . "/" . count($chunks), [
+
+                    Log::info("Smart fallback translated {$targetLang} chunk ".($chunkIndex + 1).'/'.count($chunks), [
                         'job_id' => $this->translationJob->id,
                         'chunk_size' => count($chunk),
                         'total_translated' => count($translatedTexts),
-                        'language' => $targetLang
+                        'language' => $targetLang,
                     ]);
-                    
+
                     // Reduced delay for faster processing
                     if (count($chunks) > 1) {
                         sleep(1);
                     }
                 }
-                
+
                 $translations[$targetLang] = $translatedTexts;
                 $processedItems += count($translatedTexts);
-                
+
                 $this->translationJob->update(['processed_items' => $processedItems]);
-                
+
             } catch (\Exception $e) {
                 Log::error("Smart fallback failed for {$targetLang}", [
                     'job_id' => $this->translationJob->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
                 // Continue with other languages
             }
         }
-        
+
         if (empty($translations)) {
             throw new \Exception('Failed to translate to any target languages');
         }
-        
+
         // Create CSV output for better compatibility
         $originalName = pathinfo($this->translationJob->original_filename, PATHINFO_FILENAME);
-        $outputFilename = 'smart_translations_' . $originalName . '_' . date('Y-m-d_H-i-s') . '.csv';
-        $outputPath = 'temp/' . $outputFilename;
-        $fullOutputPath = storage_path('app/public/' . $outputPath);
-        
+        $outputFilename = 'smart_translations_'.$originalName.'_'.date('Y-m-d_H-i-s').'.csv';
+        $outputPath = 'temp/'.$outputFilename;
+        $fullOutputPath = storage_path('app/public/'.$outputPath);
+
         // Ensure temp directory exists
         $tempDir = storage_path('app/public/temp');
-        if (!file_exists($tempDir)) {
+        if (! file_exists($tempDir)) {
             mkdir($tempDir, 0755, true);
         }
-        
+
         // Create CSV with all translations in one sheet
-        $csvParser = new CsvParserService();
+        $csvParser = new CsvParserService;
         $csvParser->exportToCsv($headers, $data, $fullOutputPath);
-        
+
         $this->translationJob->update(['output_path' => $outputPath]);
-        
+
         // Cleanup original upload
         Storage::disk('public')->delete($this->translationJob->file_path);
     }
@@ -353,15 +354,15 @@ class ProcessCsvTranslationJob implements ShouldQueue
         foreach ($headers as $header) {
             if ($header === 'en_US' || strtolower($header) === 'en_us') {
                 Log::info('Found en_US column, copying values from en column');
-                
+
                 foreach ($data as $index => $row) {
-                    if (!empty($row['en'])) {
+                    if (! empty($row['en'])) {
                         $data[$index][$header] = $row['en'];
                     }
                 }
-                
+
                 Log::info('Copied values from en to en_US column', [
-                    'rows_processed' => count($data)
+                    'rows_processed' => count($data),
                 ]);
             }
         }
@@ -374,13 +375,13 @@ class ProcessCsvTranslationJob implements ShouldQueue
     {
         Log::error('CSV translation job failed completely', [
             'job_id' => $this->translationJob->id,
-            'error' => $exception->getMessage()
+            'error' => $exception->getMessage(),
         ]);
 
         $this->translationJob->update([
             'status' => 'failed',
             'error_message' => $exception->getMessage(),
-            'completed_at' => now()
+            'completed_at' => now(),
         ]);
     }
 }

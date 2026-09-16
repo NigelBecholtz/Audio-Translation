@@ -4,22 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Actions\Audio\CreateAudioTranslationAction;
 use App\Http\Requests\StoreAudioRequest;
-use App\Jobs\ProcessAudioJob;
 use App\Jobs\ProcessAdditionalAudioTranslation;
-use App\Models\AudioFile;
-use App\Models\CreditTransaction;
-use App\Models\TextToAudio;
+use App\Jobs\ProcessAudioJob;
 use App\Models\AudioTranslation;
-use App\Services\AudioProcessingService;
-use App\Services\SanitizationService;
 use App\Traits\HasAudioFiles;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class AudioController extends Controller
 {
     use HasAudioFiles;
+
     public function index()
     {
         // Eager load relationships to avoid N+1 queries
@@ -28,28 +25,28 @@ class AudioController extends Controller
             ->with('user') // Eager load user relationship
             ->orderBy('created_at', 'desc')
             ->paginate(10);
-            
+
         $textToAudioFiles = auth()->user()
             ->textToAudioFiles()
             ->with('user') // Eager load user relationship
             ->orderBy('created_at', 'desc')
             ->paginate(10);
-            
+
         $user = auth()->user();
-        
+
         return view('audio.index', compact('audioFiles', 'textToAudioFiles', 'user'));
     }
 
     public function create()
     {
         $user = auth()->user();
-        
-        if (!$user->canMakeTranslation()) {
-            return redirect()->route('audio.index')->with('error', 
+
+        if (! $user->canMakeTranslation()) {
+            return redirect()->route('audio.index')->with('error',
                 'You have no more translations available. Upgrade your account for more translations!'
             );
         }
-        
+
         return view('audio.create', compact('user'));
     }
 
@@ -73,9 +70,10 @@ class AudioController extends Controller
         } catch (\Exception $e) {
             Log::error('Audio upload failed', [
                 'user_id' => auth()->id(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
-            return back()->with('error', __('Upload failed: ') . $e->getMessage());
+
+            return back()->with('error', __('Upload failed: ').$e->getMessage());
         }
     }
 
@@ -86,7 +84,7 @@ class AudioController extends Controller
         $audioFile = auth()->user()->audioFiles()
             ->with('audioTranslations')
             ->findOrFail($id);
-        
+
         return view('audio.show', compact('audioFile'));
     }
 
@@ -94,8 +92,8 @@ class AudioController extends Controller
     {
         // Use user's audioFiles relationship for automatic authorization
         $audioFile = auth()->user()->audioFiles()->findOrFail($id);
-        
-        if (!$audioFile->isCompleted() || !$audioFile->translated_audio_path) {
+
+        if (! $audioFile->isCompleted() || ! $audioFile->translated_audio_path) {
             return back()->with('error', __('Audio file is not ready for download yet.'));
         }
 
@@ -104,23 +102,24 @@ class AudioController extends Controller
 
     public function destroy($id)
     {
+        // Use user's audioFiles relationship for automatic authorization (404 for other users' files)
+        $audioFile = auth()->user()->audioFiles()->findOrFail($id);
+
         try {
-            // Use user's audioFiles relationship for automatic authorization
-            $audioFile = auth()->user()->audioFiles()->findOrFail($id);
-            
             // Delete audio files using trait
             $this->deleteAudioFile($audioFile->file_path);
             $this->deleteAudioFile($audioFile->translated_audio_path);
-            
+
             // Delete database record (this will also delete related translations due to cascade)
             $audioFile->delete();
-            
+
             return redirect()->route('audio.index')
                 ->with('success', __('Audio translation deleted successfully.'));
-                
+
         } catch (\Exception $e) {
-            Log::error('Delete failed: ' . $e->getMessage());
-            return back()->with('error', __('Delete failed: ') . $e->getMessage());
+            Log::error('Delete failed: '.$e->getMessage());
+
+            return back()->with('error', __('Delete failed: ').$e->getMessage());
         }
     }
 
@@ -131,7 +130,7 @@ class AudioController extends Controller
     {
         // Use user's audioFiles relationship for automatic authorization
         $audioFile = auth()->user()->audioFiles()->findOrFail($id);
-        
+
         return response()->json([
             'status' => $audioFile->status,
             'processing_stage' => $audioFile->processing_stage,
@@ -154,12 +153,13 @@ class AudioController extends Controller
         try {
             // Use user's audioFiles relationship for automatic authorization
             $audioFile = auth()->user()->audioFiles()->find($id);
-            
-            if (!$audioFile) {
+
+            if (! $audioFile) {
                 Log::warning('Audio file not found for save transcription', [
                     'audio_file_id' => $id,
                     'user_id' => auth()->id(),
                 ]);
+
                 return response()->json(['error' => __('Audio file not found or you do not have permission to access it.')], 404);
             }
 
@@ -184,12 +184,12 @@ class AudioController extends Controller
 
             // Update the transcription with the edited version
             $audioFile->update([
-                'transcription' => $editedTranscription
+                'transcription' => $editedTranscription,
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => __('Transcription saved successfully!')
+                'message' => __('Transcription saved successfully!'),
             ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -199,14 +199,16 @@ class AudioController extends Controller
                 'audio_file_id' => $id,
                 'user_id' => auth()->id(),
             ]);
+
             return response()->json(['error' => __('Audio file not found or you do not have permission to access it.')], 404);
         } catch (\Exception $e) {
             Log::error('Failed to save transcription', [
                 'audio_file_id' => $id,
                 'user_id' => auth()->id(),
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return response()->json(['error' => __('Failed to save transcription. Please try again.')], 500);
         }
     }
@@ -224,7 +226,7 @@ class AudioController extends Controller
                 return back()->with('error', __('This transcription is not pending approval.'));
             }
 
-            if (!$audioFile->transcription) {
+            if (! $audioFile->transcription) {
                 return back()->with('error', __('No transcription found. Please save your transcription first.'));
             }
 
@@ -233,7 +235,7 @@ class AudioController extends Controller
                 'status' => 'translating',
                 'processing_stage' => 'translating',
                 'processing_progress' => 10,
-                'processing_message' => __('Starting translation...')
+                'processing_message' => __('Starting translation...'),
             ]);
 
             // Dispatch job to continue with translation and audio generation
@@ -246,9 +248,10 @@ class AudioController extends Controller
             Log::error('Failed to approve transcription', [
                 'audio_file_id' => $id,
                 'user_id' => auth()->id(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
-            return back()->with('error', __('Failed to approve transcription: ') . $e->getMessage());
+
+            return back()->with('error', __('Failed to approve transcription: ').$e->getMessage());
         }
     }
 
@@ -282,12 +285,12 @@ class AudioController extends Controller
 
             // Update the translated text with the edited version
             $audioFile->update([
-                'translated_text' => $editedTranslatedText
+                'translated_text' => $editedTranslatedText,
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => __('Translated text saved successfully!')
+                'message' => __('Translated text saved successfully!'),
             ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -296,9 +299,10 @@ class AudioController extends Controller
             Log::error('Failed to save translated text', [
                 'audio_file_id' => $id,
                 'user_id' => auth()->id(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
-            return response()->json(['error' => __('Failed to save translated text: ') . $e->getMessage()], 500);
+
+            return response()->json(['error' => __('Failed to save translated text: ').$e->getMessage()], 500);
         }
     }
 
@@ -315,7 +319,7 @@ class AudioController extends Controller
                 return back()->with('error', __('This translation is not pending TTS approval.'));
             }
 
-            if (!$audioFile->translated_text) {
+            if (! $audioFile->translated_text) {
                 return back()->with('error', __('No translated text found. Please save your translated text first.'));
             }
 
@@ -324,7 +328,7 @@ class AudioController extends Controller
                 'status' => 'generating_audio',
                 'processing_stage' => 'generating_audio',
                 'processing_progress' => 80,
-                'processing_message' => __('Starting audio generation...')
+                'processing_message' => __('Starting audio generation...'),
             ]);
 
             // Dispatch job to generate TTS
@@ -337,9 +341,10 @@ class AudioController extends Controller
             Log::error('Failed to approve TTS', [
                 'audio_file_id' => $id,
                 'user_id' => auth()->id(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
-            return back()->with('error', __('Failed to approve TTS: ') . $e->getMessage());
+
+            return back()->with('error', __('Failed to approve TTS: ').$e->getMessage());
         }
     }
 
@@ -351,7 +356,7 @@ class AudioController extends Controller
         try {
             // Use user's audioFiles relationship for automatic authorization
             $audioFile = auth()->user()->audioFiles()->findOrFail($id);
-            
+
             // Only allow retry if status is 'uploaded' and it's been more than 2 minutes
             if ($audioFile->status !== 'uploaded') {
                 return back()->with('error', __('This file is not in uploaded status. Cannot retry.'));
@@ -367,9 +372,10 @@ class AudioController extends Controller
             Log::error('Failed to retry processing', [
                 'audio_file_id' => $id,
                 'user_id' => auth()->id(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
-            return back()->with('error', __('Failed to retry processing: ') . $e->getMessage());
+
+            return back()->with('error', __('Failed to retry processing: ').$e->getMessage());
         }
     }
 
@@ -384,16 +390,16 @@ class AudioController extends Controller
             ->findOrFail($id);
 
         // Only allow if the original translation is completed
-        if (!$audioFile->isCompleted()) {
+        if (! $audioFile->isCompleted()) {
             return redirect()->route('audio.show', $audioFile->id)
                 ->with('error', __('You can only add additional translations after the original translation is completed.'));
         }
 
         // Get available languages (exclude source and already translated languages)
-        $availableLanguages = collect(config('audio.available_languages'))
+        $availableLanguages = collect(config('audio.languages'))
             ->filter(function ($language, $code) use ($audioFile) {
                 return $code !== $audioFile->source_language &&
-                       !$audioFile->audioTranslations()->where('target_language', $code)->exists();
+                       ! $audioFile->audioTranslations()->where('target_language', $code)->exists();
             });
 
         // Get existing audio translations - ensure it's always a collection
@@ -409,28 +415,28 @@ class AudioController extends Controller
     {
         $audioFile = auth()->user()->audioFiles()->findOrFail($id);
 
-        if (!$audioFile->isCompleted()) {
+        if (! $audioFile->isCompleted()) {
             return redirect()->route('audio.show', $audioFile->id)
                 ->with('error', __('You can only add additional translations after the original translation is completed.'));
         }
 
         $request->validate([
-            'additional_languages' => 'required|string|in:' . implode(',', array_keys(config('audio.available_languages'))),
+            'additional_languages' => ['required', 'string', Rule::in(array_keys(config('audio.languages')))],
             'voice' => 'required|string',
-            'style_instruction' => 'nullable|string|max:' . config('audio.max_style_instruction_length', 5000),
+            'style_instruction' => 'nullable|string|max:'.config('audio.max_style_instruction_length', 5000),
         ]);
 
         // Convert single language to array for processing
         $targetLanguage = $request->input('additional_languages');
         $additionalLanguages = [$targetLanguage];
-        
+
         $voice = $request->input('voice');
         $styleInstruction = $request->input('style_instruction', $audioFile->style_instruction);
 
         // Check credits
         $totalCost = count($additionalLanguages) * config('stripe.default_cost_per_translation');
-        if (!$audioFile->user->hasEnoughCredits($totalCost)) {
-            return back()->with('error', __('You don\'t have enough credits. You need ') . $totalCost . __(' credits for this translation.'));
+        if (! $audioFile->user->hasEnoughCredits($totalCost)) {
+            return back()->with('error', __('You don\'t have enough credits. You need ').$totalCost.__(' credits for this translation.'));
         }
 
         // Create audio translation records and dispatch jobs
@@ -465,19 +471,19 @@ class AudioController extends Controller
         $audioFile = auth()->user()->audioFiles()->findOrFail($audioFileId);
         $audioTranslation = $audioFile->audioTranslations()->findOrFail($translationId);
 
-        if (!$audioTranslation->isCompleted() || !$audioTranslation->translated_audio_path) {
+        if (! $audioTranslation->isCompleted() || ! $audioTranslation->translated_audio_path) {
             return back()->with('error', __('This translation is not ready for download yet.'));
         }
 
-        $filePath = storage_path('app/public/' . $audioTranslation->translated_audio_path);
+        $filePath = storage_path('app/public/'.$audioTranslation->translated_audio_path);
 
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             return back()->with('error', __('Audio file not found.'));
         }
 
-        $filename = pathinfo($audioFile->original_filename, PATHINFO_FILENAME) .
-                   '_to_' . strtoupper($audioTranslation->target_language) .
-                   '.' . pathinfo($audioTranslation->translated_audio_path, PATHINFO_EXTENSION);
+        $filename = pathinfo($audioFile->original_filename, PATHINFO_FILENAME).
+                   '_to_'.strtoupper($audioTranslation->target_language).
+                   '.'.pathinfo($audioTranslation->translated_audio_path, PATHINFO_EXTENSION);
 
         return response()->download($filePath, $filename);
     }

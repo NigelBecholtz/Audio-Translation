@@ -32,6 +32,15 @@ class User extends Authenticatable
     ];
 
     /**
+     * Default attribute values (mirrors the is_admin column default).
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'is_admin' => false,
+    ];
+
+    /**
      * The attributes that should be hidden for serialization.
      *
      * @var list<string>
@@ -84,26 +93,47 @@ class User extends Authenticatable
     }
 
     // Subscription methods
+
+    /**
+     * Admin accounts translate without limits: every credit check passes and
+     * CreditService never deducts from their balance.
+     */
+    public function hasUnlimitedCredits(): bool
+    {
+        return $this->isAdmin();
+    }
+
     public function canMakeTranslation(): bool
     {
+        if ($this->hasUnlimitedCredits()) {
+            return true;
+        }
+
         // Check free translations first
         if ($this->translations_used < $this->translations_limit) {
             return true;
         }
-        
+
         // Then check if user has credits
         return $this->credits >= config('stripe.default_cost_per_translation');
     }
 
+    /**
+     * Unlimited accounts report PHP_INT_MAX; views show "∞" via hasUnlimitedCredits().
+     */
     public function getRemainingTranslations(): int
     {
+        if ($this->hasUnlimitedCredits()) {
+            return PHP_INT_MAX;
+        }
+
         // Free translations
         $freeRemaining = max(0, $this->translations_limit - $this->translations_used);
-        
+
         // Credits translations
         $costPerTranslation = config('stripe.default_cost_per_translation');
         $creditsTranslations = floor($this->credits / $costPerTranslation);
-        
+
         return $freeRemaining + $creditsTranslations;
     }
 
@@ -112,11 +142,11 @@ class User extends Authenticatable
         if ($this->subscription_type === 'free') {
             return true;
         }
-        
+
         if ($this->subscription_type === 'pay_per_use') {
             return $this->credits > 0;
         }
-        
+
         return $this->subscription_expires_at && $this->subscription_expires_at->isFuture();
     }
 
@@ -127,17 +157,18 @@ class User extends Authenticatable
 
     /**
      * Check if user has enough credits for a transaction
-     *
-     * @param float $amount
-     * @return bool
      */
     public function hasEnoughCredits(float $amount): bool
     {
+        if ($this->hasUnlimitedCredits()) {
+            return true;
+        }
+
         // Check free translations first
         if ($this->translations_used < $this->translations_limit) {
             return true;
         }
-        
+
         // Then check if user has enough credits
         return $this->credits >= $amount;
     }

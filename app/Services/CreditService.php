@@ -2,92 +2,148 @@
 
 namespace App\Services;
 
+use App\Constants\CreditConstants;
+use App\Exceptions\InsufficientCreditsException;
 use App\Models\CreditTransaction;
+use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
+/**
+ * The only place that changes a user's credit balance. Every change locks the user row and is recorded.
+ */
 class CreditService
 {
     /**
-     * Deduct credit for a translation/conversion
+     * Charge a translation/conversion: free translations are used before paid credits.
      *
-     * @param User $user
-     * @param string $description
-     * @param float $amount
-     * @return void
-     * @throws \Exception if user has insufficient credits
+     * @throws InsufficientCreditsException
      */
-    public function deductCredit(User $user, string $description = 'Credits used', float $amount = null): void
+    public function deductCredit(User $user, string $description = 'Credits used', ?float $amount = null): void
     {
-        // Use default cost if not specified
-        $amount = $amount ?? config('stripe.default_cost_per_translation');
-        
-        // Use free translations first
-        if ($user->translations_used < $user->translations_limit) {
-            // Use database transaction with locking for free translations
-            DB::transaction(function() use ($user) {
-                $lockedUser = User::lockForUpdate()->find($user->id);
-                
-                // Double-check after lock
-                if ($lockedUser->translations_used < $lockedUser->translations_limit) {
-                    $lockedUser->increment('translations_used');
-                }
-            });
-            return;
-        }
+        $amount ??= (float) config('stripe.default_cost_per_translation');
 
-        // Then use credits with database transaction and row-level locking
-        DB::transaction(function() use ($user, $description, $amount) {
-            // Lock the user row for update to prevent concurrent modifications
-            $lockedUser = User::lockForUpdate()->find($user->id);
-            
-            // Verify user has sufficient credits after lock
-            if ($lockedUser->credits < $amount) {
-                throw new \Exception('Insufficient credits. Current balance: ' . $lockedUser->credits);
+        DB::transaction(function () use ($user, $description, $amount) {
+            $lockedUser = User::lockForUpdate()->findOrFail($user->id);
+
+            if ($lockedUser->hasUnlimitedCredits()) {
+                return;
             }
-            
-            $lockedUser->decrement('credits', $amount);
-            $newBalance = $lockedUser->fresh()->credits;
-            
-            CreditTransaction::create([
-                'user_id' => $lockedUser->id,
-                'admin_id' => null,
-                'amount' => -$amount,
-                'type' => 'usage',
-                'description' => $description,
-                'balance_after' => $newBalance,
-            ]);
+
+            if ($lockedUser->translations_used < $lockedUser->translations_limit) {
+                $lockedUser->increment('translations_used');
+
+                return;
+            }
+
+            $this->changeBalance($lockedUser, -$amount, CreditConstants::TRANSACTION_TYPE_USAGE, $description);
+        });
+    }
+
+    public function addCredit(User $user, float $amount, string $type, string $description, ?int $adminId = null): void
+    {
+        DB::transaction(function () use ($user, $amount, $type, $description, $adminId) {
+            $this->changeBalance(User::lockForUpdate()->findOrFail($user->id), $amount, $type, $description, $adminId);
         });
     }
 
     /**
-     * Add credits to user (for purchases or admin actions)
-     *
-     * @param User $user
-     * @param float $amount
-     * @param string $type
-     * @param string $description
-     * @param int|null $adminId
-     * @return void
+     * @throws InsufficientCreditsException
      */
-    public function addCredit(User $user, float $amount, string $type, string $description, ?int $adminId = null): void
+    public function removeCredit(User $user, float $amount, string $type, string $description, ?int $adminId = null): void
     {
-        DB::transaction(function() use ($user, $amount, $type, $description, $adminId) {
-            // Lock the user row for update to prevent concurrent modifications
-            $lockedUser = User::lockForUpdate()->find($user->id);
-            
-            $lockedUser->increment('credits', $amount);
-            $newBalance = $lockedUser->fresh()->credits;
-            
-            CreditTransaction::create([
-                'user_id' => $lockedUser->id,
-                'admin_id' => $adminId,
-                'amount' => $amount,
-                'type' => $type,
-                'description' => $description,
-                'balance_after' => $newBalance,
-            ]);
+        DB::transaction(function () use ($user, $amount, $type, $description, $adminId) {
+            $this->changeBalance(User::lockForUpdate()->findOrFail($user->id), -$amount, $type, $description, $adminId);
         });
     }
-}
 
+    /**
+     * Complete a pending Stripe payment and credit its owner. Safe to call from both the webhook and
+     * the success page: only the first call credits, later calls return false.
+     */
+    public function completePurchase(Payment $payment, ?string $paymentIntentId): bool
+    {
+        return DB::transaction(function () use ($payment, $paymentIntentId) {
+            $lockedPayment = Payment::lockForUpdate()->findOrFail($payment->id);
+
+            if ($lockedPayment->status !== CreditConstants::PAYMENT_STATUS_PENDING) {
+                return false;
+            }
+
+            $lockedPayment->update([
+                'status' => CreditConstants::PAYMENT_STATUS_COMPLETED,
+                'stripe_payment_intent_id' => $paymentIntentId,
+                'completed_at' => now(),
+            ]);
+
+            $this->changeBalance(
+                User::lockForUpdate()->findOrFail($lockedPayment->user_id),
+                (float) $lockedPayment->credits_purchased,
+                CreditConstants::TRANSACTION_TYPE_PURCHASE,
+                "Credits purchased via Stripe (€{$lockedPayment->amount})"
+            );
+
+            return true;
+        });
+    }
+
+    /**
+     * Mark a payment as refunded and take its credits back when the user still has them. Idempotent.
+     */
+    public function refundPurchase(Payment $payment): void
+    {
+        DB::transaction(function () use ($payment) {
+            $lockedPayment = Payment::lockForUpdate()->findOrFail($payment->id);
+
+            if ($lockedPayment->status === CreditConstants::PAYMENT_STATUS_REFUNDED) {
+                return;
+            }
+
+            $lockedPayment->update(['status' => CreditConstants::PAYMENT_STATUS_REFUNDED]);
+
+            $user = User::lockForUpdate()->findOrFail($lockedPayment->user_id);
+            $credits = (float) $lockedPayment->credits_purchased;
+
+            if ((float) $user->credits < $credits) {
+                Log::warning('User has insufficient credits for refund', [
+                    'user_id' => $user->id,
+                    'user_credits' => $user->credits,
+                    'refund_amount' => $credits,
+                    'payment_id' => $lockedPayment->id,
+                ]);
+
+                return;
+            }
+
+            $this->changeBalance($user, -$credits, CreditConstants::TRANSACTION_TYPE_REFUND, "Refund for payment (€{$lockedPayment->amount})");
+        });
+    }
+
+    /**
+     * Apply a balance change to an already locked user and record it.
+     *
+     * @throws InsufficientCreditsException
+     */
+    private function changeBalance(User $lockedUser, float $amount, string $type, string $description, ?int $adminId = null): void
+    {
+        if ($amount < 0 && (float) $lockedUser->credits < abs($amount)) {
+            throw new InsufficientCreditsException("Insufficient credits. Current balance: {$lockedUser->credits} credits.");
+        }
+
+        if ($amount >= 0) {
+            $lockedUser->increment('credits', $amount);
+        } else {
+            $lockedUser->decrement('credits', abs($amount));
+        }
+
+        CreditTransaction::create([
+            'user_id' => $lockedUser->id,
+            'admin_id' => $adminId,
+            'amount' => $amount,
+            'type' => $type,
+            'description' => $description,
+            'balance_after' => $lockedUser->fresh()->credits,
+        ]);
+    }
+}

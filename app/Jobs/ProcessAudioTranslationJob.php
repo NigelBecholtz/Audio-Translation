@@ -2,18 +2,20 @@
 
 namespace App\Jobs;
 
+use App\Jobs\Concerns\HandlesProcessingFailure;
 use App\Models\AudioFile;
-use App\Services\AudioProcessingService;
+use App\Services\GoogleTranslationService;
+use App\Support\LanguageCode;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
 
 class ProcessAudioTranslationJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, HandlesProcessingFailure, InteractsWithQueue, Queueable, SerializesModels;
 
     /**
      * The number of times the job may be attempted.
@@ -29,117 +31,58 @@ class ProcessAudioTranslationJob implements ShouldQueue
      */
     public $timeout = 600;
 
-    /**
-     * Create a new job instance.
-     */
     public function __construct(
         public AudioFile $audioFile
     ) {}
 
     /**
-     * Execute the job.
+     * Translate the approved transcription, then wait for the user to approve TTS generation.
      */
-    public function handle(AudioProcessingService $processingService): void
+    public function handle(GoogleTranslationService $translator): void
     {
-        try {
-            // Step 1: Translate text (skip if same language for accent improvement)
-            $sourceBase = $this->getBaseLanguageCode($this->audioFile->source_language);
-            $targetBase = $this->getBaseLanguageCode($this->audioFile->target_language);
-            $isSameLanguage = ($sourceBase === $targetBase);
-            
-            if ($isSameLanguage) {
-                // Same language - skip translation, use transcription directly for accent improvement
-                $this->audioFile->update([
-                    'status' => 'generating_audio',
-                    'processing_stage' => 'generating_audio',
-                    'processing_progress' => 60,
-                    'processing_message' => 'Skipping translation (accent improvement mode)...'
-                ]);
-                
-                $translatedText = $this->audioFile->transcription; // Use transcription as-is
-            } else {
-                // Different languages - translate
-                $this->audioFile->update([
-                    'status' => 'translating',
-                    'processing_stage' => 'translating',
-                    'processing_progress' => 60,
-                    'processing_message' => 'Translating text with AI...'
-                ]);
+        // Same base language (e.g. en-gb → en-us) is an accent improvement: keep the transcription as-is
+        $isSameLanguage = LanguageCode::isSameLanguage(
+            $this->audioFile->source_language,
+            $this->audioFile->target_language
+        );
 
-                $translatedText = $processingService->translateText(
-                    $this->audioFile->transcription,
-                    $this->audioFile->source_language,
-                    $this->audioFile->target_language
-                );
-            }
-
+        if ($isSameLanguage) {
             $this->audioFile->update([
-                'translated_text' => $translatedText,
-                'status' => 'pending_tts_approval',
-                'processing_stage' => 'pending_tts_approval',
-                'processing_progress' => 100,
-                'processing_message' => $isSameLanguage ? 'Translation completed! Ready to generate audio (accent improvement).' : 'Translation completed! Please review and approve to generate audio.'
+                'status' => 'generating_audio',
+                'processing_stage' => 'generating_audio',
+                'processing_progress' => 60,
+                'processing_message' => 'Skipping translation (accent improvement mode)...',
             ]);
 
-            // Stop here - wait for user approval for TTS generation
-            return;
-
-        } catch (\Exception $e) {
-            Log::error('Audio translation processing failed', [
-                'audio_file_id' => $this->audioFile->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
+            $translatedText = $this->audioFile->transcription;
+        } else {
             $this->audioFile->update([
-                'status' => 'failed',
-                'processing_stage' => 'failed',
-                'processing_progress' => 0,
-                'processing_message' => 'Processing failed',
-                'error_message' => $e->getMessage()
+                'status' => 'translating',
+                'processing_stage' => 'translating',
+                'processing_progress' => 60,
+                'processing_message' => 'Translating text with Google Translate...',
             ]);
 
-            // Re-throw to trigger retry mechanism
-            throw $e;
+            $translatedText = $translator->translateText(
+                $this->audioFile->transcription,
+                $this->audioFile->target_language,
+                $this->audioFile->source_language
+            );
         }
-    }
-
-    /**
-     * Handle a job failure.
-     */
-    public function failed(\Throwable $exception): void
-    {
-        Log::error('Audio translation job failed permanently', [
-            'audio_file_id' => $this->audioFile->id,
-            'error' => $exception->getMessage(),
-            'attempts' => $this->attempts()
-        ]);
 
         $this->audioFile->update([
-            'status' => 'failed',
-            'processing_stage' => 'failed',
-            'processing_progress' => 0,
-            'processing_message' => 'Processing failed',
-            'error_message' => 'Processing failed after ' . $this->tries . ' attempts: ' . $exception->getMessage()
+            'translated_text' => $translatedText,
+            'status' => 'pending_tts_approval',
+            'processing_stage' => 'pending_tts_approval',
+            'processing_progress' => 100,
+            'processing_message' => $isSameLanguage
+                ? 'Translation completed! Ready to generate audio (accent improvement).'
+                : 'Translation completed! Please review and approve to generate audio.',
         ]);
     }
 
-    /**
-     * Get base language code (e.g., 'en-gb' -> 'en', 'es' -> 'es')
-     *
-     * @param string $languageCode
-     * @return string
-     */
-    private function getBaseLanguageCode(string $languageCode): string
+    protected function processingRecord(): ?Model
     {
-        $code = strtolower(trim($languageCode));
-        
-        // Extract base language code if it's in format 'xx-XX' or 'xx_XX'
-        if (preg_match('/^([a-z]{2})(?:[-_][a-z]{2,})?$/i', $code, $matches)) {
-            return strtolower($matches[1]);
-        }
-        
-        return $code;
+        return $this->audioFile;
     }
 }
-

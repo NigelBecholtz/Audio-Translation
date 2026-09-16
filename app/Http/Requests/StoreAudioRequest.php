@@ -23,28 +23,29 @@ class StoreAudioRequest extends FormRequest
     public function rules(): array
     {
         $maxUploadSize = config('audio.max_upload_size', 100);
-        $languageCodes = explode(',', config('audio.language_codes'));
-        
+        $languageCodes = array_keys(config('audio.languages'));
+
         return [
             'audio' => [
                 'required',
                 'file',
                 'mimes:mp3,wav,m4a,mp4,ogg,flac',
-                'max:' . ($maxUploadSize * 1024), // Convert MB to KB
+                'max:'.($maxUploadSize * 1024), // Convert MB to KB
                 function ($attribute, $value, $fail) {
                     // Extra MIME validation with finfo
-                    if (!$value->isValid()) {
+                    if (! $value->isValid()) {
                         $fail('The file is corrupted or invalid.');
+
                         return;
                     }
-                    
+
                     $finfo = finfo_open(FILEINFO_MIME_TYPE);
                     $mimeType = finfo_file($finfo, $value->getRealPath());
                     finfo_close($finfo);
-                    
+
                     $allowedMimes = [
                         'audio/mpeg',
-                        'audio/mp3', 
+                        'audio/mp3',
                         'audio/wav',
                         'audio/x-wav',
                         'audio/wave',
@@ -56,10 +57,10 @@ class StoreAudioRequest extends FormRequest
                         'audio/ogg',
                         'audio/flac',
                         'audio/x-flac',
-                        'application/octet-stream' // Some systems report this for audio files
+                        'application/octet-stream', // Some systems report this for audio files
                     ];
-                    
-                    if (!in_array($mimeType, $allowedMimes)) {
+
+                    if (! in_array($mimeType, $allowedMimes)) {
                         $fail("This file type ($mimeType) is not supported. Please upload a valid audio file.");
                     }
                 },
@@ -67,7 +68,7 @@ class StoreAudioRequest extends FormRequest
             'source_language' => [
                 'required',
                 'string',
-                Rule::in($languageCodes)
+                Rule::in($languageCodes),
             ],
             'target_language' => [
                 'required',
@@ -80,48 +81,44 @@ class StoreAudioRequest extends FormRequest
                 'required',
                 'string',
                 'max:50',
-                'regex:/^[a-zA-Z]+$/' // Only letters
+                'regex:/^[a-zA-Z]+$/', // Only letters
             ],
             'style_instruction' => [
                 'nullable',
                 'string',
-                'max:' . config('audio.max_style_instruction_length', 5000)
+                'max:'.config('audio.max_style_instruction_length', 5000),
             ],
         ];
     }
 
     /**
      * Get custom messages for validator errors.
-     *
-     * @return array
      */
     public function messages(): array
     {
         $maxUploadSize = config('audio.max_upload_size', 100);
-        
+
         return [
             'audio.required' => 'Please upload an audio file to translate.',
             'audio.file' => 'The uploaded file is invalid.',
             'audio.mimes' => 'Only MP3, WAV, M4A, MP4, OGG and FLAC files are allowed.',
             'audio.max' => "The audio file must not exceed {$maxUploadSize}MB.",
-            
+
             'source_language.required' => 'Please select the source language of your audio.',
             'source_language.in' => 'The selected source language is invalid.',
-            
+
             'target_language.required' => 'Please select the target language for translation or accent improvement.',
             'target_language.in' => 'The selected target language is invalid.',
-            
+
             'voice.required' => 'Please select a voice for the translated audio.',
             'voice.regex' => 'The selected voice is invalid.',
-            
+
             'style_instruction.max' => 'The style instruction must not exceed :max characters.',
         ];
     }
 
     /**
      * Get custom attributes for validator errors.
-     *
-     * @return array
      */
     public function attributes(): array
     {
@@ -146,23 +143,5 @@ class StoreAudioRequest extends FormRequest
         throw new \Illuminate\Auth\Access\AuthorizationException(
             __('You have no more translations available. Purchase credits to continue!')
         );
-    }
-
-    /**
-     * Get base language code (e.g., 'en-gb' -> 'en', 'es' -> 'es')
-     *
-     * @param string $languageCode
-     * @return string
-     */
-    private function getBaseLanguageCode(string $languageCode): string
-    {
-        $code = strtolower(trim($languageCode));
-        
-        // Extract base language code if it's in format 'xx-XX' or 'xx_XX'
-        if (preg_match('/^([a-z]{2})(?:[-_][a-z]{2,})?$/i', $code, $matches)) {
-            return strtolower($matches[1]);
-        }
-        
-        return $code;
     }
 }

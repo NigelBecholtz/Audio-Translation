@@ -22,38 +22,36 @@ class StoreTextToAudioRequest extends FormRequest
      */
     public function rules(): array
     {
-        $languageCodes = explode(',', config('audio.language_codes'));
-        
+        $languageCodes = array_keys(config('audio.languages'));
+
         return [
             'text_content' => [
                 'required',
                 'string',
                 'min:10',
-                'max:' . config('audio.max_text_length', 50000),
+                'max:'.config('audio.max_text_length', 50000),
             ],
             'language' => [
                 'required',
                 'string',
-                Rule::in($languageCodes)
+                Rule::in($languageCodes),
             ],
             'voice' => [
                 'required',
                 'string',
                 'max:50',
-                'regex:/^[a-zA-Z]+$/' // Only letters
+                'regex:/^[a-zA-Z]+$/', // Only letters
             ],
             'style_instruction' => [
                 'nullable',
                 'string',
-                'max:' . config('audio.max_style_instruction_length', 5000)
+                'max:'.config('audio.max_style_instruction_length', 5000),
             ],
         ];
     }
 
     /**
      * Get custom messages for validator errors.
-     *
-     * @return array
      */
     public function messages(): array
     {
@@ -61,21 +59,19 @@ class StoreTextToAudioRequest extends FormRequest
             'text_content.required' => 'Please enter the text you want to convert to audio.',
             'text_content.min' => 'The text must be at least :min characters.',
             'text_content.max' => 'The text must not exceed :max characters.',
-            
+
             'language.required' => 'Please select the language for the audio.',
             'language.in' => 'The selected language is invalid.',
-            
+
             'voice.required' => 'Please select a voice for the audio.',
             'voice.regex' => 'The selected voice is invalid.',
-            
+
             'style_instruction.max' => 'The style instruction must not exceed :max characters.',
         ];
     }
 
     /**
      * Get custom attributes for validator errors.
-     *
-     * @return array
      */
     public function attributes(): array
     {
