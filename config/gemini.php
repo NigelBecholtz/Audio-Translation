@@ -43,6 +43,9 @@ return [
             'ar' => 'Arabic',
             'hi' => 'Hindi',
             'sv' => 'Swedish',
+            'no' => 'Norwegian',
+            'da' => 'Danish',
+            'pl' => 'Polish',
             'sq' => 'Albanian',
             'bg' => 'Bulgarian',
             'sk' => 'Slovak',
@@ -50,7 +53,7 @@ return [
             'fi' => 'Finnish',
             'el' => 'Greek',
             'ro' => 'Romanian',
-            'ca' => 'Catalan'
+            'ca' => 'Catalan',
         ],
         'voice_mapping' => [
             // English variants - all use Aoede (Gemini handles accent via languageCode)
@@ -74,6 +77,9 @@ return [
             'ar' => 'Aoede',
             'hi' => 'Aoede',
             'sv' => 'Aoede',
+            'no' => 'Aoede',
+            'da' => 'Aoede',
+            'pl' => 'Aoede',
             'sq' => 'Aoede',
             'bg' => 'Aoede',
             'sk' => 'Aoede',
@@ -81,8 +87,8 @@ return [
             'fi' => 'Aoede',
             'el' => 'Aoede',
             'ro' => 'Aoede',
-            'ca' => 'Aoede'
-        ]
+            'ca' => 'Aoede',
+        ],
     ],
 
     /*
@@ -94,7 +100,8 @@ return [
     |
     */
 
-    'timeout' => env('GEMINI_TIMEOUT', 120), // Increased to 2 minutes for better reliability
+    'timeout' => env('GEMINI_TIMEOUT', 180), // TTS can be slow; 3 minutes to avoid timeout
+    'connect_timeout' => env('GEMINI_CONNECT_TIMEOUT', 30), // Fail fast if connection fails
 
     /*
     |--------------------------------------------------------------------------

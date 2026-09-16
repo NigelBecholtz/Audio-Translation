@@ -2,212 +2,171 @@
 
 namespace App\Services;
 
+use App\Support\LanguageCode;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use App\Services\GoogleOAuthService;
+use RuntimeException;
+use Throwable;
 
+/**
+ * Translates text with Google Cloud Translation API v3 — the app's single translation provider.
+ */
 class GoogleTranslationService
 {
-    private $oauthService;
-    private $projectId;
-    
-    // Language code mapping voor Google Translate API (TTS compatible)
-    private array $languageMapping = [
-        'en' => 'en',    // English
-        'es' => 'es',    // Spanish
-        'es_AR' => 'es-AR', // Spanish (Argentina)
-        'sq' => 'sq',    // Albanian (AL)
-        'al' => 'sq',    // Albanian (AL) - alternative code
-        'bg' => 'bg',    // Bulgarian
-        'sk' => 'sk',    // Slovak
-        'lv' => 'lv',    // Latvian
-        'fi' => 'fi',    // Finnish
-        'el' => 'el',    // Greek (GR)
-        'gr' => 'el',    // Greek (GR) - alternative code
-        'nl' => 'nl',    // Dutch
-        'fr' => 'fr',    // French
-        'it' => 'it',    // Italian
-        'ro' => 'ro',    // Romanian
-        'ca' => 'ca',    // Catalan
-        // Additional languages
-        'de' => 'de',    // German
-        'pt' => 'pt',    // Portuguese
-        'ru' => 'ru',    // Russian
-        'ja' => 'ja',    // Japanese
-        'ko' => 'ko',    // Korean
-        'zh' => 'zh',    // Chinese
-        'ar' => 'ar',    // Arabic
-        'hi' => 'hi',    // Hindi
-        'pl' => 'pl',    // Polish
-        'tr' => 'tr',    // Turkish
-        'sv' => 'sv',    // Swedish
-        'da' => 'da',    // Danish
-        'no' => 'no',    // Norwegian
-        'cs' => 'cs',    // Czech
-        'hu' => 'hu',    // Hungarian
-        'hr' => 'hr',    // Croatian
-        'sl' => 'sl',    // Slovenian
-        'uk' => 'uk',    // Ukrainian
-        'lt' => 'lt',    // Lithuanian
-        'et' => 'et',    // Estonian
+    /** Google recommends keeping one translateText request under 30,000 codepoints. */
+    private const MAX_REQUEST_CODEPOINTS = 30000;
+
+    /** translateText accepts at most 1024 entries in `contents`. */
+    private const MAX_REQUEST_TEXTS = 1024;
+
+    /** App codes Google does not accept as-is (used as CSV column headers). */
+    private const GOOGLE_LANGUAGE_CODES = [
+        'es_AR' => 'es-AR',
+        'gr' => 'el',
+        'al' => 'sq',
     ];
 
-    public function __construct(GoogleOAuthService $oauthService)
+    public function __construct(private GoogleOAuthService $oauthService) {}
+
+    /**
+     * @param  string|null  $sourceLanguage  null lets Google detect the source language
+     */
+    public function translateText(string $text, string $targetLanguage, ?string $sourceLanguage = null): string
     {
-        $this->oauthService = $oauthService;
-        
-        // Get project ID from service account JSON file
-        $serviceAccountPath = storage_path('app/google-service-account.json');
-        if (file_exists($serviceAccountPath)) {
-            $serviceAccount = json_decode(file_get_contents($serviceAccountPath), true);
-            $this->projectId = $serviceAccount['project_id'] ?? null;
-        }
-        
-        // Fallback to config if not found
-        if (empty($this->projectId)) {
-            $this->projectId = config('services.google_cloud.project_id');
-        }
-        
-        if (empty($this->projectId)) {
-            throw new \Exception('Google Cloud project ID not configured. Please set GOOGLE_CLOUD_PROJECT_ID in .env or ensure google-service-account.json contains project_id.');
-        }
+        return $this->translateBatch([$text], $targetLanguage, $sourceLanguage)[0];
     }
 
     /**
-     * Translate a single text to target language
+     * @param  array<int, string>  $texts
+     * @param  string|null  $sourceLanguage  null lets Google detect the source language
+     * @return list<string> translations in input order; blank texts stay empty
      *
-     * @param string $text Text to translate
-     * @param string $targetLanguage Target language code (from CSV header)
-     * @return string Translated text
-     * @throws \Exception
+     * @throws RuntimeException
      */
-    public function translateText(string $text, string $targetLanguage): string
+    public function translateBatch(array $texts, string $targetLanguage, ?string $sourceLanguage = null): array
     {
-        if (empty($text)) {
-            return '';
+        $texts = array_map('strval', array_values($texts));
+        $target = $this->toGoogleLanguageCode($targetLanguage);
+        $source = $sourceLanguage === null ? null : $this->toGoogleLanguageCode($sourceLanguage);
+
+        // Google rejects equal source and target languages; an accent change (en-gb → en-us) needs no translation.
+        if ($source !== null && LanguageCode::isSameLanguage($source, $target)) {
+            return $texts;
         }
 
-        $result = $this->translateBatch([$text], $targetLanguage);
-        return $result[0] ?? $text;
+        $results = array_fill(0, count($texts), '');
+        $pending = array_filter($texts, fn (string $text) => trim($text) !== '');
+
+        foreach ($this->chunkForRequests($pending) as $chunk) {
+            $translations = $this->requestTranslations(array_values($chunk), $target, $source);
+
+            foreach (array_keys($chunk) as $position => $index) {
+                $results[$index] = $this->capitalizeSentences($translations[$position]);
+            }
+        }
+
+        return $results;
     }
 
     /**
-     * Translate multiple texts to target language (batch processing)
-     *
-     * @param array $texts Array of texts to translate
-     * @param string $targetLanguage Target language code
-     * @return array Array of translated texts
-     * @throws \Exception
+     * @param  array<int, string>  $texts  keyed by their position in the batch
+     * @return list<array<int, string>>
      */
-    public function translateBatch(array $texts, string $targetLanguage): array
+    private function chunkForRequests(array $texts): array
     {
-        if (empty($texts)) {
-            return [];
-        }
+        $chunks = [];
+        $chunk = [];
+        $codepoints = 0;
 
-        // Filter out empty texts but keep track of positions
-        $nonEmptyTexts = [];
-        $positions = [];
         foreach ($texts as $index => $text) {
-            if (!empty($text)) {
-                $nonEmptyTexts[] = $text;
-                $positions[] = $index;
+            $length = mb_strlen($text);
+
+            if ($chunk !== [] && (count($chunk) >= self::MAX_REQUEST_TEXTS || $codepoints + $length > self::MAX_REQUEST_CODEPOINTS)) {
+                $chunks[] = $chunk;
+                $chunk = [];
+                $codepoints = 0;
             }
+
+            $chunk[$index] = $text;
+            $codepoints += $length;
         }
 
-        if (empty($nonEmptyTexts)) {
-            return array_fill(0, count($texts), '');
+        if ($chunk !== []) {
+            $chunks[] = $chunk;
         }
 
-        try {
-            // Map language code
-            $googleLangCode = $this->languageMapping[$targetLanguage] ?? $targetLanguage;
-            
-            // Get OAuth2 access token
-            $accessToken = $this->oauthService->getAccessToken();
-            
-            // Google Cloud Translation API v3 endpoint
-            $endpoint = "https://translation.googleapis.com/v3/projects/{$this->projectId}:translateText";
-            
-            // Split into chunks if needed (max 1000 texts per request for better performance)
-            $chunks = array_chunk($nonEmptyTexts, 1000);
-            $allTranslations = [];
-            
-            foreach ($chunks as $chunk) {
-                $response = Http::timeout(600)
-                    ->withHeaders([
-                        'Authorization' => 'Bearer ' . $accessToken,
-                        'Content-Type' => 'application/json',
-                    ])
-                    ->post($endpoint, [
-                        'contents' => $chunk,
-                        'targetLanguageCode' => $googleLangCode,
-                        'sourceLanguageCode' => 'en',
-                    ]);
+        return $chunks;
+    }
 
-                if (!$response->successful()) {
-                    Log::error('Google Translation API failed', [
-                        'status' => $response->status(),
-                        'body' => $response->body(),
-                        'target_language' => $googleLangCode
-                    ]);
-                    throw new \Exception('Translation API failed: ' . $response->body());
-                }
+    /**
+     * @param  list<string>  $contents
+     * @return list<string>
+     */
+    private function requestTranslations(array $contents, string $target, ?string $source): array
+    {
+        $endpoint = $this->endpoint();
+        $payload = [
+            'contents' => $contents,
+            'mimeType' => 'text/plain',
+            'targetLanguageCode' => $target,
+        ];
 
-                $data = $response->json();
-                
-                if (!isset($data['translations'])) {
-                    throw new \Exception('No translations returned from API');
-                }
+        if ($source !== null) {
+            $payload['sourceLanguageCode'] = $source;
+        }
 
-                foreach ($data['translations'] as $translation) {
-                    $translatedText = $translation['translatedText'] ?? '';
-                    
-                    // Decode HTML entities to proper UTF-8 characters
-                    $translatedText = html_entity_decode($translatedText, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                    
-                    // Capitalize first letter of each sentence
-                    if (!empty($translatedText)) {
-                        $translatedText = $this->capitalizeSentences($translatedText);
-                    }
-                    
-                    $allTranslations[] = $translatedText;
-                }
-                
-                // Rate limiting: minimal delay for faster processing
-                if (count($chunks) > 1) {
-                    usleep(100000); // 0.1 second for faster processing
-                }
-            }
+        $response = Http::withToken($this->oauthService->getAccessToken())
+            ->acceptJson()
+            ->timeout(120)
+            ->retry(3, 200, fn (Throwable $exception) => $this->isTransient($exception), throw: false)
+            ->post($endpoint, $payload);
 
-            // Reconstruct full array with empty strings in original positions
-            $result = array_fill(0, count($texts), '');
-            foreach ($positions as $idx => $originalPosition) {
-                $result[$originalPosition] = $allTranslations[$idx] ?? '';
-            }
-
-            Log::info('Batch translation completed', [
-                'count' => count($nonEmptyTexts),
-                'target_language' => $googleLangCode
+        if ($response->failed()) {
+            Log::error('Google Translation API request failed', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+                'target_language' => $target,
             ]);
 
-            return $result;
-
-        } catch (\Exception $e) {
-            Log::error('Translation batch failed', [
-                'target_language' => $targetLanguage,
-                'texts_count' => count($texts),
-                'error' => $e->getMessage()
-            ]);
-            throw new \Exception('Translation failed: ' . $e->getMessage());
+            throw new RuntimeException('Translation failed: '.($response->json('error.message') ?? $response->body()));
         }
+
+        $translations = $response->json('translations');
+
+        if (! is_array($translations) || count($translations) !== count($contents)) {
+            throw new RuntimeException('Translation failed: Google returned an unexpected response.');
+        }
+
+        return array_map(fn (array $translation) => (string) ($translation['translatedText'] ?? ''), $translations);
+    }
+
+    private function endpoint(): string
+    {
+        $projectId = $this->oauthService->projectId();
+
+        if (! $projectId) {
+            throw new RuntimeException('Translation failed: Google Cloud project ID not configured. Add project_id to the service account file or set GOOGLE_CLOUD_PROJECT_ID.');
+        }
+
+        return "https://translation.googleapis.com/v3/projects/{$projectId}:translateText";
+    }
+
+    private function isTransient(Throwable $exception): bool
+    {
+        return $exception instanceof ConnectionException
+            || ($exception instanceof RequestException
+                && ($exception->response->status() === 429 || $exception->response->serverError()));
+    }
+
+    private function toGoogleLanguageCode(string $code): string
+    {
+        return self::GOOGLE_LANGUAGE_CODES[$code] ?? LanguageCode::base($code);
     }
 
     /**
      * Capitalize the first letter of each sentence in the text
-     *
-     * @param string $text
-     * @return string
      */
     private function capitalizeSentences(string $text): string
     {
@@ -217,7 +176,7 @@ class GoogleTranslationService
 
         // Trim whitespace
         $text = trim($text);
-        
+
         // Always capitalize the first letter of the text
         // This ensures every translation starts with a capital letter
         if (mb_strlen($text, 'UTF-8') > 0) {
@@ -225,7 +184,7 @@ class GoogleTranslationService
             $textLength = mb_strlen($text, 'UTF-8');
             $firstLetterPos = -1;
             $firstLetter = '';
-            
+
             for ($i = 0; $i < $textLength; $i++) {
                 $char = mb_substr($text, $i, 1, 'UTF-8');
                 // Check if it's any letter (lowercase or uppercase)
@@ -235,52 +194,31 @@ class GoogleTranslationService
                     break;
                 }
             }
-            
+
             // If we found a letter, capitalize it (if it's not already uppercase)
             if ($firstLetterPos >= 0) {
                 // Only capitalize if it's lowercase
                 if (preg_match('/\p{Ll}/u', $firstLetter)) {
                     $before = mb_substr($text, 0, $firstLetterPos, 'UTF-8');
                     $after = mb_substr($text, $firstLetterPos + 1, null, 'UTF-8');
-                    $text = $before . mb_strtoupper($firstLetter, 'UTF-8') . $after;
+                    $text = $before.mb_strtoupper($firstLetter, 'UTF-8').$after;
                 }
             }
         }
-        
+
         // Pattern to match sentence endings (. ! ?) followed by whitespace and then a lowercase letter
         // \p{Ll} matches any lowercase letter in any language (Unicode)
         $pattern = '/([.!?])\s+(\p{Ll})/u';
-        $text = preg_replace_callback($pattern, function($matches) {
-            return $matches[1] . ' ' . mb_strtoupper($matches[2], 'UTF-8');
+        $text = preg_replace_callback($pattern, function ($matches) {
+            return $matches[1].' '.mb_strtoupper($matches[2], 'UTF-8');
         }, $text);
-        
+
         // Handle cases where sentence ends and next sentence starts immediately (no space)
         $pattern = '/([.!?])(\p{Ll})/u';
-        $text = preg_replace_callback($pattern, function($matches) {
-            return $matches[1] . mb_strtoupper($matches[2], 'UTF-8');
+        $text = preg_replace_callback($pattern, function ($matches) {
+            return $matches[1].mb_strtoupper($matches[2], 'UTF-8');
         }, $text);
-        
+
         return $text;
     }
-
-    /**
-     * Get supported language codes from CSV headers
-     *
-     * @return array
-     */
-    public function getSupportedLanguages(): array
-    {
-        return array_keys($this->languageMapping);
-    }
-
-    /**
-     * Check if translation service is configured
-     *
-     * @return bool
-     */
-    public function isConfigured(): bool
-    {
-        return $this->oauthService->isConfigured();
-    }
 }
-

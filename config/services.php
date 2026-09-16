@@ -41,6 +41,7 @@ return [
 
     'google_cloud' => [
         'project_id' => env('GOOGLE_CLOUD_PROJECT_ID'),
+        'credentials_path' => env('GOOGLE_APPLICATION_CREDENTIALS', storage_path('app/google-service-account.json')),
     ],
 
 ];

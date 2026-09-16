@@ -22,7 +22,7 @@ class GeminiTtsService
     {
         $this->oauthService = new GoogleOAuthService();
         $this->baseUrl = config('gemini.base_url');
-        $this->timeout = config('gemini.timeout', 120);
+        $this->timeout = config('gemini.timeout', 180);
         $this->fallbackService = new SimpleTtsService();
         $this->rateLimiter = new RateLimiter();
     }
@@ -134,8 +134,10 @@ class GeminiTtsService
             $ttsPayload['input']['prompt'] = $styleInstruction;
         }
 
-        $response = Http::timeout($this->timeout)
-            ->retry(2, 1000)
+        $connectTimeout = config('gemini.connect_timeout', 30);
+        $response = Http::connectTimeout($connectTimeout)
+            ->timeout($this->timeout)
+            ->retry(3, 2000)
             ->withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Bearer ' . $accessToken,
