@@ -2,13 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
-use App\Models\AudioFile;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Queue;
 use App\Jobs\ProcessAudioJob;
+use App\Models\AudioFile;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AudioUploadTest extends TestCase
@@ -37,10 +36,10 @@ class AudioUploadTest extends TestCase
         $user = User::factory()->create([
             'translations_used' => 0,
             'translations_limit' => 2,
-            'credits' => 0
+            'credits' => 0,
         ]);
 
-        $file = UploadedFile::fake()->create('test.mp3', 1000);
+        $file = $this->fakeMp3();
 
         $response = $this->actingAs($user)->post(route('audio.store'), [
             'audio' => $file,
@@ -67,10 +66,10 @@ class AudioUploadTest extends TestCase
         $user = User::factory()->create([
             'translations_used' => 2,
             'translations_limit' => 2,
-            'credits' => 0
+            'credits' => 0,
         ]);
 
-        $file = UploadedFile::fake()->create('test.mp3', 1000);
+        $file = $this->fakeMp3();
 
         $response = $this->actingAs($user)->post(route('audio.store'), [
             'audio' => $file,
@@ -99,16 +98,16 @@ class AudioUploadTest extends TestCase
             'status' => 'completed',
         ]);
 
-        // User2 tries to access User1's file
+        // User2 tries to access User1's file; scoped lookup hides its existence
         $response = $this->actingAs($user2)->get(route('audio.show', $audioFile->id));
 
-        $response->assertForbidden();
+        $response->assertNotFound();
     }
 
     public function test_validation_fails_with_invalid_languages()
     {
         $user = User::factory()->create(['credits' => 1.0]);
-        $file = UploadedFile::fake()->create('test.mp3', 1000);
+        $file = $this->fakeMp3();
 
         $response = $this->actingAs($user)->post(route('audio.store'), [
             'audio' => $file,

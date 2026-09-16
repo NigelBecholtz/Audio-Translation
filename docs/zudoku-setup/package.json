@@ -1,0 +1,16 @@
+{
+  "name": "audio-translation-docs",
+  "version": "1.0.0",
+  "description": "Audio Translation project documentation - built with Zudoku",
+  "type": "module",
+  "scripts": {
+    "dev": "zudoku dev",
+    "build": "zudoku build",
+    "preview": "zudoku preview"
+  },
+  "devDependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "zudoku": "^0.69.3"
+  }
+}

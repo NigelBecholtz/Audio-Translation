@@ -2,9 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use App\Models\AudioFile;
-use App\Models\TextToAudio;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -30,7 +29,7 @@ class AuthorizationTest extends TestCase
 
         $response = $this->actingAs($user2)->get(route('audio.show', $audioFile->id));
 
-        $response->assertForbidden();
+        $response->assertNotFound();
     }
 
     public function test_user_cannot_download_another_users_audio_file()
@@ -52,7 +51,7 @@ class AuthorizationTest extends TestCase
 
         $response = $this->actingAs($user2)->get(route('audio.download', $audioFile->id));
 
-        $response->assertForbidden();
+        $response->assertNotFound();
     }
 
     public function test_user_cannot_delete_another_users_audio_file()
@@ -73,7 +72,7 @@ class AuthorizationTest extends TestCase
 
         $response = $this->actingAs($user2)->delete(route('audio.destroy', $audioFile->id));
 
-        $response->assertForbidden();
+        $response->assertNotFound();
         $this->assertDatabaseHas('audio_files', ['id' => $audioFile->id]);
     }
 

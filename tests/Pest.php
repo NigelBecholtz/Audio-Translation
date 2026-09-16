@@ -45,3 +45,5 @@ function something()
 {
     // ..
 }
+
+dataset('new languages', ['no', 'da', 'sv', 'pl']);

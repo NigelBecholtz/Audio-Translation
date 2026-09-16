@@ -12,6 +12,8 @@
 /.vscode
 /.zed
 /auth.json
+/docs/zudoku-setup/dist
+/docs/zudoku-setup/node_modules
 /node_modules
 /public/build
 /public/hot
