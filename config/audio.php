@@ -20,6 +20,9 @@ $defaultLanguages = [
     'ar' => 'Arabic',
     'hi' => 'Hindi',
     'sv' => 'Swedish',
+    'no' => 'Norwegian',
+    'da' => 'Danish',
+    'pl' => 'Polish',
     'sq' => 'Albanian',
     'bg' => 'Bulgarian',
     'sk' => 'Slovak',
@@ -78,13 +81,13 @@ return [
     'max_execution_time' => env('AUDIO_MAX_EXECUTION_TIME', 600), // seconds
     'max_input_time' => env('AUDIO_MAX_INPUT_TIME', 600), // seconds
     'memory_limit' => env('AUDIO_MEMORY_LIMIT', '512M'),
-    
+
     /*
     |--------------------------------------------------------------------------
     | Storage Settings
     |--------------------------------------------------------------------------
     */
-    
+
     'storage_disk' => env('AUDIO_STORAGE_DISK', 'public'),
     'cleanup_after_days' => env('AUDIO_CLEANUP_AFTER_DAYS', 30), // 0 = never
 
@@ -94,11 +97,15 @@ return [
     |--------------------------------------------------------------------------
     */
 
+    // Single source of truth for every language dropdown and validation rule.
     'languages' => $defaultLanguages,
-    'available_languages' => $defaultLanguages,
     'available_voices' => $defaultVoices,
 
-    'language_codes' => 'en-us,en-gb,en-au,en-ca,en-in,en,es,fr,de,it,pt,ru,ja,ko,zh,ar,hi,nl,sv,da,no,fi,pl,cs,sk,hu,ro,bg,hr,sl,el,tr,uk,lv,lt,et,ca,eu,th,vi,id,ms,tl,bn,ta,te,ml,kn,gu,pa,ur,si,my,km,lo,mn,af,sw,am,sq,hy,az,ka,he,fa,ps,ne',
+    // Fixed target order for CSV smart-fallback translation (alternative codes es_AR, gr, al included).
+    'csv_preset_languages' => [
+        'en', 'es', 'es_AR', 'de', 'fr', 'it', 'nl', 'ro', 'el', 'gr', 'sq', 'al', 'sk', 'lv', 'bg', 'fi', 'ca',
+        'no', 'da', 'sv', 'pl',
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -120,4 +127,3 @@ return [
     'tts_chunk_size' => env('TTS_CHUNK_SIZE', 900), // bytes - Gemini TTS limit
     'tts_chunk_delay' => env('TTS_CHUNK_DELAY', 2), // seconds between chunks
 ];
-
