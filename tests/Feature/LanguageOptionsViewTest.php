@@ -69,6 +69,7 @@ it('lists the new languages and the extended preset order in the CSV admin', fun
     }
     $response->assertDontSee('name="languages[]" value="en"', false);
 
-    $presetOrder = 'EN → ES → DE → FR → IT → NL → RO → EL → SQ → SK → LV → BG → FI → CA → NO → DA → SV → PL';
+    // Includes the alias headers customer files use (ES_AR, GR, AL).
+    $presetOrder = 'EN → ES → ES_AR → DE → FR → IT → NL → RO → EL → GR → SQ → AL → SK → LV → BG → FI → CA → NO → DA → SV → PL';
     expect(substr_count($response->getContent(), $presetOrder))->toBe(2);
 });

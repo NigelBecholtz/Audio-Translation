@@ -101,6 +101,13 @@ return [
     'languages' => $defaultLanguages,
     'available_voices' => $defaultVoices,
 
+    // Column headers customer files use instead of the ISO code; GoogleTranslationService maps them onto es-AR, el and sq.
+    'csv_language_aliases' => [
+        'es_AR' => 'Spanish (Argentina)',
+        'gr' => 'Greek (alternative code)',
+        'al' => 'Albanian (alternative code)',
+    ],
+
     // Fixed target order for CSV smart-fallback translation (alternative codes es_AR, gr, al included).
     'csv_preset_languages' => [
         'en', 'es', 'es_AR', 'de', 'fr', 'it', 'nl', 'ro', 'el', 'gr', 'sq', 'al', 'sk', 'lv', 'bg', 'fi', 'ca',

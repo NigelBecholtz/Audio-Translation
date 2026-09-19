@@ -5,7 +5,8 @@
 @section('content')
 
 @php
-    $languageNames = config('audio.languages');
+    // Alias headers (es_AR, gr, al) are valid CSV columns too, so they need a label of their own.
+    $languageNames = config('audio.languages') + config('audio.csv_language_aliases');
     $presetCodes = collect(config('audio.csv_preset_languages'))->filter(fn ($code) => isset($languageNames[$code]));
     $langs = $presetCodes->reject(fn ($code) => $code === 'en')
         ->mapWithKeys(fn ($code) => [$code => $languageNames[$code]])

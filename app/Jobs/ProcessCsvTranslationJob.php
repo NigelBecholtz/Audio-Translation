@@ -109,8 +109,9 @@ class ProcessCsvTranslationJob implements ShouldQueue
         // Handle en_US columns - copy from en column
         $this->handleEnUsColumns($data, $headers);
 
-        // Get target languages
-        $targetLanguages = $this->translationJob->target_languages ?? array_diff($headers, ['en', 'en_US']);
+        // Only the file's own columns can receive a translation, and their header spelling is kept as-is
+        // so alias codes (es_AR, gr, al) survive the export.
+        $targetLanguages = $this->translatableColumns($headers, $this->translationJob->target_languages);
 
         Log::info('Standard translation target languages', [
             'job_id' => $this->translationJob->id,
@@ -344,6 +345,34 @@ class ProcessCsvTranslationJob implements ShouldQueue
 
         // Cleanup original upload
         Storage::disk('public')->delete($this->translationJob->file_path);
+    }
+
+    /**
+     * Columns that can be translated: every non-empty header except the English source,
+     * narrowed down to the selected languages when the user picked any.
+     *
+     * @param  array<int, string>  $headers
+     * @param  array<int, string>|null  $selected
+     * @return list<string>
+     */
+    private function translatableColumns(array $headers, ?array $selected): array
+    {
+        $columns = array_filter(
+            $headers,
+            fn (string $header) => trim($header) !== '' && ! in_array(strtolower($header), ['en', 'en_us'], true)
+        );
+
+        if (empty($selected)) {
+            return array_values($columns);
+        }
+
+        // Match case-insensitively so a file with ES_AR still matches the selected es_AR.
+        $selected = array_map('strtolower', $selected);
+
+        return array_values(array_filter(
+            $columns,
+            fn (string $header) => in_array(strtolower($header), $selected, true)
+        ));
     }
 
     /**
